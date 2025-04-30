@@ -156,7 +156,7 @@ class _WardrobePageState extends State<WardrobePage> {
                         : Container(
                             height: 300,
                             width: double.infinity,
-                            color: Theme.of(context).colorScheme.background, // Dynamic placeholder background color
+                            color: Theme.of(context).colorScheme.surface, // Dynamic placeholder background color
                             child: Center(
                               child: Text(
                                 "Image not found",

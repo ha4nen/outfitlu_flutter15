@@ -125,7 +125,7 @@ class _MainAppPageState extends State<MainAppPage> with SingleTickerProviderStat
         },
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         selectedItemColor: Theme.of(context).colorScheme.secondary,
-        unselectedItemColor: Theme.of(context).colorScheme.onBackground,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurface,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.feed_rounded),

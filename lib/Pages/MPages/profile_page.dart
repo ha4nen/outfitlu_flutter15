@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -7,6 +9,15 @@ import '../mesc/settings_page.dart';
 import 'package:flutter_application_1/Pages/all%20items/all_items_page.dart';
 import 'package:flutter_application_1/Pages/Outfits/all_outfits.dart';
 import 'package:flutter_application_1/Pages/all items/ItemDetails.dart'; // Ensure this is the correct path
+import 'package:http/http.dart' as http;
+import 'package:flutter_application_1/Pages/mesc/edit_profile_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+final storage = FlutterSecureStorage();
+
+Future<String?> getToken() async {
+  return await storage.read(key: 'auth_token');
+}
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback onThemeChange;
@@ -22,12 +33,48 @@ class _ProfilePageState extends State<ProfilePage> {
   File? _profileImage;
   bool _isEditing = false; // Tracks whether the user is in edit mode
   final Set<int> _selectedItems = {}; // Tracks selected items for deletion
+  String username = '';
+  String bio = '';
+  String location = '';
+  String gender = '';
+  String modestyPreference = '';
+  String? profileImageUrl; // For loading from the server
+
 
   @override
   void initState() {
     super.initState();
     _loadProfileImage();
+    fetchProfileData();
   }
+
+Future<void> fetchProfileData() async {
+  final token = await getToken();
+  final response = await http.get(
+    Uri.parse('http://10.0.2.2:8000/api/profile/'),
+    headers: {'Authorization': 'Token $token'},
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    setState(() {
+  username = data['user']?['username'] ?? '';
+  bio = data['bio'] ?? '';
+  location = data['location'] ?? '';
+  gender = data['gender'] ?? '';
+  modestyPreference = data['modesty_preference'] ?? '';
+
+  if (data['profile_picture'] != null && data['profile_picture'] != '') {
+    _profileImage = File('');
+    profileImageUrl = data['profile_picture']; // should be full URL from the server
+  }
+});
+
+  } else {
+    print('Failed to load profile data');
+  }
+}
+
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -100,28 +147,48 @@ class _ProfilePageState extends State<ProfilePage> {
               GestureDetector(
                 onTap: _pickImage,
                 child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: _profileImage != null
-                      ? FileImage(_profileImage!)
-                      : null,
-                  backgroundColor: Theme.of(context).colorScheme.surface, // Dynamic background color
-                  child: _profileImage == null
-                      ? Icon(Icons.add_a_photo, size: 30, color: Theme.of(context).iconTheme.color) // Dynamic icon color
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 16),
+                    radius: 50,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    backgroundImage: _profileImage != null
+                        ? FileImage(_profileImage!)
+                        : (profileImageUrl != null
+                            ? NetworkImage(profileImageUrl!) as ImageProvider
+                            : null),
+                    child: (_profileImage == null && profileImageUrl == null)
+                        ? Icon(Icons.add_a_photo, size: 30, color: Theme.of(context).iconTheme.color)
+                        : null,
+                  ),
+ ), // ✅ Properly closed GestureDetector
+              SizedBox(height: 16.0),
 
               // Username
+              // Username
               Text(
-                '@username',
+                '@$username',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color, // Dynamic text color
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
-              const SizedBox(height: 8),
+
+              // Bio - Move this up
+                Builder(
+                  builder: (context) {
+                    if (bio.isNotEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          bio,
+                          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink(); // Return an empty widget if bio is empty
+                  },
+                ),
+
 
               // Followers and Following Count
               Text(
@@ -132,6 +199,21 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 16),
+              ElevatedButton(
+              onPressed: () async {
+                final updated = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditProfilePage()),
+                );
+                if (updated == true) {
+                  await fetchProfileData(); // Refresh after editing
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+            ),
 
               // Divider
               Divider(color: Theme.of(context).dividerColor), // Dynamic divider color

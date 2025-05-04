@@ -1,12 +1,11 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'itemDetails.dart'; // Import the ItemDetails page
 
 class SubDetails extends StatelessWidget {
   final String subcategoryName;
 
-  const SubDetails({super.key, required this.subcategoryName});
+  const SubDetails({super.key, required this.subcategoryName, required String subCategory});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +18,20 @@ class SubDetails extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(subcategoryName), // Display the subcategory name in the title
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Row(
+          children: [
+            Text(
+              subcategoryName, // Display the subcategory name dynamically
+              style: const TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Dynamic app bar color
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
       ),
@@ -37,7 +49,8 @@ class SubDetails extends StatelessWidget {
                     color: color,       // Pass the required color
                     size: size,         // Pass the required size
                     season: season,     // Pass the required season
-                    tags: tags, item: File('path/to/your/file'), // Pass a valid File object
+                    tags: tags,
+                    item: File('path/to/your/file'), // Pass a valid File object
                   ),
                 ),
               );

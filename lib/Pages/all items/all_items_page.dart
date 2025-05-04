@@ -1,8 +1,8 @@
 // ignore_for_file: unused_element, unused_field
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Pages/all%20items/SubDIn.dart';
 import 'dart:io';
+import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart';
 
 class AllItemsPage extends StatefulWidget {
   final Map<String, List<File>> categorizedTops;
@@ -104,7 +104,9 @@ class _AllItemsPageState extends State<AllItemsPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SubDIn(subCategory: title), // Navigate to Category page
+                builder: (context) => SubDetails(
+                  subcategoryName: title, subCategory: '', // Pass the clicked category name dynamically
+                ),
               ),
             );
           },

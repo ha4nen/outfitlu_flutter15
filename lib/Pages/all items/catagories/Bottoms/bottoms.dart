@@ -142,7 +142,7 @@ class _BottomsPageState extends State<BottomsPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SubDetails(subcategoryName: categoryName),
+                builder: (context) => SubDetails(subcategoryName: categoryName, subCategory: '',),
               ),
             );
           },

@@ -3,7 +3,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../mesc/settings_page.dart';
 import 'package:flutter_application_1/Pages/all%20items/all_items_page.dart';
@@ -31,7 +30,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  File? _profileImage;
   bool _isEditing = false; // Tracks whether the user is in edit mode
   final Set<int> _selectedItems = {}; // Tracks selected items for deletion
   String username = '';
@@ -80,27 +78,9 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _saveProfileImage(String path) async {
-    // Save profile image path locally (e.g., using SharedPreferences)
-  }
 
   Future<void> _loadProfileImage() async {
     // Load profile image path from local storage
-  }
-
-  void _toggleEditMode() {
-    setState(() {
-      _isEditing = !_isEditing;
-      _selectedItems.clear(); // Clear selections when toggling modes
-    });
-  }
-
-  void _deleteSelectedItems() {
-    setState(() {
-      widget.items.removeWhere((file) => _selectedItems.contains(widget.items.indexOf(file)));
-      _selectedItems.clear();
-      _isEditing = false; // Exit edit mode after deletion
-    });
   }
 
   @override
@@ -243,13 +223,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      _isEditing ? Icons.delete : Icons.edit,
-                      color: Theme.of(context).iconTheme.color, // Dynamic icon color
-                    ),
-                    onPressed: _isEditing ? _deleteSelectedItems : _toggleEditMode,
-                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -367,13 +340,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _isEditing ? Icons.delete : Icons.edit,
-                      color: Theme.of(context).iconTheme.color, // Dynamic icon color
-                    ),
-                    onPressed: _isEditing ? _deleteSelectedItems : _toggleEditMode,
                   ),
                 ],
               ),

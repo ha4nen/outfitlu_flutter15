@@ -145,7 +145,7 @@ class _ShoesPageState extends State<ShoesPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SubDetails(subcategoryName: categoryName),
+                builder: (context) => SubDetails(subcategoryName: categoryName, subCategory: '',),
               ),
             );
           },

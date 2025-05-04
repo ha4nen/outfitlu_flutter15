@@ -12,6 +12,7 @@ import 'package:flutter_application_1/Pages/all items/ItemDetails.dart'; // Ensu
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/Pages/mesc/edit_profile_page.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final storage = FlutterSecureStorage();
 
@@ -40,7 +41,6 @@ class _ProfilePageState extends State<ProfilePage> {
   String modestyPreference = '';
   String? profileImageUrl; // For loading from the server
 
-
   @override
   void initState() {
     super.initState();
@@ -48,43 +48,35 @@ class _ProfilePageState extends State<ProfilePage> {
     fetchProfileData();
   }
 
-Future<void> fetchProfileData() async {
-  final token = await getToken();
-  final response = await http.get(
-    Uri.parse('http://10.0.2.2:8000/api/profile/'),
-    headers: {'Authorization': 'Token $token'},
-  );
+  Future<void> fetchProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token'); // Retrieve the token
 
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    setState(() {
-  username = data['user']?['username'] ?? '';
-  bio = data['bio'] ?? '';
-  location = data['location'] ?? '';
-  gender = data['gender'] ?? '';
-  modestyPreference = data['modesty_preference'] ?? '';
+    if (token == null) {
+      print('No token found. User might not be logged in.');
+      return;
+    }
 
-  if (data['profile_picture'] != null && data['profile_picture'] != '') {
-    _profileImage = File('');
-    profileImageUrl = data['profile_picture']; // should be full URL from the server
-  }
-});
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8000/api/profile/'),
+      headers: {'Authorization': 'Token $token'}, // Use the token here
+    );
 
-  } else {
-    print('Failed to load profile data');
-  }
-}
-
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
       setState(() {
-        _profileImage = File(pickedFile.path);
+        username = data['username'] ?? 'unknown'; // Access username directly from the root
+        bio = data['bio'] ?? '';
+        location = data['location'] ?? '';
+        gender = data['gender'] ?? '';
+        modestyPreference = data['modesty_preference'] ?? '';
+        profileImageUrl = data['profile_picture'] != null && data['profile_picture'].isNotEmpty
+            ? 'http://10.0.2.2:8000${data['profile_picture']}' // Prepend base URL
+            : null; // Use null if no profile picture is provided
       });
-      _saveProfileImage(pickedFile.path);
+      print('Profile Image URL: $profileImageUrl');
+    } else {
+      print('Failed to load profile data: ${response.statusCode}');
     }
   }
 
@@ -145,26 +137,26 @@ Future<void> fetchProfileData() async {
             children: [
               // Profile Picture
               GestureDetector(
-                onTap: _pickImage,
                 child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    backgroundImage: _profileImage != null
-                        ? FileImage(_profileImage!)
-                        : (profileImageUrl != null
-                            ? NetworkImage(profileImageUrl!) as ImageProvider
-                            : null),
-                    child: (_profileImage == null && profileImageUrl == null)
-                        ? Icon(Icons.add_a_photo, size: 30, color: Theme.of(context).iconTheme.color)
-                        : null,
-                  ),
- ), // ✅ Properly closed GestureDetector
+                  radius: 50,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                      ? NetworkImage(profileImageUrl!) // Load the profile picture from the URL
+                      : null, // No image if the URL is null or empty
+                  child: profileImageUrl == null || profileImageUrl!.isEmpty
+                      ? Icon(
+                          Icons.person, // Default icon if no profile picture is available
+                          size: 50,
+                          color: Theme.of(context).iconTheme.color,
+                        )
+                      : null,
+                ),
+              ), // ✅ Properly closed GestureDetector
               SizedBox(height: 16.0),
 
               // Username
-              // Username
               Text(
-                '@$username',
+                '@$username', // Display the username dynamically
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -173,22 +165,21 @@ Future<void> fetchProfileData() async {
               ),
 
               // Bio - Move this up
-                Builder(
-                  builder: (context) {
-                    if (bio.isNotEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          bio,
-                          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                          textAlign: TextAlign.center,
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink(); // Return an empty widget if bio is empty
-                  },
-                ),
-
+              Builder(
+                builder: (context) {
+                  if (bio.isNotEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        bio,
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink(); // Return an empty widget if bio is empty
+                },
+              ),
 
               // Followers and Following Count
               Text(
@@ -200,20 +191,20 @@ Future<void> fetchProfileData() async {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-              onPressed: () async {
-                final updated = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditProfilePage()),
-                );
-                if (updated == true) {
-                  await fetchProfileData(); // Refresh after editing
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
+                onPressed: () async {
+                  final updated = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EditProfilePage()),
+                  );
+                  if (updated == true) {
+                    await fetchProfileData(); // Refresh after editing
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                ),
+                child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
               ),
-              child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-            ),
 
               // Divider
               Divider(color: Theme.of(context).dividerColor), // Dynamic divider color

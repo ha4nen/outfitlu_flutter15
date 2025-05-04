@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image/image.dart' as img;
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -81,7 +82,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         return;
       }
 
-      setState(() => _image = File(pickedFile.path));
+      // Resize the image
+      final imageBytes = await pickedFile.readAsBytes();
+      final decodedImage = img.decodeImage(imageBytes);
+      if (decodedImage != null) {
+        final resizedImage = img.copyResize(decodedImage, width: 500); // Resize to 500px width
+        final resizedImageFile = File(pickedFile.path)
+          ..writeAsBytesSync(img.encodeJpg(resizedImage));
+        setState(() => _image = resizedImageFile);
+      }
     }
   }
 
@@ -99,28 +108,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (_image != null) {
       final mimeType = lookupMimeType(_image!.path)?.split('/');
       if (mimeType != null && mimeType.length == 2) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'profile_picture',
-          _image!.path,
-          contentType: MediaType(mimeType[0], mimeType[1]),
-        ));
+        try {
+          request.files.add(await http.MultipartFile.fromPath(
+            'profile_picture',
+            _image!.path,
+            contentType: MediaType(mimeType[0], mimeType[1]),
+          ));
+        } catch (e) {
+          print('Error adding file to request: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to add image to request.')),
+          );
+          return;
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid image format.')),
+        );
+        return;
       }
     }
 
-    final response = await request.send();
-    final responseData = await response.stream.bytesToString();
+    try {
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
 
-    if (response.statusCode == 200) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
-        );
-        Navigator.pop(context, true);
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully')),
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        throw Exception('Failed to update profile: ${response.statusCode}');
       }
-    } else {
+    } catch (e) {
+      print('Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile: $responseData')),
+          SnackBar(content: Text('An error occurred: $e')),
         );
       }
     }

@@ -1,51 +1,21 @@
+// Updated ItemDetailsFormPage with centered image and clean multi-tag formatting
+
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/Pages/The+Button/clothing_item.dart';
-import 'package:flutter_application_1/Pages/The+Button/clothing_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class ItemDetailsFormPage extends StatefulWidget {
   final File imageFile;
-
-  final List<File> items;
-  final List<File> tops;
-  final List<File> tShirts;
-  final List<File> shirts;
-  final List<File> longSleeves;
-  final List<File> bottoms;
-  final List<File> jeans;
-  final List<File> shorts;
-  final List<File> joggers;
-  final List<File> accessories;
-  final List<File> bracelets;
-  final List<File> necklaces;
-  final List<File> rings;
-  final List<File> handBags;
-  final List<File> shoes;
-  final List<File> sneakers;
-  final List<File> sandals;
-  final List<File> boots;
+  final List<Map<String, dynamic>> categoryList;
+  final Map<String, List<Map<String, dynamic>>> categories;
 
   const ItemDetailsFormPage({
     super.key,
     required this.imageFile,
-    required this.items,
-    required this.tops,
-    required this.tShirts,
-    required this.shirts,
-    required this.longSleeves,
-    required this.bottoms,
-    required this.jeans,
-    required this.shorts,
-    required this.joggers,
-    required this.accessories,
-    required this.bracelets,
-    required this.necklaces,
-    required this.rings,
-    required this.handBags,
-    required this.shoes,
-    required this.sneakers,
-    required this.sandals,
-    required this.boots,
+    required this.categoryList,
+    required this.categories,
   });
 
   @override
@@ -54,58 +24,158 @@ class ItemDetailsFormPage extends StatefulWidget {
 
 class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
   final _formKey = GlobalKey<FormState>();
-
   final Map<String, dynamic> itemData = {
-    'name': '',
-    'category': '',
-    'subcategory': '',
+    'category': null,
+    'subcategory': null,
     'color': '',
     'size': '',
     'material': '',
-    'occasion': '',
-    'condition': '',
-    'brand': '',
-    'price': '',
-    'location': '',
+    'season': 'All-Season',
+    'tags': '',
   };
 
-  List<String> subCategories = []; // List to hold subcategories based on the selected main category
+  String? token;
+  List<Map<String, dynamic>> subCategories = [];
+
+  final List<String> colorSuggestions = ['Red', 'Blue', 'Black', 'White', 'Green'];
+  final List<String> sizeSuggestions = ['S', 'M', 'L', 'XL'];
+  final List<String> materialSuggestions = ['Cotton', 'Polyester', 'Wool', 'Silk'];
+  final List<String> tagSuggestions = ['Casual', 'Work', 'Formal', 'Comfy', 'Chic'];
+
+  final Map<String, TextEditingController> _controllers = {
+    'color': TextEditingController(),
+    'size': TextEditingController(),
+    'material': TextEditingController(),
+    'tags': TextEditingController(),
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadToken();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _loadToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      token = prefs.getString('auth_token');
+    });
+  }
+
+  Future<void> _saveItem() async {
+    if (!_formKey.currentState!.validate()) {
+      _showSnackBar('Please fill in all required fields.');
+      return;
+    }
+
+    if (token == null) {
+      _showSnackBar('User is not logged in.');
+      return;
+    }
+
+    try {
+      final uri = Uri.parse('http://10.0.2.2:8000/api/wardrobe/upload/');
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['Authorization'] = 'Token $token';
+
+      if (!await widget.imageFile.exists()) {
+        throw Exception('Image file does not exist');
+      }
+
+      request.fields.addAll({
+        'category_id': itemData['category']?['id']?.toString() ?? '',
+        'subcategory_id': itemData['subcategory']?['id']?.toString() ?? '',
+        'color': _controllers['color']!.text,
+        'size': _controllers['size']!.text,
+        'material': _controllers['material']!.text,
+        'season': itemData['season'],
+        'tags': _controllers['tags']!.text,
+      });
+
+      request.files.add(await http.MultipartFile.fromPath('photo_path', widget.imageFile.path));
+
+      final streamedResponse = await request.send();
+      final responseBody = await streamedResponse.stream.bytesToString();
+
+      if (streamedResponse.statusCode == 201) {
+        _showSuccessDialog();
+      } else {
+        _showSnackBar('Error saving item:\n$responseBody');
+      }
+    } catch (e) {
+      _showSnackBar('Unexpected error: $e');
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red.shade400),
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Success"),
+        content: const Text("Item saved successfully!"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
+            },
+            child: const Text("Go to Home"),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Item Details"),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Dynamic app bar color
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
-      ),
+      appBar: AppBar(title: const Text("Item Details")),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.file(widget.imageFile),
-              const SizedBox(height: 10),
-              _buildTextField("Name", "name"),
-              _buildMainCategoryDropdown(),
-              _buildSubCategoryDropdown(),
-              _buildTextField("Color", "color"),
-              _buildTextField("Size", "size"),
-              _buildTextField("Material", "material"),
-              _buildTextField("Occasion", "occasion"),
-              _buildTextField("Condition", "condition"),
-              _buildTextField("Brand", "brand"),
-              _buildTextField("Price", "price"),
-              _buildTextField("Location", "location"),
+              Center(child: Image.file(widget.imageFile, height: 200)),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveItem,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary, // Dynamic button color
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary, // Dynamic text color
+              _buildLabel("Category"),
+              _buildDropdown("Select category", _buildCategoryDropdown()),
+              const SizedBox(height: 10),
+              _buildLabel("Subcategory"),
+              _buildDropdown("Select subcategory", _buildSubCategoryDropdown()),
+              const SizedBox(height: 10),
+              _buildLabel("Color"),
+              _buildWithSuggestions("color", colorSuggestions),
+              _buildLabel("Size"),
+              _buildWithSuggestions("size", sizeSuggestions),
+              _buildLabel("Material"),
+              _buildWithSuggestions("material", materialSuggestions),
+              _buildLabel("Season"),
+              _buildDropdown("Select season", _buildSeasonDropdown()),
+              _buildLabel("Tags"),
+              _buildWithSuggestions("tags", tagSuggestions, isMulti: true),
+              const SizedBox(height: 25),
+              Center(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.save),
+                  label: const Text("Save Item"),
+                  onPressed: _saveItem,
                 ),
-                child: const Text("Save Item"),
               ),
             ],
           ),
@@ -114,178 +184,103 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
     );
   }
 
-  Widget _buildTextField(String label, String key) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), // Dynamic label text color
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).dividerColor), // Dynamic border color
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary), // Dynamic focused border color
-          ),
-        ),
-        style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color), // Dynamic input text color
-        onChanged: (value) => itemData[key] = value,
-      ),
-    );
-  }
+  Widget _buildLabel(String label) => Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 4),
+        child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+      );
 
-  Widget _buildMainCategoryDropdown() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: "Main Category",
-          labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), // Dynamic label text color
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).dividerColor), // Dynamic border color
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary), // Dynamic focused border color
-          ),
+  Widget _buildDropdown(String hint, Widget child) => Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: Colors.white,
         ),
-        items: {
-          'Tops': ['T-Shirts', 'LongSleeves', 'Shirts'],
-          'Bottoms': ['Jeans', 'Shorts', 'Joggers'],
-          'Shoes': ['Sneakers', 'Sandals', 'Boots'],
-          'Accessories': ['Bracelets', 'Necklaces', 'Rings', 'HandBags'],
-        }.keys.map((String category) {
-          return DropdownMenuItem<String>(
+        child: child,
+      );
+
+  Widget _buildCategoryDropdown() => DropdownButtonFormField<Map<String, dynamic>>(
+        decoration: _inputDecoration("Select category"),
+        items: widget.categoryList.map((category) {
+          return DropdownMenuItem<Map<String, dynamic>>(
             value: category,
-            child: Text(
-              category,
-              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color), // Dynamic dropdown text color
-            ),
+            child: Text(category['name'], style: const TextStyle(color: Colors.black)),
           );
         }).toList(),
         onChanged: (value) {
-          setState(() {
-            itemData['category'] = value;
-            subCategories = {
-              'Tops': ['T-Shirts', 'LongSleeves', 'Shirts'],
-              'Bottoms': ['Jeans', 'Shorts', 'Joggers'],
-              'Shoes': ['Sneakers', 'Sandals', 'Boots'],
-              'Accessories': ['Bracelets', 'Necklaces', 'Rings', 'HandBags'],
-            }[value]!;
-            itemData['subcategory'] = null; // Reset subcategory when main category changes
-          });
+          if (value != null) {
+            final relatedSubCategories = widget.categories[value['name']] ?? [];
+            setState(() {
+              itemData['category'] = value;
+              subCategories = relatedSubCategories;
+              itemData['subcategory'] = null;
+            });
+          }
         },
-      ),
-    );
-  }
+        value: itemData['category'],
+        validator: (value) => value == null ? 'Select a category' : null,
+      );
 
-  Widget _buildSubCategoryDropdown() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: "Sub-category",
-          labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), // Dynamic label text color
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).dividerColor), // Dynamic border color
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary), // Dynamic focused border color
-          ),
-        ),
-        items: subCategories.map((String subCategory) {
-          return DropdownMenuItem<String>(
-            value: subCategory,
-            child: Text(
-              subCategory,
-              style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color), // Dynamic dropdown text color
-            ),
+  Widget _buildSubCategoryDropdown() => DropdownButtonFormField<Map<String, dynamic>>(
+        decoration: _inputDecoration("Select subcategory"),
+        items: subCategories.map((subcategory) {
+          return DropdownMenuItem<Map<String, dynamic>>(
+            value: subcategory,
+            child: Text(subcategory['name'], style: const TextStyle(color: Colors.black)),
           );
         }).toList(),
-        onChanged: itemData['category'] == null
-            ? null // Disable dropdown if no main category is selected
-            : (value) {
+        onChanged: (value) => setState(() => itemData['subcategory'] = value),
+        value: itemData['subcategory'],
+        validator: (value) => value == null ? 'Select a subcategory' : null,
+      );
+
+  Widget _buildSeasonDropdown() => DropdownButtonFormField<String>(
+        decoration: _inputDecoration("Select season"),
+        items: ['Winter', 'Spring', 'Summer', 'Autumn', 'All-Season'].map((season) {
+          return DropdownMenuItem<String>(
+            value: season,
+            child: Text(season, style: const TextStyle(color: Colors.black)),
+          );
+        }).toList(),
+        onChanged: (value) => setState(() => itemData['season'] = value!),
+        value: itemData['season'],
+      );
+
+  Widget _buildWithSuggestions(String key, List<String> suggestions, {bool isMulti = false}) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _controllers[key],
+            decoration: _inputDecoration("Type or tap a suggestion"),
+            onChanged: (value) => itemData[key] = value,
+            validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+          ),
+          Wrap(
+            spacing: 8,
+            children: suggestions.map((s) => ActionChip(
+              label: Text(s, style: const TextStyle(color: Colors.black)),
+              backgroundColor: Colors.grey.shade200,
+              onPressed: () {
                 setState(() {
-                  itemData['subcategory'] = value;
+                  if (isMulti) {
+                    final currentText = _controllers[key]!.text.trim();
+                    final tags = currentText.isEmpty ? <String>{} : currentText.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
+                    tags.add(s);
+                    _controllers[key]!.text = tags.join(', ');
+                    itemData[key] = _controllers[key]!.text;
+                  } else {
+                    _controllers[key]!.text = s;
+                    itemData[key] = s;
+                  }
                 });
               },
-        value: itemData['subcategory'],
-        disabledHint: Text(
-          'Select a main category first',
-          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), // Dynamic disabled hint color
-        ),
-      ),
-    );
-  }
-
-  void _saveItem() async {
-    if (_formKey.currentState!.validate()) {
-      // Save the item to its respective category and subcategory
-      final File imageFile = widget.imageFile;
-
-      // Add the item to the general items list (Wardrobe Page)
-      setState(() {
-        widget.items.add(imageFile); // Add to the general items list
-      });
-
-      // Add the item to the respective category and subcategory
-      if (itemData['category'] == 'Tops') {
-        widget.tops.add(imageFile); // Add to Tops in All Items Page
-
-        if (itemData['subcategory'] == 'T-Shirts') {
-          widget.tShirts.add(imageFile); // Add to T-Shirts in Tops Page
-        } else if (itemData['subcategory'] == 'Shirts') {
-          widget.shirts.add(imageFile); // Add to Shirts in Tops Page
-        } else if (itemData['subcategory'] == 'LongSleeves') {
-          widget.longSleeves.add(imageFile); // Add to LongSleeves in Tops Page
-        }
-      } else if (itemData['category'] == 'Bottoms') {
-        widget.bottoms.add(imageFile); // Add to Bottoms in All Items Page
-
-        if (itemData['subcategory'] == 'Jeans') {
-          widget.jeans.add(imageFile); // Add to Jeans in Bottoms Page
-        } else if (itemData['subcategory'] == 'Shorts') {
-          widget.shorts.add(imageFile); // Add to Shorts in Bottoms Page
-        } else if (itemData['subcategory'] == 'Joggers') {
-          widget.joggers.add(imageFile); // Add to Joggers in Bottoms Page
-        }
-      } else if (itemData['category'] == 'Accessories') {
-        widget.accessories.add(imageFile); // Add to Accessories in All Items Page
-
-        if (itemData['subcategory'] == 'Bracelets') {
-          widget.bracelets.add(imageFile); // Add to Bracelets in Accessories Page
-        } else if (itemData['subcategory'] == 'Necklaces') {
-          widget.necklaces.add(imageFile); // Add to Necklaces in Accessories Page
-        } else if (itemData['subcategory'] == 'Rings') {
-          widget.rings.add(imageFile); // Add to Rings in Accessories Page
-        } else if (itemData['subcategory'] == 'HandBags') {
-          widget.handBags.add(imageFile); // Add to HandBags in Accessories Page
-        }
-      } else if (itemData['category'] == 'Shoes') {
-        widget.shoes.add(imageFile); // Add to Shoes in All Items Page
-
-        if (itemData['subcategory'] == 'Sneakers') {
-          widget.sneakers.add(imageFile); // Add to Sneakers in Shoes Page
-        } else if (itemData['subcategory'] == 'Sandals') {
-          widget.sandals.add(imageFile); // Add to Sandals in Shoes Page
-        } else if (itemData['subcategory'] == 'Boots') {
-          widget.boots.add(imageFile); // Add to Boots in Shoes Page
-        }
-      }
-
-      // Save the item using ClothingStorage
-      final savedImage = await imageFile.copy('${Directory.systemTemp.path}/${DateTime.now().millisecondsSinceEpoch}.png');
-      await ClothingStorage.saveItem(ClothingItem(
-        imagePath: savedImage.path,
-        category: itemData['category'],
-        subcategory: itemData['subcategory'],
-      ));
-
-      // Navigate back to the Wardrobe Page
-      Navigator.popUntil(context, (route) => route.isFirst);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all required fields.')),
+            )).toList(),
+          )
+        ],
       );
-    }
-  }
+
+  InputDecoration _inputDecoration(String label) => InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.black87),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+      );
 }

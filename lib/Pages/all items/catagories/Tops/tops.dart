@@ -145,7 +145,7 @@ class _TopsPageState extends State<TopsPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SubDetails(subcategoryName: categoryName, subCategory: '',),
+                builder: (context) => SubDetails(subcategoryName: categoryName, subCategory: '', subcategoryId: 0,),
               ),
             );
           },

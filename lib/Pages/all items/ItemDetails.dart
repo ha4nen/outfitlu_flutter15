@@ -17,7 +17,7 @@ class ItemDetails extends StatelessWidget {
     required this.color,
     required this.size,
     required this.season,
-    required this.tags, required File item,
+    required this.tags, required File item, String? imageUrl,
   });
 
   @override

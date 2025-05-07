@@ -132,7 +132,7 @@ class _AccessoriesPageState extends State<AccessoriesPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => SubDetails(subcategoryName: categoryName, subCategory: '',),
+                builder: (context) => SubDetails(subcategoryName: categoryName, subCategory: '', subcategoryId: 0,),
               ),
             );
           },

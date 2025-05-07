@@ -1,102 +1,215 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:flutter/material.dart';
+// import 'dart:io'; // No longer needed for items list
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Keep if used elsewhere
+
 import '../mesc/settings_page.dart';
 import 'package:flutter_application_1/Pages/all%20items/all_items_page.dart';
 import 'package:flutter_application_1/Pages/Outfits/all_outfits.dart';
 import 'package:flutter_application_1/Pages/all items/ItemDetails.dart'; // Ensure this is the correct path
-import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/Pages/mesc/edit_profile_page.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-final storage = FlutterSecureStorage();
+// Re-use the WardrobeItem model (ensure it's consistent with other pages)
+class WardrobeItem {
+  final int id;
+  final String? color;
+  final String? size;
+  final String? material;
+  final String? season;
+  final String? tags;
+  final String? photoPath;
+  final int? categoryId;
+  final String? categoryName; 
+  final int? subcategoryId;
+  final String? subcategoryName;
 
+  WardrobeItem({
+    required this.id,
+    this.color,
+    this.size,
+    this.material,
+    this.season,
+    this.tags,
+    this.photoPath,
+    this.categoryId,
+    this.categoryName,
+    this.subcategoryId,
+    this.subcategoryName,
+  });
+
+  factory WardrobeItem.fromJson(Map<String, dynamic> json) {
+    String? catName = json['category']?['name'];
+    String? subcatName = json['subcategory']?['name'];
+    int? catId = json['category']?['id'];
+    int? subcatId = json['subcategory']?['id'];
+
+    return WardrobeItem(
+      id: json['id'],
+      color: json['color'],
+      size: json['size'],
+      material: json['material'],
+      season: json['season'],
+      tags: json['tags'],
+      photoPath: json['photo_path'] != null ? 'http://10.0.2.2:8000${json['photo_path']}' : null,
+      categoryId: catId,
+      categoryName: catName,
+      subcategoryId: subcatId,
+      subcategoryName: subcatName,
+    );
+  }
+}
+
+
+final storage = FlutterSecureStorage(); // Keep if used elsewhere
+
+// Function to get token (keep if used elsewhere)
 Future<String?> getToken() async {
   return await storage.read(key: 'auth_token');
 }
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback onThemeChange;
-  final List<File> items; // Shared list of items
+  // REMOVED: final List<File> items; 
 
-  const ProfilePage({super.key, required this.onThemeChange, required this.items});
+  // Update constructor: remove 'items' parameter
+  const ProfilePage({super.key, required this.onThemeChange, required List<File> items});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _isEditing = false; // Tracks whether the user is in edit mode
-  final Set<int> _selectedItems = {}; // Tracks selected items for deletion
+  // Existing state for profile data
   String username = '';
   String bio = '';
   String location = '';
   String gender = '';
   String modestyPreference = '';
-  String? profileImageUrl; // For loading from the server
+  String? profileImageUrl;
+
+  // State for wardrobe items
+  List<WardrobeItem> _wardrobeItems = [];
+  bool _isLoadingItems = true; // Separate loading state for items
+  String _errorItems = '';
+
+  // REMOVED: _isEditing and _selectedItems related to File list
 
   @override
   void initState() {
     super.initState();
-    _loadProfileImage();
-    fetchProfileData();
+    // _loadProfileImage(); // Keep if implemented
+    fetchProfileData(); // Fetch profile details
+    _fetchWardrobeItems(); // Fetch wardrobe items
   }
 
   Future<void> fetchProfileData() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token'); // Retrieve the token
+    final token = prefs.getString('auth_token');
 
     if (token == null) {
       print('No token found. User might not be logged in.');
+      // Optionally set an error state for the profile section
       return;
     }
 
-    final response = await http.get(
-      Uri.parse('http://10.0.2.2:8000/api/profile/'),
-      headers: {'Authorization': 'Token $token'}, // Use the token here
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:8000/api/profile/'), // Use your actual profile endpoint
+        headers: {'Authorization': 'Token $token'},
+      );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      setState(() {
-        username = data['username'] ?? 'unknown'; // Access username directly from the root
-        bio = data['bio'] ?? '';
-        location = data['location'] ?? '';
-        gender = data['gender'] ?? '';
-        modestyPreference = data['modesty_preference'] ?? '';
-        profileImageUrl = data['profile_picture'] != null && data['profile_picture'].isNotEmpty
-            ? 'http://10.0.2.2:8000${data['profile_picture']}' // Prepend base URL
-            : null; // Use null if no profile picture is provided
-      });
-      print('Profile Image URL: $profileImageUrl');
-    } else {
-      print('Failed to load profile data: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          // Assuming UserProfileSerializer returns username at the top level now
+          username = data['username'] ?? 'unknown'; 
+          bio = data['bio'] ?? '';
+          location = data['location'] ?? '';
+          gender = data['gender'] ?? '';
+          modestyPreference = data['modesty_preference'] ?? '';
+          profileImageUrl = data['profile_picture'] != null && data['profile_picture'].isNotEmpty
+              ? 'http://10.0.2.2:8000${data['profile_picture']}'
+              : null;
+        });
+      } else {
+        print('Failed to load profile data: ${response.statusCode}');
+        // Optionally set an error state for the profile section
+      }
+    } catch (e) {
+       print('Error fetching profile data: $e');
+       // Optionally set an error state for the profile section
     }
   }
 
+  // Fetch all wardrobe items for the user
+  Future<void> _fetchWardrobeItems() async {
+    setState(() {
+      _isLoadingItems = true;
+      _errorItems = '';
+    });
 
-  Future<void> _loadProfileImage() async {
-    // Load profile image path from local storage
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token == null) {
+      setState(() {
+        _isLoadingItems = false;
+        _errorItems = 'Authentication token not found.';
+      });
+      return;
+    }
+
+    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Token $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _wardrobeItems = data.map((itemJson) => WardrobeItem.fromJson(itemJson)).toList();
+          _isLoadingItems = false;
+        });
+      } else {
+        setState(() {
+          _isLoadingItems = false;
+          _errorItems = 'Failed to load items (Code: ${response.statusCode})';
+        });
+        print('Error response body (items): ${response.body}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingItems = false;
+        _errorItems = 'An error occurred: $e';
+      });
+      print('Network or parsing error (items): $e');
+    }
   }
+
+  // REMOVED: _loadProfileImage (unless it was actually implemented)
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Dynamic app bar color
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         actions: [
           IconButton(
             icon: Icon(
               Icons.settings,
               color: Theme.of(context).brightness == Brightness.light
-                  ? Colors.white // White in light theme
-                  : Theme.of(context).iconTheme.color, // Default in dark theme
+                  ? Colors.white
+                  : Theme.of(context).iconTheme.color,
             ),
             onPressed: () {
               Navigator.of(context).push(
@@ -109,321 +222,273 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Profile Picture
-              GestureDetector(
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
-                      ? NetworkImage(profileImageUrl!) // Load the profile picture from the URL
-                      : null, // No image if the URL is null or empty
-                  child: profileImageUrl == null || profileImageUrl!.isEmpty
-                      ? Icon(
-                          Icons.person, // Default icon if no profile picture is available
-                          size: 50,
-                          color: Theme.of(context).iconTheme.color,
-                        )
-                      : null,
+      body: RefreshIndicator( // Optional: Add pull-to-refresh
+        onRefresh: () async {
+          await fetchProfileData();
+          await _fetchWardrobeItems();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // Ensure scroll works with RefreshIndicator
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // --- Profile Section (Remains largely the same) ---
+                GestureDetector(
+                  // onTap: _pickProfileImage, // Add if you implement image picking
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                        ? NetworkImage(profileImageUrl!) 
+                        : null,
+                    child: profileImageUrl == null || profileImageUrl!.isEmpty
+                        ? Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Theme.of(context).iconTheme.color,
+                          )
+                        : null,
+                  ),
                 ),
-              ), // ✅ Properly closed GestureDetector
-              SizedBox(height: 16.0),
-
-              // Username
-              Text(
-                '@$username', // Display the username dynamically
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                const SizedBox(height: 16.0),
+                Text(
+                  '@$username',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                 ),
-              ),
-
-              // Bio - Move this up
-              Builder(
-                builder: (context) {
-                  if (bio.isNotEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        bio,
-                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                        textAlign: TextAlign.center,
-                      ),
+                if (bio.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text(
+                      bio,
+                      style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                Text(
+                  '0 Following  |  0 Followers', // TODO: Implement Follower counts
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    final updated = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EditProfilePage()),
                     );
-                  }
-                  return const SizedBox.shrink(); // Return an empty widget if bio is empty
-                },
-              ),
-
-              // Followers and Following Count
-              Text(
-                '0 Following  |  0 Followers',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).textTheme.bodyMedium?.color, // Dynamic text color
+                    if (updated == true) {
+                      await fetchProfileData(); // Refresh profile after editing
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () async {
-                  final updated = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EditProfilePage()),
-                  );
-                  if (updated == true) {
-                    await fetchProfileData(); // Refresh after editing
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                ),
-                child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-              ),
-
-              // Divider
-              Divider(color: Theme.of(context).dividerColor), // Dynamic divider color
-
-              // Items Section Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AllItemsPage(
-                            categorizedTops: {},
-                            categorizedBottoms: {},
-                            categorizedAccessories: {},
-                            categorizedShoes: {},
+                Divider(color: Theme.of(context).dividerColor),
+                
+                // --- Items Section Header (Navigate to modified AllItemsPage) ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            // Navigate to the modified AllItemsPage (no args needed)
+                            builder: (context) => const AllItemsPage(), 
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Items',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary, // Dynamic background color
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Items',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onPrimary, // Dynamic text color
-                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
+                    // Add other actions if needed (e.g., Add Item button)
+                  ],
+                ),
+                const SizedBox(height: 8),
 
-              // Items Section
-              widget.items.isEmpty
-                  ? Container(
-                      height: 150,
-                      color: Theme.of(context).colorScheme.surface, // Dynamic placeholder color
-                      child: Center(
-                        child: Text(
-                          'No items to display',
-                          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), // Dynamic text color
-                        ),
-                      ),
-                    )
-                  : SizedBox(
-                      height: 150,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: widget.items.length,
-                        itemBuilder: (context, index) {
-                          final isSelected = _selectedItems.contains(index);
-                          return GestureDetector(
-                            onTap: _isEditing
-                                ? () {
-                                    setState(() {
-                                      if (isSelected) {
-                                        _selectedItems.remove(index);
-                                      } else {
-                                        _selectedItems.add(index);
-                                      }
-                                    });
-                                  }
-                                : () {
-                                    // Navigate to the ItemDetailsPage
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ItemDetails(
-                                          item: widget.items[index],
-                                          itemName: 'Sample Item Name',
-                                          color: 'Sample Color',
-                                          size: 'Sample Size',
-                                          season: 'Sample Season',
-                                          tags: ['Sample Tag 1', 'Sample Tag 2'],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            child: Stack(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Image.file(
-                                    widget.items[index],
-                                    fit: BoxFit.cover,
-                                    width: 100,
-                                    height: 100,
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.primary.withOpacity(0.5) // Dynamic overlay color
-                                        : null,
-                                    colorBlendMode: isSelected ? BlendMode.darken : null,
-                                  ),
-                                ),
-                                if (isSelected)
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      color: Theme.of(context).colorScheme.onPrimary, // Dynamic icon color
-                                    ),
-                                  ),
-                              ],
+                // --- Items Section Body (Uses fetched data) ---
+                _buildItemsSection(), // Use helper method
+
+                const SizedBox(height: 16), 
+
+                // --- Outfits Section Header (Remains the same for now) ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: Update AllOutfitsPage similarly if needed
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AllOutfitsPage(
+                              // These arguments likely need updating too
+                              outfits: [], // Pass actual outfit data later
+                              summerOutfits: [],
+                              winterOutfits: [],
+                              fallOutfits: [],
+                              springOutfits: [],
                             ),
-                          );
-                        },
-                      ),
-                    ),
-
-              const SizedBox(height: 16), // Add spacing between sections
-
-              // Outfits Section Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AllOutfitsPage(
-                            outfits: widget.items,
-                            summerOutfits: [],
-                            winterOutfits: [],
-                            fallOutfits: [],
-                            springOutfits: [],
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Outfits',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary, // Dynamic background color
-                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        'Outfits',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onPrimary, // Dynamic text color
-                        ),
-                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // --- Outfits Section Body (Still uses placeholder/old logic) ---
+                // TODO: Update this section similarly to the Items section later
+                Container(
+                  height: 150,
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Center(
+                    child: Text(
+                      'Outfits display needs update',
+                      style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // Outfits Section
-              widget.items.isEmpty
-                  ? Container(
-                      height: 150,
-                      color: Theme.of(context).colorScheme.surface, // Dynamic placeholder color
-                      child: Center(
-                        child: Text(
-                          'No outfits to display',
-                          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color), // Dynamic text color
-                        ),
-                      ),
-                    )
-                  : SizedBox(
-                      height: 150,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: widget.items.length,
-                        itemBuilder: (context, index) {
-                          final isSelected = _selectedItems.contains(index);
-                          return GestureDetector(
-                            onTap: _isEditing
-                                ? () {
-                                    setState(() {
-                                      if (isSelected) {
-                                        _selectedItems.remove(index);
-                                      } else {
-                                        _selectedItems.add(index);
-                                      }
-                                    });
-                                  }
-                                : () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ItemDetails(
-                                          item: widget.items[index],
-                                          itemName: 'Sample Item Name',
-                                          color: 'Sample Color',
-                                          size: 'Sample Size',
-                                          season: 'Sample Season',
-                                          tags: ['Sample Tag 1', 'Sample Tag 2'],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            child: Stack(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Image.file(
-                                    widget.items[index],
-                                    fit: BoxFit.cover,
-                                    width: 100,
-                                    height: 100,
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.primary.withOpacity(0.5) // Dynamic overlay color
-                                        : null,
-                                    colorBlendMode: isSelected ? BlendMode.darken : null,
-                                  ),
-                                ),
-                                if (isSelected)
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: Icon(
-                                      Icons.check_circle,
-                                      color: Theme.of(context).colorScheme.onPrimary, // Dynamic icon color
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ],
+                ),
+                // Original Outfits ListView (commented out, needs update)
+                /*
+                widget.items.isEmpty // This logic is now incorrect
+                    ? Container(...) 
+                    : SizedBox(...ListView.builder using widget.items...)
+                */
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  // Helper method to build the items section
+  Widget _buildItemsSection() {
+    if (_isLoadingItems) {
+      return Container(
+        height: 150,
+        alignment: Alignment.center,
+        child: const CircularProgressIndicator()
+      );
+    }
+
+    if (_errorItems.isNotEmpty) {
+      return Container(
+        height: 150,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Text('Error loading items: $_errorItems', style: const TextStyle(color: Colors.red), textAlign: TextAlign.center,)
+      );
+    }
+
+    if (_wardrobeItems.isEmpty) {
+      return Container(
+        height: 150,
+        alignment: Alignment.center,
+        color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        child: Text(
+          'No items added yet.',
+          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+        ),
+      );
+    }
+
+    // Display fetched items in a horizontal list
+    return SizedBox(
+      height: 150,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _wardrobeItems.length,
+        itemBuilder: (context, index) {
+          final item = _wardrobeItems[index];
+          return GestureDetector(
+            onTap: () {
+              // Navigate to ItemDetails - REMINDER: User must update ItemDetails
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ItemDetails(
+                    itemName: item.material ?? 'Item ${item.id}',
+                    color: item.color ?? 'N/A',
+                    size: item.size ?? 'N/A',
+                    season: item.season ?? 'N/A',
+                    tags: item.tags?.split(',') ?? [],
+                    imageUrl: item.photoPath, item: File(''), // Provide a dummy File object
+                    // item: File(''), // REMOVE dummy File object
+                  ),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0), // Adjust spacing
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Container(
+                  width: 110, // Adjust width as needed
+                  color: Theme.of(context).colorScheme.surface, // Background for image frame
+                  child: item.photoPath != null
+                    ? Image.network(
+                        item.photoPath!,
+                        fit: BoxFit.cover,
+                        width: 110,
+                        height: 150,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(child: CircularProgressIndicator());
+                        },
+                        errorBuilder: (context, error, stack) {
+                          print('Error loading image: ${item.photoPath}, Error: $error');
+                          return const Center(child: Icon(Icons.broken_image, color: Colors.grey));
+                        },
+                      )
+                    : const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)), // Placeholder
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
+

@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart'; // Keep for subcategory item list navigation
-import 'package:flutter_application_1/Pages/all%20items/category_details_page.dart'; // Import the new page
+import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart'; // For navigating to item list of a single subcategory
 
 // Re-use the WardrobeItem model (ensure consistent)
 class WardrobeItem {
@@ -33,64 +32,78 @@ class WardrobeItem {
     this.subcategoryName,
   });
 
-  // *** UPDATED fromJson factory ***
+  // Updated factory to handle potential invalid data from API
   factory WardrobeItem.fromJson(Map<String, dynamic> json) {
+    // *** FIX START: Explicitly check if 'id' is a valid integer ***
+    final itemId = json['id'];
+    if (itemId == null || itemId is! int) {
+      // Throw an error if ID is missing or not an integer. 
+      // This will be caught in the list mapping logic.
+      throw FormatException('Invalid or missing item ID found in JSON: ${json['id']}');
+    }
+    // *** FIX END ***
+
+    // If ID is valid, proceed with parsing
+    String? catName = json['category']?['name'];
+    String? subcatName = json['subcategory']?['name'];
+    int? catId = json['category']?['id'];
+    int? subcatId = json['subcategory']?['id'];
+
     return WardrobeItem(
-      id: json['id'] ?? 0,
-      color: json['color'] ?? 'Unknown',
-      size: json['size'] ?? 'Unknown',
-      material: json['material'] ?? 'Unknown',
-      season: json['season'] ?? 'All-Season',
-      tags: json['tags'] ?? '',
+      id: itemId, // Use the validated itemId
+      color: json['color'],
+      size: json['size'],
+      material: json['material'],
+      season: json['season'],
+      tags: json['tags'],
       photoPath: json['photo_path'] != null ? 'http://10.0.2.2:8000${json['photo_path']}' : null,
-      categoryId: json['category']?['id'], // Directly from Wardrobe table
-      categoryName: json['category']?['name'] ?? 'Unknown', // Directly from Wardrobe table
-      subcategoryId: json['subcategory']?['id'], // Directly from Wardrobe table
-      subcategoryName: json['subcategory']?['name'] ?? 'General', // Directly from Wardrobe table
+      categoryId: catId,
+      categoryName: catName,
+      subcategoryId: subcatId,
+      subcategoryName: subcatName,
     );
   }
 }
 
-// Structure to hold grouped items
-class CategoryGroup {
-  final int id;
-  final String name;
-  final Map<int, SubCategoryGroup> subcategories = {};
-
-  CategoryGroup({required this.id, required this.name});
-}
-
-class SubCategoryGroup {
+// Structure to hold grouped subcategories and their items
+class SubCategoryGroupForDetails {
   final int id;
   final String name;
   final List<WardrobeItem> items = [];
 
-  SubCategoryGroup({required this.id, required this.name});
+  SubCategoryGroupForDetails({required this.id, required this.name});
 }
 
-class AllItemsPage extends StatefulWidget {
-  const AllItemsPage({super.key});
+class CategoryDetailsPage extends StatefulWidget {
+  final int categoryId;
+  final String categoryName;
+
+  const CategoryDetailsPage({
+    super.key,
+    required this.categoryId,
+    required this.categoryName,
+  });
 
   @override
-  State<AllItemsPage> createState() => _AllItemsPageState();
+  State<CategoryDetailsPage> createState() => _CategoryDetailsPageState();
 }
 
-class _AllItemsPageState extends State<AllItemsPage> {
-  Map<int, CategoryGroup> _groupedItems = {};
+class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
+  Map<int, SubCategoryGroupForDetails> _groupedItemsBySubCategory = {}; // Map<subcategoryId, SubCategoryGroup>
   bool _isLoading = true;
   String _error = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchAllItemsAndGroup();
+    _fetchItemsForCategoryAndGroup();
   }
 
-  Future<void> _fetchAllItemsAndGroup() async {
+  Future<void> _fetchItemsForCategoryAndGroup() async {
     setState(() {
       _isLoading = true;
       _error = '';
-      _groupedItems = {};
+      _groupedItemsBySubCategory = {}; // Clear previous data
     });
 
     final prefs = await SharedPreferences.getInstance();
@@ -104,7 +117,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/category/${widget.categoryId}/');
 
     try {
       final response = await http.get(
@@ -115,60 +128,89 @@ class _AllItemsPageState extends State<AllItemsPage> {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         
-        // *** UPDATED item parsing with try-catch and filtering ***
-        final List<WardrobeItem> allItems = data.map((itemJson) {
+        // *** DEBUG LOGGING START ***
+        print("--- Raw API Data for Category ${widget.categoryId} ---");
+        print(response.body);
+        print("--- Processing Items ---");
+        // *** DEBUG LOGGING END ***
+
+        final List<WardrobeItem> categoryItems = data.map((itemJson) {
+          // *** DEBUG LOGGING START ***
+          print("Processing item JSON: $itemJson"); 
+          // *** DEBUG LOGGING END ***
           try {
+            // *** DEBUG LOGGING START ***
+            // Log potential nulls before parsing
+            if (itemJson is Map<String, dynamic>) {
+              print("  >> ID: ${itemJson['id']} (Type: ${itemJson['id']?.runtimeType})");
+              print("  >> Category ID: ${itemJson['category']?['id']} (Type: ${itemJson['category']?['id']?.runtimeType})");
+              print("  >> SubCategory ID: ${itemJson['subcategory']?['id']} (Type: ${itemJson['subcategory']?['id']?.runtimeType})");
+            } else {
+              print("  >> Item JSON is not a Map: $itemJson");
+            }
+            // *** DEBUG LOGGING END ***
+            
             return WardrobeItem.fromJson(itemJson);
           } catch (e) {
-            print('Failed to parse item on AllItemsPage: $itemJson, Error: $e');
+            print('Failed to parse item: $itemJson, Error: $e');
             return null; // Return null for items that fail parsing
           }
         })
-        .where((item) => item != null) // Filter out the nulls
-        .cast<WardrobeItem>()
+        .where((item) => item != null) // Filter out the nulls (failed items)
+        .cast<WardrobeItem>() // Cast the list back to the correct type
         .toList();
         
-        final Map<int, CategoryGroup> grouped = {};
-        for (var item in allItems) {
-          if (item.categoryId != null && item.categoryName != null) {
-            grouped.putIfAbsent(item.categoryId!, () => CategoryGroup(id: item.categoryId!, name: item.categoryName!));
-            
-            if (item.subcategoryId != null && item.subcategoryName != null) {
-              final categoryGroup = grouped[item.categoryId!]!;
-              categoryGroup.subcategories.putIfAbsent(item.subcategoryId!, () => SubCategoryGroup(id: item.subcategoryId!, name: item.subcategoryName!));
-              categoryGroup.subcategories[item.subcategoryId!]!.items.add(item);
-            } 
+        // *** DEBUG LOGGING START ***
+        print("--- Successfully Parsed Items: ${categoryItems.length} ---");
+        // *** DEBUG LOGGING END ***
+
+        // Group the successfully parsed items by SubCategory
+        final Map<int, SubCategoryGroupForDetails> grouped = {};
+        for (var item in categoryItems) {
+          // *** DEBUG LOGGING START ***
+          print("Grouping item ID: ${item.id}, Subcategory ID: ${item.subcategoryId}, Subcategory Name: ${item.subcategoryName}");
+          // *** DEBUG LOGGING END ***
+          if (item.subcategoryId != null && item.subcategoryName != null) {
+            // Ensure SubCategoryGroup exists
+            grouped.putIfAbsent(
+              item.subcategoryId!, 
+              () => SubCategoryGroupForDetails(id: item.subcategoryId!, name: item.subcategoryName!)
+            );
+            // Add item to the SubCategoryGroup
+            grouped[item.subcategoryId!]!.items.add(item);
+          } else {
+            // Optional: Handle items with category but no subcategory
+             print("Item ID ${item.id} has null subcategory ID or name. Skipping grouping.");
           }
         }
 
         setState(() {
-          _groupedItems = grouped;
+          _groupedItemsBySubCategory = grouped;
           _isLoading = false;
         });
       } else {
         setState(() {
           _isLoading = false;
-          _error = 'Failed to load items (Status code: ${response.statusCode})';
+          _error = 'Failed to load items for this category (Status code: ${response.statusCode})';
         });
         print('Error response body: ${response.body}');
       } 
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _error = 'An error occurred: $e';
+        _error = 'An error occurred during fetch/processing: $e'; // More specific error
       });
       print('Network or parsing error: $e');
     }
   }
 
-  Widget _buildSubCategorySection(SubCategoryGroup subCategoryGroup) {
-    // ... (rest of the widget remains the same) ...
+  Widget _buildSubCategorySection(SubCategoryGroupForDetails subCategoryGroup) {
+    // ... (rest of widget remains the same) ...
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
           onTap: () {
-            // Navigate to SubDetails (existing page for items in ONE subcategory)
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -180,14 +222,24 @@ class _AllItemsPageState extends State<AllItemsPage> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              subCategoryGroup.name,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).textTheme.titleMedium?.color,
-              ),
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                 Text(
+                  subCategoryGroup.name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.titleMedium?.color,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Theme.of(context).textTheme.titleMedium?.color?.withOpacity(0.6),
+                ),
+              ],
             ),
           ),
         ),
@@ -212,9 +264,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
                       padding: const EdgeInsets.only(right: 8.0),
                       child: GestureDetector(
                         onTap: () {
-                          // TODO: Navigate to ItemDetails (ensure ItemDetails accepts WardrobeItem data)
                           print('Navigate to details for item ID: ${item.id}');
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => ItemDetails(...)));
                         },
                         child: ClipRRect(
                            borderRadius: BorderRadius.circular(8.0),
@@ -246,64 +296,13 @@ class _AllItemsPageState extends State<AllItemsPage> {
     );
   }
 
-  Widget _buildCategorySection(CategoryGroup categoryGroup) {
-    // ... (rest of the widget remains the same) ...
-     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CategoryDetailsPage(
-                    categoryId: categoryGroup.id,
-                    categoryName: categoryGroup.name,
-                  ),
-                ),
-              );
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  categoryGroup.name,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (categoryGroup.subcategories.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Text('No subcategories or items found in ${categoryGroup.name}.'),
-          )
-        else
-          ...categoryGroup.subcategories.values.map((subCatGroup) => _buildSubCategorySection(subCatGroup)),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // ... (build method remains the same) ...
-     return Scaffold(
+    return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('All Items'),
+        title: Text(widget.categoryName),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         leading: IconButton(
@@ -313,7 +312,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh, color: Theme.of(context).iconTheme.color),
-            onPressed: _fetchAllItemsAndGroup,
+            onPressed: _fetchItemsForCategoryAndGroup,
             tooltip: 'Refresh Items',
           ),
         ],
@@ -337,15 +336,17 @@ class _AllItemsPageState extends State<AllItemsPage> {
       );
     }
 
-    if (_groupedItems.isEmpty) {
-      return const Center(
-        child: Text('No items found in your wardrobe. Add some!'),
+    if (_groupedItemsBySubCategory.isEmpty) {
+      return Center(
+        child: Text('No items found in the ${widget.categoryName} category.'),
       );
     }
 
     return ListView(
       padding: const EdgeInsets.all(16.0),
-      children: _groupedItems.values.map((categoryGroup) => _buildCategorySection(categoryGroup)).toList(),
+      children: _groupedItemsBySubCategory.values
+          .map((subCategoryGroup) => _buildSubCategorySection(subCategoryGroup))
+          .toList(),
     );
   }
 }

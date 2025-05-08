@@ -148,6 +148,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Fetch all wardrobe items for the user
   Future<void> _fetchWardrobeItems() async {
+    if (!mounted) return;
     setState(() {
       _isLoadingItems = true;
       _errorItems = '';

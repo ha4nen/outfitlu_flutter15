@@ -43,7 +43,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (_authToken.isNotEmpty) {
       await _fetchProfile();
     }
-    setState(() => _loading = false);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+    });
   }
 
   Future<void> _fetchProfile() async {

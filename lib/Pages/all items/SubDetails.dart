@@ -83,6 +83,7 @@ class _SubDetailsState extends State<SubDetails> {
   }
 
   Future<void> _fetchItemsBySubcategory() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = '';
@@ -207,7 +208,7 @@ class _SubDetailsState extends State<SubDetails> {
                   size: item.size ?? 'N/A',
                   season: item.season ?? 'N/A',
                   tags: item.tags?.split(',') ?? [],
-                  imageUrl: item.photoPath, item: File(''), // Provide a dummy File object
+                  item: File(''), // Provide a dummy File object
                   // item: File(''), // REMOVE dummy File object if ItemDetails is updated
                 ),
               ),

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_application_1/Pages/mesc/outfit_creation_page.dart';
 
 class MagicPage extends StatefulWidget {
   final VoidCallback onThemeChange;
@@ -60,6 +61,7 @@ class _MagicPageState extends State<MagicPage> {
                         child: FadeInAnimation(
                           child: GestureDetector(
                             onTap: () {
+                              if (!mounted) return;
                               setState(() {
                                 // Toggle selection
                                 selectedItemIndex = selectedItemIndex == index ? null : index;
@@ -136,9 +138,13 @@ class _MagicPageState extends State<MagicPage> {
                 duration: const Duration(milliseconds: 100),
                 child: ElevatedButton(
                   onPressed: () {
-                    // Add functionality for Make your own button
-                    print('Make your own button clicked');
-                  },
+  Navigator.of(context).push(
+    MaterialPageRoute(
+builder: (_) => const OutfitCreationPage(),
+    ),
+  );
+},
+
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     minimumSize: const Size(double.infinity, 50), // Full-width button

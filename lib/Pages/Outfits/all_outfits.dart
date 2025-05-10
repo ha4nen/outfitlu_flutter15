@@ -140,19 +140,34 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
                         ...outfitsBySeason.entries.map((entry) {
                           final season = entry.key;
                           final outfits = entry.value;
-                          final previewOutfits = outfits.take(5).toList();
-
+                         final sorted = List<Outfit>.from(outfits)..sort((a, b) => b.id.compareTo(a.id));
+                          final previewOutfits = sorted.take(4).toList();
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                season,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.secondary,
+                             GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => OutfitCategoryPage(
+                                          categoryName: season,
+                                          outfits: outfits,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    season,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.secondary,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
                                 ),
-                              ),
+
                               const SizedBox(height: 8),
                               previewOutfits.isEmpty
                                   ? Padding(

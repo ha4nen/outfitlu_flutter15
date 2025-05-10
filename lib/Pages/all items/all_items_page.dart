@@ -1,13 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart'; // Keep for subcategory item list navigation
-import 'package:flutter_application_1/Pages/all%20items/category_details_page.dart'; // Import the new page
+import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart';
+import 'package:flutter_application_1/Pages/all%20items/CategoryDetailsPage.dart';
+import 'package:flutter_application_1/Pages/Outfits/outfit.dart';
+import 'package:flutter_application_1/Pages/all items/ItemDetails.dart';
 
-// Re-use the WardrobeItem model (ensure consistent)
 class WardrobeItem {
-  final int id; // Keep ID non-nullable
+  final int id;
   final String? color;
   final String? size;
   final String? material;
@@ -15,7 +17,7 @@ class WardrobeItem {
   final String? tags;
   final String? photoPath;
   final int? categoryId;
-  final String? categoryName; 
+  final String? categoryName;
   final int? subcategoryId;
   final String? subcategoryName;
 
@@ -33,39 +35,34 @@ class WardrobeItem {
     this.subcategoryName,
   });
 
-  // *** UPDATED fromJson factory ***
   factory WardrobeItem.fromJson(Map<String, dynamic> json) {
     return WardrobeItem(
       id: json['id'] ?? 0,
-      color: json['color'] ?? 'Unknown',
-      size: json['size'] ?? 'Unknown',
-      material: json['material'] ?? 'Unknown',
-      season: json['season'] ?? 'All-Season',
-      tags: json['tags'] ?? '',
+      color: json['color'],
+      size: json['size'],
+      material: json['material'],
+      season: json['season'],
+      tags: json['tags'],
       photoPath: json['photo_path'] != null ? 'http://10.0.2.2:8000${json['photo_path']}' : null,
-      categoryId: json['category']?['id'], // Directly from Wardrobe table
-      categoryName: json['category']?['name'] ?? 'Unknown', // Directly from Wardrobe table
-      subcategoryId: json['subcategory']?['id'], // Directly from Wardrobe table
-      subcategoryName: json['subcategory']?['name'] ?? 'General', // Directly from Wardrobe table
+      categoryId: json['category']?['id'],
+      categoryName: json['category']?['name'],
+      subcategoryId: json['subcategory']?['id'],
+      subcategoryName: json['subcategory']?['name'],
     );
   }
 }
-
-// Structure to hold grouped items
-class CategoryGroup {
+class Category {
   final int id;
   final String name;
-  final Map<int, SubCategoryGroup> subcategories = {};
 
-  CategoryGroup({required this.id, required this.name});
-}
+  Category({required this.id, required this.name});
 
-class SubCategoryGroup {
-  final int id;
-  final String name;
-  final List<WardrobeItem> items = [];
-
-  SubCategoryGroup({required this.id, required this.name});
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'],
+      name: json['name'],
+    );
+  }
 }
 
 class AllItemsPage extends StatefulWidget {
@@ -76,277 +73,202 @@ class AllItemsPage extends StatefulWidget {
 }
 
 class _AllItemsPageState extends State<AllItemsPage> {
-  Map<int, CategoryGroup> _groupedItems = {};
-  bool _isLoading = true;
-  String _error = '';
+  Map<String, List<WardrobeItem>> groupedItems = {};
+  bool isLoading = true;
+  String error = '';
 
+  
   @override
   void initState() {
     super.initState();
-    _fetchAllItemsAndGroup();
+    fetchGroupedItems();
   }
 
-  Future<void> _fetchAllItemsAndGroup() async {
+  Future<void> fetchGroupedItems() async {
     setState(() {
-      _isLoading = true;
-      _error = '';
-      _groupedItems = {};
+      isLoading = true;
+      error = '';
     });
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-
-    if (token == null) {
-      setState(() {
-        _isLoading = false;
-        _error = 'Authentication token not found. Please log in.';
-      });
-      return;
-    }
-
     final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
 
     try {
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Token $token'},
-      );
-
+      final response = await http.get(url, headers: {'Authorization': 'Token $token'});
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        
-        // *** UPDATED item parsing with try-catch and filtering ***
-        final List<WardrobeItem> allItems = data.map((itemJson) {
-          try {
-            return WardrobeItem.fromJson(itemJson);
-          } catch (e) {
-            print('Failed to parse item on AllItemsPage: $itemJson, Error: $e');
-            return null; // Return null for items that fail parsing
-          }
-        })
-        .where((item) => item != null) // Filter out the nulls
-        .cast<WardrobeItem>()
-        .toList();
-        
-        final Map<int, CategoryGroup> grouped = {};
-        for (var item in allItems) {
-          if (item.categoryId != null && item.categoryName != null) {
-            grouped.putIfAbsent(item.categoryId!, () => CategoryGroup(id: item.categoryId!, name: item.categoryName!));
-            
-            if (item.subcategoryId != null && item.subcategoryName != null) {
-              final categoryGroup = grouped[item.categoryId!]!;
-              categoryGroup.subcategories.putIfAbsent(item.subcategoryId!, () => SubCategoryGroup(id: item.subcategoryId!, name: item.subcategoryName!));
-              categoryGroup.subcategories[item.subcategoryId!]!.items.add(item);
-            } 
+        final List<dynamic> data = jsonDecode(response.body);
+        final items = data.map((json) => WardrobeItem.fromJson(json)).toList();
+
+        final Map<String, List<WardrobeItem>> tempGrouped = {};
+        for (var item in items) {
+          if (item.categoryName != null) {
+            tempGrouped.putIfAbsent(item.categoryName!, () => []);
+            tempGrouped[item.categoryName!]!.add(item);
           }
         }
 
         setState(() {
-          _groupedItems = grouped;
-          _isLoading = false;
+          groupedItems = tempGrouped;
+          isLoading = false;
         });
       } else {
         setState(() {
-          _isLoading = false;
-          _error = 'Failed to load items (Status code: ${response.statusCode})';
+          isLoading = false;
+          error = 'Failed to fetch items (${response.statusCode})';
         });
-        print('Error response body: ${response.body}');
-      } 
+      }
     } catch (e) {
       setState(() {
-        _isLoading = false;
-        _error = 'An error occurred: $e';
+        isLoading = false;
+        error = 'An error occurred: $e';
       });
-      print('Network or parsing error: $e');
     }
-  }
-
-  Widget _buildSubCategorySection(SubCategoryGroup subCategoryGroup) {
-    // ... (rest of the widget remains the same) ...
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: () {
-            // Navigate to SubDetails (existing page for items in ONE subcategory)
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SubDetails(
-                  subcategoryName: subCategoryGroup.name,
-                  subcategoryId: subCategoryGroup.id, subCategory: '',
-                ),
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              subCategoryGroup.name,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).textTheme.titleMedium?.color,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        subCategoryGroup.items.isEmpty
-            ? Container(
-                height: 120,
-                alignment: Alignment.center,
-                child: Text(
-                  'No items in this subcategory.',
-                  style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                ),
-              )
-            : SizedBox(
-                height: 120,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: subCategoryGroup.items.length,
-                  itemBuilder: (context, index) {
-                    final item = subCategoryGroup.items[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          // TODO: Navigate to ItemDetails (ensure ItemDetails accepts WardrobeItem data)
-                          print('Navigate to details for item ID: ${item.id}');
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => ItemDetails(...)));
-                        },
-                        child: ClipRRect(
-                           borderRadius: BorderRadius.circular(8.0),
-                           child: item.photoPath != null
-                            ? Image.network(
-                                item.photoPath!,
-                                width: 100,
-                                height: 120,
-                                fit: BoxFit.cover,
-                                loadingBuilder: (context, child, progress) => 
-                                  progress == null ? child : Center(child: CircularProgressIndicator()),
-                                errorBuilder: (context, error, stack) => 
-                                  Container(width: 100, height: 120, color: Colors.grey[200], child: Icon(Icons.error)),
-                              )
-                            : Container(
-                                width: 100,
-                                height: 120,
-                                color: Colors.grey[300],
-                                child: Icon(Icons.image_not_supported, color: Colors.white),
-                              ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildCategorySection(CategoryGroup categoryGroup) {
-    // ... (rest of the widget remains the same) ...
-     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CategoryDetailsPage(
-                    categoryId: categoryGroup.id,
-                    categoryName: categoryGroup.name,
-                  ),
-                ),
-              );
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  categoryGroup.name,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (categoryGroup.subcategories.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: Text('No subcategories or items found in ${categoryGroup.name}.'),
-          )
-        else
-          ...categoryGroup.subcategories.values.map((subCatGroup) => _buildSubCategorySection(subCatGroup)),
-        const SizedBox(height: 16),
-      ],
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // ... (build method remains the same) ...
-     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    return Scaffold(
       appBar: AppBar(
         title: const Text('All Items'),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh, color: Theme.of(context).iconTheme.color),
-            onPressed: _fetchAllItemsAndGroup,
-            tooltip: 'Refresh Items',
-          ),
-        ],
       ),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    // ... (buildBody method remains the same) ...
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error.isNotEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text('Error: $_error', style: TextStyle(color: Colors.red)),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : error.isNotEmpty
+              ? Center(child: Text(error))
+              : groupedItems.isEmpty
+    ? const Center(
+        child: Text(
+          'No items in your wardrobe yet.',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
-      );
-    }
-
-    if (_groupedItems.isEmpty) {
-      return const Center(
-        child: Text('No items found in your wardrobe. Add some!'),
-      );
-    }
-
-    return ListView(
+      )
+   : RefreshIndicator(
+    onRefresh: fetchGroupedItems,
+    child: ListView(
       padding: const EdgeInsets.all(16.0),
-      children: _groupedItems.values.map((categoryGroup) => _buildCategorySection(categoryGroup)).toList(),
+      children: groupedItems.entries.map((entry) {
+                    final category = entry.key;
+                    final items = entry.value;
+                    final previewItems = items.take(4).toList();
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                       GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CategoryDetailsPage(
+          categoryId: items.first.categoryId!,
+          categoryName: category,
+        ),
+      ),
+    );
+  },
+  child: Padding(
+    padding: const EdgeInsets.only(bottom: 8.0),
+    child: Text(
+      category,
+      style: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.secondary,
+      ),
+    ),
+  ),
+),
+
+                        SizedBox(
+                          height: 130,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+itemCount: items.length > 4 ? 5 : previewItems.length,
+itemBuilder: (context, index) {
+  if (index < 4 && index < items.length) {
+    final item = items[index];
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ItemDetails(
+  itemId: item.id,
+  itemName: item.material ?? 'Unnamed',
+  color: item.color ?? 'N/A',
+  size: item.size ?? 'N/A',
+  material: item.material ?? 'N/A',
+  season: item.season ?? 'N/A',
+  tags: item.tags?.split(',') ?? [],
+  imageUrl: item.photoPath,
+  category: item.categoryName ?? 'N/A',
+  subcategory: item.subcategoryName ?? 'General',
+),
+
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: Container(
+            width: 100,
+            color: Theme.of(context).colorScheme.surface,
+            child: item.photoPath != null
+                ? Image.network(
+                    item.photoPath!,
+                    fit: BoxFit.cover,
+                    width: 100,
+                    height: 130,
+                    loadingBuilder: (context, child, progress) =>
+                        progress == null ? child : const Center(child: CircularProgressIndicator()),
+                    errorBuilder: (_, __, ___) =>
+                        const Center(child: Icon(Icons.broken_image)),
+                  )
+                : const Center(child: Icon(Icons.image_not_supported)),
+          ),
+        ),
+      ),
+    );
+  } else {
+    // Arrow tile
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CategoryDetailsPage(
+            categoryId: items.first.categoryId!,
+            categoryName: category,
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+        child: Container(
+          width: 100,
+          height: 130,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: const Center(
+            child: Icon(Icons.arrow_forward, size: 30, color: Colors.black54),
+          ),
+        ),
+      ),
     );
   }
 }
 
+
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    );
+                  }).toList(),
+    ),
+                ),
+    );
+  }
+}

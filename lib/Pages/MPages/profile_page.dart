@@ -501,70 +501,91 @@ itemBuilder: (context, index) {
   }
 
   // Helper method to build the items section
-  Widget _buildItemsSection() {
-    if (_isLoadingItems) {
-      return Container(
-        height: 150,
-        alignment: Alignment.center,
-        child: const CircularProgressIndicator()
-      );
-    }
-
-    if (_errorItems.isNotEmpty) {
-      return Container(
-        height: 150,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Text('Error loading items: $_errorItems', style: const TextStyle(color: Colors.red), textAlign: TextAlign.center,)
-      );
-    }
-
-    if (_wardrobeItems.isEmpty) {
-      return Container(
-        height: 150,
-        alignment: Alignment.center,
-        color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
-        child: Text(
-          'No items added yet.',
-          style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-        ),
-      );
-    }
-
-    // Display fetched items in a horizontal list
-    return SizedBox(
+Widget _buildItemsSection() {
+  if (_isLoadingItems) {
+    return Container(
       height: 150,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _wardrobeItems.length,
-        itemBuilder: (context, index) {
-          final item = _wardrobeItems[index];
-          return GestureDetector(
-            onTap: () {
-              // Navigate to ItemDetails - REMINDER: User must update ItemDetails
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ItemDetails(
-                    itemName: item.material ?? 'Item ${item.id}',
-                    color: item.color ?? 'N/A',
-                    size: item.size ?? 'N/A',
-                    season: item.season ?? 'N/A',
-                    tags: item.tags?.split(',') ?? [],
-                    imageUrl: item.photoPath, item: File(''), // Provide a dummy File object
-                    // item: File(''), // REMOVE dummy File object
+      alignment: Alignment.center,
+      child: const CircularProgressIndicator(),
+    );
+  }
+
+  if (_errorItems.isNotEmpty) {
+    return Container(
+      height: 150,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Text(
+        'Error loading items: \$_errorItems',
+        style: const TextStyle(color: Colors.red),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  final displayedItems = _wardrobeItems.take(4).toList();
+
+  return SizedBox(
+    height: 150,
+    child: ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: displayedItems.length + 1,
+      itemBuilder: (context, index) {
+        if (index == displayedItems.length) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AllItemsPage()),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: 100,
+                  height: 150,
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                  child: const Center(
+                    child: Icon(Icons.arrow_forward, size: 32, color: Colors.black54),
                   ),
                 ),
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0), // Adjust spacing
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: Container(
-                  width: 110, // Adjust width as needed
-                  color: Theme.of(context).colorScheme.surface, // Background for image frame
-                  child: item.photoPath != null
+              ),
+            ),
+          );
+        }
+
+        final item = displayedItems[index];
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ItemDetails(
+  itemId: item.id,
+  itemName: item.material ?? 'Unnamed',
+  color: item.color ?? 'N/A',
+  size: item.size ?? 'N/A',
+  material: item.material ?? 'N/A',
+  season: item.season ?? 'N/A',
+  tags: item.tags?.split(',') ?? [],
+  imageUrl: item.photoPath,
+  category: item.categoryName ?? 'N/A',
+  subcategory: item.subcategoryName ?? 'General',
+),
+
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Container(
+                width: 110,
+                color: Theme.of(context).colorScheme.surface,
+                child: item.photoPath != null
                     ? Image.network(
                         item.photoPath!,
                         fit: BoxFit.cover,
@@ -574,19 +595,17 @@ itemBuilder: (context, index) {
                           if (progress == null) return child;
                           return const Center(child: CircularProgressIndicator());
                         },
-                        errorBuilder: (context, error, stack) {
-                          print('Error loading image: ${item.photoPath}, Error: $error');
-                          return const Center(child: Icon(Icons.broken_image, color: Colors.grey));
-                        },
+                        errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
                       )
-                    : const Center(child: Icon(Icons.image_not_supported, color: Colors.grey)), // Placeholder
-                ),
+                    : const Center(child: Icon(Icons.image_not_supported)),
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
+          ),
+        );
+      },
+    ),
+  );
+}
+
 }
 

@@ -13,7 +13,9 @@ import 'package:flutter_application_1/Pages/all%20items/all_items_page.dart';
 import 'package:flutter_application_1/Pages/Outfits/all_outfits.dart';
 import 'package:flutter_application_1/Pages/all items/ItemDetails.dart'; // Ensure this is the correct path
 import 'package:flutter_application_1/Pages/mesc/edit_profile_page.dart';
-
+import 'package:flutter_application_1/Pages/Outfits/outfit.dart';
+import 'package:flutter_application_1/Pages/Outfits/outfit_service.dart';
+import 'package:flutter_application_1/Pages/Outfits/OutfitDetailsPage.dart'; // Ensure this is the correct path
 // Re-use the WardrobeItem model (ensure it's consistent with other pages)
 class WardrobeItem {
   final int id;
@@ -92,6 +94,10 @@ class _ProfilePageState extends State<ProfilePage> {
   String modestyPreference = '';
   String? profileImageUrl;
 
+List<Outfit> _recentOutfits = [];
+bool _loadingOutfits = true;
+String _errorOutfits = '';
+
   // State for wardrobe items
   List<WardrobeItem> _wardrobeItems = [];
   bool _isLoadingItems = true; // Separate loading state for items
@@ -105,6 +111,8 @@ class _ProfilePageState extends State<ProfilePage> {
     // _loadProfileImage(); // Keep if implemented
     fetchProfileData(); // Fetch profile details
     _fetchWardrobeItems(); // Fetch wardrobe items
+      _fetchOutfits(); // 👈 Add this
+
   }
 
   Future<void> fetchProfileData() async {
@@ -194,6 +202,28 @@ class _ProfilePageState extends State<ProfilePage> {
       print('Network or parsing error (items): $e');
     }
   }
+Future<void> _fetchOutfits() async {
+  setState(() {
+    _loadingOutfits = true;
+    _errorOutfits = '';
+  });
+
+  try {
+    final allOutfits = await fetchAllOutfits(); // use your outfit_service.dart
+    setState(() {
+final sorted = List<Outfit>.from(allOutfits)
+  ..sort((a, b) => b.id.compareTo(a.id)); // Sort descending by id
+_recentOutfits = sorted.take(4).toList();
+
+      _loadingOutfits = false;
+    });
+  } catch (e) {
+    setState(() {
+      _errorOutfits = 'Error fetching outfits: $e';
+      _loadingOutfits = false;
+    });
+  }
+}
 
   // REMOVED: _loadProfileImage (unless it was actually implemented)
 
@@ -344,18 +374,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () {
                         // TODO: Update AllOutfitsPage similarly if needed
                         Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AllOutfitsPage(
-                              // These arguments likely need updating too
-                              outfits: [], // Pass actual outfit data later
-                              summerOutfits: [],
-                              winterOutfits: [],
-                              fallOutfits: [],
-                              springOutfits: [],
-                            ),
-                          ),
-                        );
+  context,
+  MaterialPageRoute(
+    builder: (context) => const AllOutfitsPage(),
+  ),
+);
+
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -379,16 +403,89 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 // --- Outfits Section Body (Still uses placeholder/old logic) ---
                 // TODO: Update this section similarly to the Items section later
-                Container(
-                  height: 150,
-                  color: Theme.of(context).colorScheme.surface,
-                  child: Center(
-                    child: Text(
-                      'Outfits display needs update',
-                      style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
-                    ),
-                  ),
-                ),
+                _loadingOutfits
+    ? const Center(child: CircularProgressIndicator())
+    : _errorOutfits.isNotEmpty
+        ? Text(_errorOutfits, style: const TextStyle(color: Colors.red))
+        : Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    SizedBox(
+      height: 120,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _recentOutfits.length + 1,
+itemBuilder: (context, index) {
+  if (index == _recentOutfits.length) {
+    // The arrow tile
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AllOutfitsPage()),
+          );
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 100,
+            height: 120,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+            child: const Center(
+              child: Icon(Icons.arrow_forward, size: 32, color: Colors.black54),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  final outfit = _recentOutfits[index];
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OutfitDetailsPage(outfit: outfit),
+        ),
+      );
+    },
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 100,
+          color: Theme.of(context).colorScheme.surface,
+          child: outfit.photoPath != null
+              ? Image.network(
+                  outfit.photoPath!,
+                  fit: BoxFit.cover,
+                  width: 100,
+                  height: 120,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                )
+              : const Center(child: Icon(Icons.image_not_supported)),
+        ),
+      ),
+    ),
+  );
+}
+
+      ),
+    ),
+   
+
+  ],
+)
+
+
                 // Original Outfits ListView (commented out, needs update)
                 /*
                 widget.items.isEmpty // This logic is now incorrect

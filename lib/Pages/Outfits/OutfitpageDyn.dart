@@ -1,11 +1,10 @@
-// ignore_for_file: file_names
-
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'outfit.dart';
+import 'package:flutter_application_1/Pages/Outfits/OutfitDetailsPage.dart'; // This is the detail page we'll create next
 
 class OutfitCategoryPage extends StatelessWidget {
   final String categoryName;
-  final List<File> outfits;
+  final List<Outfit> outfits;
 
   const OutfitCategoryPage({
     super.key,
@@ -15,17 +14,19 @@ class OutfitCategoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('$categoryName Outfits'),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Dynamic app bar color
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
       ),
       body: outfits.isEmpty
           ? Center(
               child: Text(
                 'No outfits available for $categoryName',
-                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color),
+                style: TextStyle(color: theme.textTheme.bodyLarge?.color),
               ),
             )
           : GridView.builder(
@@ -37,17 +38,32 @@ class OutfitCategoryPage extends StatelessWidget {
               ),
               itemCount: outfits.length,
               itemBuilder: (context, index) {
+                final outfit = outfits[index];
                 return GestureDetector(
                   onTap: () {
-                    // Handle outfit selection or preview
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OutfitDetailsPage(outfit: outfit),
+                      ),
+                    );
                   },
                   child: Stack(
                     children: [
-                      Image.file(
-                        outfits[index],
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          outfit.photoPath ?? '',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (_, __, ___) =>
+                              const Center(child: Icon(Icons.broken_image)),
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(child: CircularProgressIndicator());
+                          },
+                        ),
                       ),
                       Positioned(
                         bottom: 8,

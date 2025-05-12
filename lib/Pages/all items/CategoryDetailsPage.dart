@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'category.dart';
 import 'wardrobe_service.dart';
 import 'all_items_page.dart' as all_items;
+import 'ItemDetails.dart' as details;
+import 'SubCategoryPage.dart';
 
 class SubCategoryGroup {
   final int id;
@@ -105,58 +107,111 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
   }
 
   Widget _buildSubCategorySection(SubCategoryGroup group) {
+    final previewItems = group.items.take(4).toList();
+    final hasMore = group.items.length > 4;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => SubDetails(
-                subcategoryId: group.id,
-                subcategoryName: group.name,
-                subCategory: '',
-              ),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              group.name,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-            ),
-          ),
-        ),
+  onTap: () => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => SubDetails(
+        subcategoryId: group.id,
+        subcategoryName: group.name,
+        subCategory: '',
+      ),
+    ),
+  ),
+  child: Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: Text(
+      group.name,
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.secondary,
+        decoration: TextDecoration.underline,
+      ),
+    ),
+  ),
+),
+
+
+
         SizedBox(
-          height: 120,
+          height: 130,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: group.items.length,
+            itemCount: previewItems.length + 1,
             itemBuilder: (context, index) {
-              final item = group.items[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: item.photoPath != null
-                      ? Image.network(
-                          item.photoPath!,
-                          width: 100,
-                          height: 120,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          width: 100,
-                          height: 120,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.image_not_supported),
-                        ),
-                ),
-              );
+              if (index < previewItems.length) {
+                final item = previewItems[index];
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => details.ItemDetails(
+                        itemId: item.id,
+                        itemName: item.material ?? 'Unnamed',
+                        color: item.color ?? 'N/A',
+                        size: item.size ?? 'N/A',
+                        material: item.material ?? 'N/A',
+                        season: item.season ?? 'N/A',
+                        tags: item.tags?.split(',') ?? [],
+                        imageUrl: item.photoPath,
+                        category: item.categoryName ?? 'N/A',
+                        subcategory: item.subcategoryName ?? 'General',
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: item.photoPath != null
+                          ? Image.network(
+                              item.photoPath!,
+                              width: 100,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              width: 100,
+                              height: 120,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.image_not_supported),
+                            ),
+                    ),
+                  ),
+                );
+              } else {
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SubDetails(
+                        subcategoryId: group.id,
+                        subcategoryName: group.name,
+                        subCategory: '',
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Container(
+                      width: 100,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.arrow_forward, size: 30, color: Colors.black54),
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ),

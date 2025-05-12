@@ -3,6 +3,8 @@ import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'all_items_page.dart' as all_items;
+import 'ItemDetails.dart';
 
 class SubCategoryPage extends StatefulWidget {
   final int categoryId;
@@ -17,15 +19,15 @@ class SubCategoryPage extends StatefulWidget {
 class _SubCategoryPageState extends State<SubCategoryPage> {
   bool isLoading = true;
   String error = '';
-  List<Map<String, dynamic>> subcategories = [];
+  List<all_items.WardrobeItem> items = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchSubCategories();
+    _fetchItems();
   }
 
-  Future<void> _fetchSubCategories() async {
+  Future<void> _fetchItems() async {
     setState(() {
       isLoading = true;
       error = '';
@@ -42,24 +44,25 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/categories/${widget.categoryId}/subcategories/');
+    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
 
     try {
-      final response = await http.get(
-        url,
-        headers: {'Authorization': 'Token $token'},
-      );
-
+      final response = await http.get(url, headers: {'Authorization': 'Token $token'});
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        final filtered = data
+            .map((json) => all_items.WardrobeItem.fromJson(json))
+            .where((item) => item.categoryId == widget.categoryId)
+            .toList();
+
         setState(() {
-          subcategories = data.cast<Map<String, dynamic>>();
+          items = filtered;
           isLoading = false;
         });
       } else {
         setState(() {
           isLoading = false;
-          error = 'Failed to load subcategories: ${response.statusCode}';
+          error = 'Failed to load items: ${response.statusCode}';
         });
       }
     } catch (e) {
@@ -78,25 +81,46 @@ class _SubCategoryPageState extends State<SubCategoryPage> {
           ? const Center(child: CircularProgressIndicator())
           : error.isNotEmpty
               ? Center(child: Text(error))
-              : ListView.builder(
-                  itemCount: subcategories.length,
+              : GridView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                  ),
+                  itemCount: items.length,
                   itemBuilder: (context, index) {
-                    final sub = subcategories[index];
-                    return ListTile(
-                      title: Text(sub['name'] ?? 'Unknown'),
-                      trailing: const Icon(Icons.arrow_forward_ios),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SubDetails(
-                              subcategoryId: sub['id'],
-                              subcategoryName: sub['name'] ?? 'Unknown',
-                              subCategory: '',
-                            ),
+                    final item = items[index];
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ItemDetails(
+                            itemId: item.id,
+                            itemName: item.material ?? 'Unnamed',
+                            color: item.color ?? 'N/A',
+                            size: item.size ?? 'N/A',
+                            material: item.material ?? 'N/A',
+                            season: item.season ?? 'N/A',
+                            tags: item.tags?.split(',') ?? [],
+                            imageUrl: item.photoPath,
+                            category: item.categoryName ?? 'N/A',
+                            subcategory: item.subcategoryName ?? 'General',
                           ),
-                        );
-                      },
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: item.photoPath != null
+                            ? Image.network(
+                                item.photoPath!,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.image_not_supported),
+                              ),
+                      ),
                     );
                   },
                 ),

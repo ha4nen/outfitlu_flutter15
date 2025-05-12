@@ -1,13 +1,15 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_1/Pages/all%20items/all_items_page.dart'; // For WardrobeItem model reuse
+import 'all_items_page.dart' as all_items;
+import 'ItemDetails.dart';
 
 class SubDetails extends StatefulWidget {
   final int subcategoryId;
   final String subcategoryName;
-  final String subCategory; // May be used for additional filtering or display
+  final String subCategory;
 
   const SubDetails({
     super.key,
@@ -21,7 +23,7 @@ class SubDetails extends StatefulWidget {
 }
 
 class _SubDetailsState extends State<SubDetails> {
-  List<WardrobeItem> items = [];
+  List<all_items.WardrobeItem> items = [];
   bool isLoading = true;
   String error = '';
 
@@ -57,7 +59,7 @@ class _SubDetailsState extends State<SubDetails> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final filtered = data
-            .map((json) => WardrobeItem.fromJson(json))
+            .map((json) => all_items.WardrobeItem.fromJson(json))
             .where((item) => item.subcategoryId == widget.subcategoryId)
             .toList();
 
@@ -85,7 +87,7 @@ class _SubDetailsState extends State<SubDetails> {
 
     if (token == null) return;
 
-    final url =     Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/'); // ✅ Corrected here
+    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/');
 
     final response = await http.delete(url, headers: {
       'Authorization': 'Token $token',
@@ -123,6 +125,23 @@ class _SubDetailsState extends State<SubDetails> {
                       itemBuilder: (context, index) {
                         final item = items[index];
                         return GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ItemDetails(
+                                itemId: item.id,
+                                itemName: item.material ?? 'Unnamed',
+                                color: item.color ?? 'N/A',
+                                size: item.size ?? 'N/A',
+                                material: item.material ?? 'N/A',
+                                season: item.season ?? 'N/A',
+                                tags: item.tags?.split(',') ?? [],
+                                imageUrl: item.photoPath,
+                                category: item.categoryName ?? 'N/A',
+                                subcategory: item.subcategoryName ?? 'General',
+                              ),
+                            ),
+                          ),
                           onLongPress: () => showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(

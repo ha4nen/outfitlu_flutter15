@@ -181,7 +181,7 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
                                       height: 130,
                                       child: ListView.builder(
                                         scrollDirection: Axis.horizontal,
-                                        itemCount: outfits.length > 5 ? previewOutfits.length + 1 : previewOutfits.length,
+                                        itemCount: outfits.isNotEmpty ? previewOutfits.length + 1 : 0,
                                         itemBuilder: (context, index) {
                                           if (index < previewOutfits.length) {
                                             final outfit = previewOutfits[index];

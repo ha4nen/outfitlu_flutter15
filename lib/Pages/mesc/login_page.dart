@@ -54,24 +54,26 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  InputDecoration buildInputDecoration(String label) {
+  InputDecoration buildInputDecoration(String label, BuildContext context) {
+    final theme = Theme.of(context);
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Color(0xFF222222)),
+      labelStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
-      fillColor: const Color(0xFFF1F0FF),
+      fillColor: theme.colorScheme.surfaceVariant,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         title: const Text('Login', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF936DFF),
+        backgroundColor: theme.colorScheme.primary,
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -82,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 TextFormField(
                   controller: emailController,
-                  decoration: buildInputDecoration('Email or Username'),
+                  decoration: buildInputDecoration('Email or Username', context),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Enter your Email or Username' : null,
                 ),
@@ -90,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextFormField(
                   controller: passwordController,
                   obscureText: true,
-                  decoration: buildInputDecoration('Password'),
+                  decoration: buildInputDecoration('Password', context),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Enter your password' : null,
                 ),
@@ -102,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: ElevatedButton(
                           onPressed: () => loginUser(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF936DFF),
+                            backgroundColor: theme.colorScheme.primary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -131,16 +133,16 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     );
                   },
-                  child: const Text(
+                  child: Text(
                     'Forgot Password?',
-                    style: TextStyle(color: Color(0xFFFF5C58)),
+                    style: TextStyle(color: theme.colorScheme.error),
                   ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/register'),
-                  child: const Text(
+                  child: Text(
                     'Create New Account',
-                    style: TextStyle(color: Color(0xFF936DFF)),
+                    style: TextStyle(color: theme.colorScheme.primary),
                   ),
                 ),
               ],

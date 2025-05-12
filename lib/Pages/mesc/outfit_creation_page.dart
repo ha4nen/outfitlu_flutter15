@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, avoid_print, deprecated_member_use, unnecessary_to_list_in_spreads, unused_import, unnecessary_import
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -7,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+File? _combinedImageForPost;
 
 class OutfitCreationPage extends StatefulWidget {
   const OutfitCreationPage({super.key});
@@ -147,6 +150,7 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
       );
       return;
     }
+    _combinedImageForPost = combinedImage; // ← Save for reuse
 
     final request = http.MultipartRequest(
       'POST',
@@ -163,13 +167,14 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
       request.fields['selected_items_ids[$i]'] = selectedItems[i]['id'].toString();
     }
 
-    request.files.add(await http.MultipartFile.fromPath(
-      'photo_path',
-      combinedImage.path,
-    ));
+    request.files.add(await http.MultipartFile.fromPath('photo_path', combinedImage.path));
 
     final response = await request.send();
     if (response.statusCode == 201) {
+      final responseBody = await response.stream.bytesToString();
+      final outfitData = jsonDecode(responseBody);
+      final outfitId = outfitData['id'];
+
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -177,8 +182,16 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
           content: Text('Outfit with ${selectedItems.length} item(s) saved.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-              child: const Text('Done'),
+              onPressed: () async {
+                Navigator.of(context).pop(); // close first dialog
+                final shouldPost = await _askToPostOutfit();
+                if (shouldPost == true) {
+                  await _promptCaptionAndPost(outfitId);
+                } else {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                }
+              },
+              child: const Text('OK'),
             )
           ],
         ),
@@ -192,15 +205,90 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
     }
   }
 
-  Widget _buildLabel(String label) => Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 4),
-        child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+  Future<bool?> _askToPostOutfit() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Post Outfit?"),
+        content: const Text("Do you want to post this outfit to your feed?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("No")),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Yes")),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _promptCaptionAndPost(int outfitId) async {
+  final TextEditingController captionController = TextEditingController();
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Add Caption"),
+      content: TextField(
+        controller: captionController,
+        decoration: const InputDecoration(hintText: "Enter caption for your post"),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Post")),
+      ],
+    ),
+  );
+
+  if (confirmed == true) {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final combinedImage = _combinedImageForPost;
+
+    if (token == null || combinedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Missing auth or image.")),
       );
+      return;
+    }
+
+    final postRequest = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://10.0.2.2:8000/api/feed/posts/create/'),
+    );
+    postRequest.headers['Authorization'] = 'Token $token';
+    postRequest.fields['outfit_id'] = outfitId.toString();
+    postRequest.fields['caption'] = captionController.text.trim();
+
+    final response = await postRequest.send();
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Post created successfully!")),
+      );
+    } else {
+      final respStr = await response.stream.bytesToString();
+      print("❌ Failed to post outfit: $respStr");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to post outfit: $respStr")),
+      );
+    }
+
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Outfit')),
+      appBar: AppBar(
+        title: const Text(
+          'Create Outfit',
+          style: TextStyle(color: ui.Color.fromARGB(255, 255, 255, 255)), // Changed to black
+        ),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -212,13 +300,13 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                   TextField(
                     controller: _descriptionController,
                     maxLines: 3,
-                    style: const TextStyle(color: Colors.black),
+                    style: const TextStyle(color: Colors.black), // Changed to black
                     decoration: InputDecoration(
                       labelText: 'Enter outfit description',
-                      labelStyle: const TextStyle(color: Colors.black87),
-                      border: OutlineInputBorder(),
+                      labelStyle: const TextStyle(color: Colors.black), // Changed to black
+                      border: const OutlineInputBorder(),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: colorScheme.surfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -228,14 +316,17 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                     items: seasonOptions.map((season) {
                       return DropdownMenuItem<String>(
                         value: season,
-                        child: Text(season, style: const TextStyle(color: Colors.black)),
+                        child: Text(
+                          season,
+                          style: const TextStyle(color: Colors.black), // Changed to black
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) => setState(() => selectedSeason = value!),
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: colorScheme.surfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -244,17 +335,20 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                     controller: _tagsController,
                     decoration: InputDecoration(
                       labelText: 'Type or tap a suggestion',
-                      labelStyle: const TextStyle(color: Colors.black87),
-                      border: OutlineInputBorder(),
+                      labelStyle: const TextStyle(color: Colors.black), // Changed to black
+                      border: const OutlineInputBorder(),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: colorScheme.surfaceVariant,
                     ),
                   ),
                   Wrap(
                     spacing: 8,
                     children: tagSuggestions.map((s) => ActionChip(
-                      label: Text(s, style: const TextStyle(color: Colors.black)),
-                      backgroundColor: Colors.grey.shade200,
+                      label: Text(
+                        s,
+                        style: const TextStyle(color: Colors.black), // Changed to black
+                      ),
+                      backgroundColor: colorScheme.secondaryContainer,
                       onPressed: () {
                         final currentText = _tagsController.text.trim();
                         final tags = currentText.isEmpty
@@ -270,16 +364,20 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
+                          border: Border.all(color: colorScheme.outline),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Checkbox(
                           value: isHijabFriendly,
                           onChanged: (val) => setState(() => isHijabFriendly = val!),
+                          activeColor: colorScheme.primary,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Text('Is Hijab Friendly', style: TextStyle(color: Colors.black)),
+                      const Text(
+                        'Is Hijab Friendly',
+                        style: TextStyle(color: Colors.black), // Changed to black
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -289,7 +387,13 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(category, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        Text(
+                          category,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black, // Changed to black
+                          ),
+                        ),
                         const SizedBox(height: 6),
                         SizedBox(
                           height: 120,
@@ -310,7 +414,7 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                                   width: 100,
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: isSelected ? Colors.purple : Colors.grey,
+                                      color: isSelected ? colorScheme.primary : colorScheme.outline,
                                       width: 2,
                                     ),
                                   ),
@@ -329,7 +433,14 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                     child: ElevatedButton.icon(
                       onPressed: _saveOutfit,
                       icon: const Icon(Icons.save),
-                      label: const Text('Save Outfit'),
+                      label: const Text(
+                        'Save Outfit',
+                        style: TextStyle(color: ui.Color.fromARGB(255, 193, 193, 193)), // Changed to black
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                      ),
                     ),
                   )
                 ],
@@ -337,4 +448,15 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
             ),
     );
   }
+
+  Widget _buildLabel(String label) => Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 4),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black, // Changed to black
+          ),
+        ),
+      );
 }

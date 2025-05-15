@@ -7,24 +7,26 @@ import 'category.dart';
 import 'wardrobe_service.dart';
 import 'all_items_page.dart' as all_items;
 import 'ItemDetails.dart' as details;
-import 'SubCategoryPage.dart';
 
 class SubCategoryGroup {
   final int id;
   final String name;
   final List<all_items.WardrobeItem> items;
+  final int? userId;
 
-  SubCategoryGroup({required this.id, required this.name}) : items = [];
+  SubCategoryGroup({required this.id, required this.name,  this.userId,}) : items = [];
 }
 
 class CategoryDetailsPage extends StatefulWidget {
   final int categoryId;
   final String categoryName;
+  final int? userId;
 
   const CategoryDetailsPage({
     super.key,
     required this.categoryId,
     required this.categoryName,
+    this.userId,
   });
 
   @override
@@ -60,7 +62,9 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+    final url = widget.userId != null
+      ? Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/')
+      : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
     try {
       final response = await http.get(url, headers: {
         'Authorization': 'Token $token',
@@ -121,6 +125,7 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
         subcategoryId: group.id,
         subcategoryName: group.name,
         subCategory: '',
+        userId: widget.userId, 
       ),
     ),
   ),
@@ -163,6 +168,7 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
                         imageUrl: item.photoPath,
                         category: item.categoryName ?? 'N/A',
                         subcategory: item.subcategoryName ?? 'General',
+                        userId: item.userId,
                       ),
                     ),
                   ),
@@ -195,6 +201,7 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
                         subcategoryId: group.id,
                         subcategoryName: group.name,
                         subCategory: '',
+                        userId: widget.userId, // 👈 pass it down
                       ),
                     ),
                   ),

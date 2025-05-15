@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'outfit.dart';
 import 'outfit_service.dart';
 
 class OutfitDetailsPage extends StatelessWidget {
   final Outfit outfit;
-
-  const OutfitDetailsPage({super.key, required this.outfit});
+  final int? userId;
+  const OutfitDetailsPage({super.key, required this.outfit, this.userId});
 
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -90,21 +91,34 @@ class OutfitDetailsPage extends StatelessWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 24.0),
-            child: Center(
-              child: ElevatedButton.icon(
-                onPressed: () => _confirmDelete(context),
-                icon: const Icon(Icons.delete),
-                label: const Text('Delete Outfit'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-            ),
+         FutureBuilder<int?>(
+  future: SharedPreferences.getInstance().then((prefs) => prefs.getInt('user_id')),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) return const SizedBox.shrink();
+
+    final loggedInUserId = snapshot.data;
+    final isOwner = loggedInUserId == outfit.userId;
+
+    if (!isOwner) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Center(
+        child: ElevatedButton.icon(
+          onPressed: () => _confirmDelete(context),
+          icon: const Icon(Icons.delete),
+          label: const Text('Delete Outfit'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
+        ),
+      ),
+    );
+  },
+),
+
         ],
       ),
     );

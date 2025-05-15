@@ -29,6 +29,7 @@ class WardrobeItem {
   final String? categoryName; 
   final int? subcategoryId;
   final String? subcategoryName;
+  final int? userId; // <-- Added userId field
 
   WardrobeItem({
     required this.id,
@@ -42,6 +43,7 @@ class WardrobeItem {
     this.categoryName,
     this.subcategoryId,
     this.subcategoryName,
+    this.userId, // <-- Added userId to constructor
   });
 
   factory WardrobeItem.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class WardrobeItem {
     String? subcatName = json['subcategory']?['name'];
     int? catId = json['category']?['id'];
     int? subcatId = json['subcategory']?['id'];
+    int? userId = json['user'] is int ? json['user'] : (json['user']?['id']); // Try both int or nested object
 
     return WardrobeItem(
       id: json['id'],
@@ -62,6 +65,7 @@ class WardrobeItem {
       categoryName: catName,
       subcategoryId: subcatId,
       subcategoryName: subcatName,
+      userId: userId, // <-- Assign userId
     );
   }
 }
@@ -76,10 +80,11 @@ Future<String?> getToken() async {
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback onThemeChange;
-  // REMOVED: final List<File> items; 
+  final List<File>? items; 
+  final int? userId; // 👈 added userId
 
   // Update constructor: remove 'items' parameter
-  const ProfilePage({super.key, required this.onThemeChange, required List<File> items});
+  const ProfilePage({super.key, required this.onThemeChange, this.items, this.userId,});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -100,19 +105,16 @@ String _errorOutfits = '';
 
   // State for wardrobe items
   List<WardrobeItem> _wardrobeItems = [];
-  bool _isLoadingItems = true; // Separate loading state for items
+  bool _isLoadingItems = true; 
   String _errorItems = '';
 
-  // REMOVED: _isEditing and _selectedItems related to File list
 
   @override
   void initState() {
     super.initState();
-    // _loadProfileImage(); // Keep if implemented
-    fetchProfileData(); // Fetch profile details
-    _fetchWardrobeItems(); // Fetch wardrobe items
-      _fetchOutfits(); // 👈 Add this
-
+    fetchProfileData(); 
+    _fetchWardrobeItems(); 
+    _fetchOutfits(); 
   }
 
   Future<void> fetchProfileData() async {
@@ -121,21 +123,21 @@ String _errorOutfits = '';
 
     if (token == null) {
       print('No token found. User might not be logged in.');
-      // Optionally set an error state for the profile section
       return;
     }
 
+     final url = widget.userId == null
+        ? Uri.parse('http://10.0.2.2:8000/api/profile/')
+        : Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/profile/');
+
     try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8000/api/profile/'), // Use your actual profile endpoint
-        headers: {'Authorization': 'Token $token'},
-      );
+      final response = await http.get(url, headers: {'Authorization': 'Token $token'});
+
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          // Assuming UserProfileSerializer returns username at the top level now
-          username = data['username'] ?? 'unknown'; 
+          username = data['user']?['username'] ?? data['username'] ?? 'unknown';
           bio = data['bio'] ?? '';
           location = data['location'] ?? '';
           gender = data['gender'] ?? '';
@@ -146,11 +148,9 @@ String _errorOutfits = '';
         });
       } else {
         print('Failed to load profile data: ${response.statusCode}');
-        // Optionally set an error state for the profile section
       }
     } catch (e) {
        print('Error fetching profile data: $e');
-       // Optionally set an error state for the profile section
     }
   }
 
@@ -173,7 +173,9 @@ String _errorOutfits = '';
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+final url = widget.userId == null
+    ? Uri.parse('http://10.0.2.2:8000/api/wardrobe/')
+    : Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/');
 
     try {
       final response = await http.get(
@@ -209,14 +211,41 @@ Future<void> _fetchOutfits() async {
   });
 
   try {
-    final allOutfits = await fetchAllOutfits(); // use your outfit_service.dart
-    setState(() {
-final sorted = List<Outfit>.from(allOutfits)
-  ..sort((a, b) => b.id.compareTo(a.id)); // Sort descending by id
-_recentOutfits = sorted.take(4).toList();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
 
-      _loadingOutfits = false;
+    if (token == null) {
+      setState(() {
+        _loadingOutfits = false;
+        _errorOutfits = 'Authentication token not found.';
+      });
+      return;
+    }
+
+    final url = widget.userId == null
+        ? Uri.parse('http://10.0.2.2:8000/api/outfits/')
+        : Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/outfits/');
+
+    final response = await http.get(url, headers: {
+      'Authorization': 'Token $token',
     });
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+
+      final sorted = data.map((json) => Outfit.fromJson(json)).toList()
+        ..sort((a, b) => b.id.compareTo(a.id));
+
+      setState(() {
+        _recentOutfits = sorted.take(4).toList();
+        _loadingOutfits = false;
+      });
+    } else {
+      setState(() {
+        _errorOutfits = 'Failed to load outfits (Status code: ${response.statusCode})';
+        _loadingOutfits = false;
+      });
+    }
   } catch (e) {
     setState(() {
       _errorOutfits = 'Error fetching outfits: $e';
@@ -224,6 +253,7 @@ _recentOutfits = sorted.take(4).toList();
     });
   }
 }
+
 
   // REMOVED: _loadProfileImage (unless it was actually implemented)
 
@@ -234,24 +264,24 @@ _recentOutfits = sorted.take(4).toList();
         title: const Text('Profile'),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.settings,
-              color: Theme.of(context).brightness == Brightness.light
-                  ? Colors.white
-                  : Theme.of(context).iconTheme.color,
-            ),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) =>
-                      SettingsPage(onThemeChange: widget.onThemeChange),
-                ),
-              );
-            },
-          ),
-        ],
+        actions: widget.userId == null
+          ? [
+              IconButton(
+                icon: Icon(Icons.settings,
+                    color: Theme.of(context).brightness == Brightness.light
+                        ? Colors.white
+                        : Theme.of(context).iconTheme.color),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SettingsPage(onThemeChange: widget.onThemeChange),
+                    ),
+                  );
+                },
+              ),
+            ]
+          : [],
+
       ),
       body: RefreshIndicator( // Optional: Add pull-to-refresh
         onRefresh: () async {
@@ -309,21 +339,23 @@ _recentOutfits = sorted.take(4).toList();
                   ),
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    final updated = await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => EditProfilePage()),
-                    );
-                    if (updated == true) {
-                      await fetchProfileData(); // Refresh profile after editing
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                if (widget.userId == null)
+                  ElevatedButton(
+                    onPressed: () async {
+                      final updated = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => EditProfilePage()),
+                      );
+                      if (updated == true) {
+                        await fetchProfileData(); // Refresh profile after editing
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                    child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
                   ),
-                  child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-                ),
+
                 Divider(color: Theme.of(context).dividerColor),
                 
                 // --- Items Section Header (Navigate to modified AllItemsPage) ---
@@ -336,7 +368,7 @@ _recentOutfits = sorted.take(4).toList();
                           context,
                           MaterialPageRoute(
                             // Navigate to the modified AllItemsPage (no args needed)
-                            builder: (context) => const AllItemsPage(), 
+                            builder: (context) =>  AllItemsPage(userId: widget.userId), 
                           ),
                         );
                       },
@@ -376,7 +408,7 @@ _recentOutfits = sorted.take(4).toList();
                         Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) => const AllOutfitsPage(),
+    builder: (context) =>  AllOutfitsPage(userId: widget.userId),
   ),
 );
 
@@ -563,17 +595,18 @@ Widget _buildItemsSection() {
               context,
               MaterialPageRoute(
                 builder: (context) => ItemDetails(
-  itemId: item.id,
-  itemName: item.material ?? 'Unnamed',
-  color: item.color ?? 'N/A',
-  size: item.size ?? 'N/A',
-  material: item.material ?? 'N/A',
-  season: item.season ?? 'N/A',
-  tags: item.tags?.split(',') ?? [],
-  imageUrl: item.photoPath,
-  category: item.categoryName ?? 'N/A',
-  subcategory: item.subcategoryName ?? 'General',
-),
+                  itemId: item.id,
+                  itemName: item.material ?? 'Unnamed',
+                  color: item.color ?? 'N/A',
+                  size: item.size ?? 'N/A',
+                  material: item.material ?? 'N/A',
+                  season: item.season ?? 'N/A',
+                  tags: item.tags?.split(',') ?? [],
+                  imageUrl: item.photoPath,
+                  category: item.categoryName ?? 'N/A',
+                  subcategory: item.subcategoryName ?? 'General',
+                  userId: item.userId,
+                ),
 
               ),
             );

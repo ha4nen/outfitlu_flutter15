@@ -10,12 +10,14 @@ class SubDetails extends StatefulWidget {
   final int subcategoryId;
   final String subcategoryName;
   final String subCategory;
+  final int? userId; 
 
   const SubDetails({
     super.key,
     required this.subcategoryId,
     required this.subcategoryName,
     required this.subCategory,
+    this.userId
   });
 
   @override
@@ -50,7 +52,9 @@ class _SubDetailsState extends State<SubDetails> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+final url = widget.userId != null
+    ? Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/')
+    : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
     try {
       final response = await http.get(url, headers: {
         'Authorization': 'Token $token',
@@ -87,7 +91,9 @@ class _SubDetailsState extends State<SubDetails> {
 
     if (token == null) return;
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/');
+final url = widget.userId != null
+  ? Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/')
+  : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
 
     final response = await http.delete(url, headers: {
       'Authorization': 'Token $token',
@@ -139,6 +145,7 @@ class _SubDetailsState extends State<SubDetails> {
                                 imageUrl: item.photoPath,
                                 category: item.categoryName ?? 'N/A',
                                 subcategory: item.subcategoryName ?? 'General',
+                                userId: item.userId,
                               ),
                             ),
                           ),

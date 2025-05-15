@@ -21,6 +21,7 @@ class WardrobeItem {
   final String? categoryName;
   final int? subcategoryId;
   final String? subcategoryName;
+  final int? userId;
 
   WardrobeItem({
     required this.id,
@@ -34,6 +35,7 @@ class WardrobeItem {
     this.categoryName,
     this.subcategoryId,
     this.subcategoryName,
+    this.userId,
   });
 
   factory WardrobeItem.fromJson(Map<String, dynamic> json) {
@@ -49,12 +51,14 @@ class WardrobeItem {
       categoryName: json['category']?['name'],
       subcategoryId: json['subcategory']?['id'],
       subcategoryName: json['subcategory']?['name'],
+      userId: json['user'], 
     );
   }
 }
 
 class AllItemsPage extends StatefulWidget {
-  const AllItemsPage({super.key});
+  final int? userId;
+  const AllItemsPage({super.key, this.userId});
 
   @override
   State<AllItemsPage> createState() => _AllItemsPageState();
@@ -81,7 +85,10 @@ class _AllItemsPageState extends State<AllItemsPage> {
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    final url = Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+
+    final url = widget.userId != null
+       ? Uri.parse('http://10.0.2.2:8000/api/wardrobe/?user_id=${widget.userId}')
+       : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
 
     try {
       final response = await http.get(url, headers: {'Authorization': 'Token $token'});
@@ -176,6 +183,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
                                       builder: (_) => CategoryDetailsPage(
                                         categoryId: items.first.categoryId!,
                                         categoryName: category,
+                                        userId: widget.userId,
                                       ),
                                     ),
                                   );
@@ -215,6 +223,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
                                               imageUrl: item.photoPath,
                                               category: item.categoryName ?? 'N/A',
                                               subcategory: item.subcategoryName ?? 'General',
+                                              userId: item.userId,
                                             ),
                                           ),
                                         ),

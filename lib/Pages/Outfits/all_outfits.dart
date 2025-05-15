@@ -5,7 +5,8 @@ import 'OutfitDetailsPage.dart';
 import 'OutfitPageDyn.dart';
 
 class AllOutfitsPage extends StatefulWidget {
-  const AllOutfitsPage({super.key});
+  final int? userId;
+  const AllOutfitsPage({super.key,this.userId});
 
   @override
   State<AllOutfitsPage> createState() => _AllOutfitsPageState();
@@ -28,7 +29,9 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
 
   Future<void> _loadOutfits() async {
     try {
-      final allOutfits = await fetchAllOutfits();
+      final allOutfits = widget.userId != null
+    ? await fetchOutfitsByUser(widget.userId!)
+    : await fetchAllOutfits();
 
       final filtered = allOutfits.where((outfit) {
         final matchesTag = selectedTag.isEmpty || (outfit.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false);

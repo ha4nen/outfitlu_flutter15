@@ -5,7 +5,8 @@ class Outfit {
   final String? description;
   final String? tags;
   final bool isHijabFriendly;
-  final String? type; // ✅ Add this line
+  final String? type; 
+  final int? userId;
 
   Outfit({
     required this.id,
@@ -14,7 +15,8 @@ class Outfit {
     this.description,
     this.tags,
     required this.isHijabFriendly,
-    this.type, // ✅ Add this to the constructor
+    this.type, 
+    this.userId,
   });
 
   factory Outfit.fromJson(Map<String, dynamic> json) {
@@ -25,7 +27,8 @@ class Outfit {
       description: json['description'],
       tags: json['tags'],
       isHijabFriendly: json['is_hijab_friendly'],
-      type: json['type'], // ✅ Parse from JSON
+      type: json['type'], 
+      userId: json['user'], 
     );
   }
 }

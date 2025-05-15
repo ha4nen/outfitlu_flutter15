@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_application_1/Pages/MPages/profile_page.dart';
 
 class WardrobePage extends StatefulWidget {
+  
   const WardrobePage({super.key, required List<Map<String, String>> posts});
 
   @override
@@ -53,12 +55,15 @@ class _WardrobePageState extends State<WardrobePage> {
             'id': post['id'],
             'username': post['user']['username'],
             'userId': post['user']['id'],
+            'profilePictureUrl': post['user']['profile']?['profile_picture'], // ✅ GET FROM profile
             'imageUrl': post['image'] != null ? 'http://10.0.2.2:8000${post['image']}' : null,
             'caption': post['caption'] ?? '',
             'likeCount': post['like_count'] ?? 0,
             'isLiked': post['is_liked_by_current_user'] ?? false,
           };
         }).toList();
+
+
 
         setState(() {
           posts = List<Map<String, dynamic>>.from(formatted);
@@ -93,6 +98,17 @@ class _WardrobePageState extends State<WardrobePage> {
       });
     }
   }
+void _goToUserProfile(int userId) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ProfilePage(
+        onThemeChange: () {},
+        userId: userId, 
+      ),
+    ),
+  );
+}
 
   Future<void> _deletePost(int postId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -171,12 +187,28 @@ class _WardrobePageState extends State<WardrobePage> {
             Stack(
               children: [
                 ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: colorScheme.primaryContainer,
-                    child: Icon(Icons.person, color: colorScheme.onPrimaryContainer),
-                  ),
-                  title: Text(post['username'] ?? 'Unknown User', style: const TextStyle(color: Colors.black)),
-                ),
+  leading: GestureDetector(
+    onTap: () => _goToUserProfile(post['userId']),
+    child: CircleAvatar(
+      radius: 22,
+      backgroundImage: (post['profilePictureUrl'] != null && post['profilePictureUrl'].toString().isNotEmpty)
+    ? NetworkImage('http://10.0.2.2:8000${post['profilePictureUrl']}')
+    : null,
+      backgroundColor: colorScheme.primaryContainer,
+      child: post['profilePictureUrl'] == null
+          ? Icon(Icons.person, color: colorScheme.onPrimaryContainer)
+          : null,
+    ),
+  ),
+  title: GestureDetector(
+    onTap: () => _goToUserProfile(post['userId']),
+    child: Text(
+      post['username'] ?? 'Unknown User',
+      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+    ),
+  ),
+),
+
                 if (isOwnPost)
                   Positioned(
                     top: 4,
@@ -188,16 +220,19 @@ class _WardrobePageState extends State<WardrobePage> {
                   ),
               ],
             ),
-            if (post['imageUrl'] != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+          if (post['imageUrl'] != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: AspectRatio(
+                aspectRatio: 1, // You can adjust this if most of your images are taller or wider
                 child: Image.network(
                   post['imageUrl'],
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
                 ),
               ),
+            ),
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(

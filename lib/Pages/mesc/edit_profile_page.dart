@@ -61,9 +61,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         bio = data['bio'] as String? ?? '';
         location = data['location'] as String? ?? '';
         gender = _genders.contains(data['gender']) ? data['gender'] : null;
-        modesty = _modestyOptions.contains(data['modesty_preference'])
-            ? data['modesty_preference']
-            : null;
+        modesty =
+            _modestyOptions.contains(data['modesty_preference'])
+                ? data['modesty_preference']
+                : null;
         // TODO: load existing profile picture URL if you want to show it
       });
     } else {
@@ -77,10 +78,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     if (pickedFile != null) {
       final mimeType = lookupMimeType(pickedFile.path);
-      if (mimeType == null || 
-          !(mimeType.startsWith('image/jpeg') || mimeType.startsWith('image/png'))) {
+      if (mimeType == null ||
+          !(mimeType.startsWith('image/jpeg') ||
+              mimeType.startsWith('image/png'))) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Only JPEG and PNG formats are supported.')),
+          const SnackBar(
+            content: Text('Only JPEG and PNG formats are supported.'),
+          ),
         );
         return;
       }
@@ -89,7 +93,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final imageBytes = await pickedFile.readAsBytes();
       final decodedImage = img.decodeImage(imageBytes);
       if (decodedImage != null) {
-        final resizedImage = img.copyResize(decodedImage, width: 500); // Resize to 500px width
+        final resizedImage = img.copyResize(
+          decodedImage,
+          width: 500,
+        ); // Resize to 500px width
         final resizedImageFile = File(pickedFile.path)
           ..writeAsBytesSync(img.encodeJpg(resizedImage));
         setState(() => _image = resizedImageFile);
@@ -101,22 +108,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!_formKey.currentState!.validate()) return;
 
     final uri = Uri.parse('http://10.0.2.2:8000/api/profile/update/');
-    final request = http.MultipartRequest('PUT', uri)
-      ..headers['Authorization'] = 'Token $_authToken'
-      ..fields['bio'] = bio!
-      ..fields['location'] = location!
-      ..fields['gender'] = gender!
-      ..fields['modesty_preference'] = modesty!;
+    final request =
+        http.MultipartRequest('PUT', uri)
+          ..headers['Authorization'] = 'Token $_authToken'
+          ..fields['bio'] = bio!
+          ..fields['location'] = location!
+          ..fields['gender'] = gender!
+          ..fields['modesty_preference'] = modesty!;
 
     if (_image != null) {
       final mimeType = lookupMimeType(_image!.path)?.split('/');
       if (mimeType != null && mimeType.length == 2) {
         try {
-          request.files.add(await http.MultipartFile.fromPath(
-            'profile_picture',
-            _image!.path,
-            contentType: MediaType(mimeType[0], mimeType[1]),
-          ));
+          request.files.add(
+            await http.MultipartFile.fromPath(
+              'profile_picture',
+              _image!.path,
+              contentType: MediaType(mimeType[0], mimeType[1]),
+            ),
+          );
         } catch (e) {
           print('Error adding file to request: $e');
           ScaffoldMessenger.of(context).showSnackBar(
@@ -125,9 +135,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
           return;
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid image format.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Invalid image format.')));
         return;
       }
     }
@@ -149,9 +159,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } catch (e) {
       print('Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
       }
     }
   }
@@ -192,9 +202,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   radius: 50,
                   backgroundImage: _image != null ? FileImage(_image!) : null,
                   backgroundColor: primaryColor.withOpacity(0.2),
-                  child: _image == null
-                      ? Icon(Icons.add_a_photo, size: 30, color: onPrimaryColor)
-                      : null,
+                  child:
+                      _image == null
+                          ? Icon(
+                            Icons.add_a_photo,
+                            size: 30,
+                            color: onPrimaryColor,
+                          )
+                          : null,
                 ),
               ),
               const SizedBox(height: 16),
@@ -214,8 +229,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 style: TextStyle(color: onBackgroundColor),
                 onChanged: (v) => bio = v,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Please enter a bio' : null,
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Please enter a bio' : null,
               ),
               const SizedBox(height: 12),
 
@@ -234,21 +249,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 style: TextStyle(color: onBackgroundColor),
                 onChanged: (v) => location = v,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Please enter a location' : null,
+                validator:
+                    (v) =>
+                        v == null || v.isEmpty
+                            ? 'Please enter a location'
+                            : null,
               ),
               const SizedBox(height: 12),
 
               // Gender Dropdown
               DropdownButtonFormField<String>(
                 value: gender,
-                hint: Text('Select Gender', style: TextStyle(color: onBackgroundColor)),
-                items: _genders
-                    .map((g) => DropdownMenuItem(
-                          value: g,
-                          child: Text(g.capitalize(), style: TextStyle(color: onBackgroundColor)),
-                        ))
-                    .toList(),
+                hint: Text(
+                  'Select Gender',
+                  style: TextStyle(color: onBackgroundColor),
+                ),
+                items:
+                    _genders
+                        .map(
+                          (g) => DropdownMenuItem(
+                            value: g,
+                            child: Text(
+                              g.capitalize(),
+                              style: TextStyle(color: onBackgroundColor),
+                            ),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (v) => setState(() => gender = v),
                 validator: (v) => v == null ? 'Please select gender' : null,
                 decoration: InputDecoration(
@@ -265,16 +292,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
               // Modesty Preference Dropdown
               DropdownButtonFormField<String>(
                 value: modesty,
-                hint: Text('Select Modesty Preference', style: TextStyle(color: onBackgroundColor)),
-                items: _modestyOptions
-                    .map((m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(m, style: TextStyle(color: onBackgroundColor)),
-                        ))
-                    .toList(),
+                hint: Text(
+                  'Select Modesty Preference',
+                  style: TextStyle(color: onBackgroundColor),
+                ),
+                items:
+                    _modestyOptions
+                        .map(
+                          (m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(
+                              m,
+                              style: TextStyle(color: onBackgroundColor),
+                            ),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (v) => setState(() => modesty = v),
-                validator: (v) =>
-                    v == null ? 'Please select modesty preference' : null,
+                validator:
+                    (v) =>
+                        v == null ? 'Please select modesty preference' : null,
                 decoration: InputDecoration(
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: primaryColor),
@@ -310,7 +347,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

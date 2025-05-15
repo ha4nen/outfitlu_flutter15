@@ -21,10 +21,7 @@ class ConfirmPhotoPage extends StatelessWidget {
 
     final response = await http.get(
       Uri.parse('http://10.0.2.2:8000/api/categories/'),
-      headers: {
-        'Authorization': 'Token $token',
-        'Accept': 'application/json',
-      },
+      headers: {'Authorization': 'Token $token', 'Accept': 'application/json'},
     );
 
     if (response.statusCode == 200) {
@@ -42,19 +39,17 @@ class ConfirmPhotoPage extends StatelessWidget {
         categoryList.add({'id': categoryId, 'name': categoryName});
 
         // Map subcategories
-        formattedCategories[categoryName] = subcategories.map<Map<String, dynamic>>((sub) {
-          return {
-            'id': sub['id'],
-            'name': sub['name'],
-            'category': {'id': categoryId, 'name': categoryName},
-          };
-        }).toList();
+        formattedCategories[categoryName] =
+            subcategories.map<Map<String, dynamic>>((sub) {
+              return {
+                'id': sub['id'],
+                'name': sub['name'],
+                'category': {'id': categoryId, 'name': categoryName},
+              };
+            }).toList();
       }
 
-      return {
-        'categoryList': categoryList,
-        'categories': formattedCategories,
-      };
+      return {'categoryList': categoryList, 'categories': formattedCategories};
     } else {
       throw Exception('Failed to load categories');
     }
@@ -82,11 +77,12 @@ class ConfirmPhotoPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ItemDetailsFormPage(
-                          imageFile: imageFile,
-                          categoryList: categoryList,
-                          categories: categories,
-                        ),
+                        builder:
+                            (_) => ItemDetailsFormPage(
+                              imageFile: imageFile,
+                              categoryList: categoryList,
+                              categories: categories,
+                            ),
                       ),
                     );
                   } catch (e) {

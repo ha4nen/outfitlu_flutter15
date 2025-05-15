@@ -16,6 +16,7 @@ import 'package:flutter_application_1/Pages/mesc/edit_profile_page.dart';
 import 'package:flutter_application_1/Pages/Outfits/outfit.dart';
 import 'package:flutter_application_1/Pages/Outfits/outfit_service.dart';
 import 'package:flutter_application_1/Pages/Outfits/OutfitDetailsPage.dart'; // Ensure this is the correct path
+
 // Re-use the WardrobeItem model (ensure it's consistent with other pages)
 class WardrobeItem {
   final int id;
@@ -26,7 +27,7 @@ class WardrobeItem {
   final String? tags;
   final String? photoPath;
   final int? categoryId;
-  final String? categoryName; 
+  final String? categoryName;
   final int? subcategoryId;
   final String? subcategoryName;
   final int? userId; // <-- Added userId field
@@ -51,7 +52,10 @@ class WardrobeItem {
     String? subcatName = json['subcategory']?['name'];
     int? catId = json['category']?['id'];
     int? subcatId = json['subcategory']?['id'];
-    int? userId = json['user'] is int ? json['user'] : (json['user']?['id']); // Try both int or nested object
+    int? userId =
+        json['user'] is int
+            ? json['user']
+            : (json['user']?['id']); // Try both int or nested object
 
     return WardrobeItem(
       id: json['id'],
@@ -60,7 +64,10 @@ class WardrobeItem {
       material: json['material'],
       season: json['season'],
       tags: json['tags'],
-      photoPath: json['photo_path'] != null ? 'http://10.0.2.2:8000${json['photo_path']}' : null,
+      photoPath:
+          json['photo_path'] != null
+              ? 'http://10.0.2.2:8000${json['photo_path']}'
+              : null,
       categoryId: catId,
       categoryName: catName,
       subcategoryId: subcatId,
@@ -69,7 +76,6 @@ class WardrobeItem {
     );
   }
 }
-
 
 final storage = FlutterSecureStorage(); // Keep if used elsewhere
 
@@ -80,11 +86,16 @@ Future<String?> getToken() async {
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback onThemeChange;
-  final List<File>? items; 
+  final List<File>? items;
   final int? userId; // 👈 added userId
 
   // Update constructor: remove 'items' parameter
-  const ProfilePage({super.key, required this.onThemeChange, this.items, this.userId,});
+  const ProfilePage({
+    super.key,
+    required this.onThemeChange,
+    this.items,
+    this.userId,
+  });
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -99,22 +110,21 @@ class _ProfilePageState extends State<ProfilePage> {
   String modestyPreference = '';
   String? profileImageUrl;
 
-List<Outfit> _recentOutfits = [];
-bool _loadingOutfits = true;
-String _errorOutfits = '';
+  List<Outfit> _recentOutfits = [];
+  bool _loadingOutfits = true;
+  String _errorOutfits = '';
 
   // State for wardrobe items
   List<WardrobeItem> _wardrobeItems = [];
-  bool _isLoadingItems = true; 
+  bool _isLoadingItems = true;
   String _errorItems = '';
-
 
   @override
   void initState() {
     super.initState();
-    fetchProfileData(); 
-    _fetchWardrobeItems(); 
-    _fetchOutfits(); 
+    fetchProfileData();
+    _fetchWardrobeItems();
+    _fetchOutfits();
   }
 
   Future<void> fetchProfileData() async {
@@ -126,13 +136,18 @@ String _errorOutfits = '';
       return;
     }
 
-     final url = widget.userId == null
-        ? Uri.parse('http://10.0.2.2:8000/api/profile/')
-        : Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/profile/');
+    final url =
+        widget.userId == null
+            ? Uri.parse('http://10.0.2.2:8000/api/profile/')
+            : Uri.parse(
+              'http://10.0.2.2:8000/api/users/${widget.userId}/profile/',
+            );
 
     try {
-      final response = await http.get(url, headers: {'Authorization': 'Token $token'});
-
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Token $token'},
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -142,15 +157,17 @@ String _errorOutfits = '';
           location = data['location'] ?? '';
           gender = data['gender'] ?? '';
           modestyPreference = data['modesty_preference'] ?? '';
-          profileImageUrl = data['profile_picture'] != null && data['profile_picture'].isNotEmpty
-              ? 'http://10.0.2.2:8000${data['profile_picture']}'
-              : null;
+          profileImageUrl =
+              data['profile_picture'] != null &&
+                      data['profile_picture'].isNotEmpty
+                  ? 'http://10.0.2.2:8000${data['profile_picture']}'
+                  : null;
         });
       } else {
         print('Failed to load profile data: ${response.statusCode}');
       }
     } catch (e) {
-       print('Error fetching profile data: $e');
+      print('Error fetching profile data: $e');
     }
   }
 
@@ -173,9 +190,12 @@ String _errorOutfits = '';
       return;
     }
 
-final url = widget.userId == null
-    ? Uri.parse('http://10.0.2.2:8000/api/wardrobe/')
-    : Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/');
+    final url =
+        widget.userId == null
+            ? Uri.parse('http://10.0.2.2:8000/api/wardrobe/')
+            : Uri.parse(
+              'http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/',
+            );
 
     try {
       final response = await http.get(
@@ -186,7 +206,8 @@ final url = widget.userId == null
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
-          _wardrobeItems = data.map((itemJson) => WardrobeItem.fromJson(itemJson)).toList();
+          _wardrobeItems =
+              data.map((itemJson) => WardrobeItem.fromJson(itemJson)).toList();
           _isLoadingItems = false;
         });
       } else {
@@ -204,56 +225,62 @@ final url = widget.userId == null
       print('Network or parsing error (items): $e');
     }
   }
-Future<void> _fetchOutfits() async {
-  setState(() {
-    _loadingOutfits = true;
-    _errorOutfits = '';
-  });
 
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-
-    if (token == null) {
-      setState(() {
-        _loadingOutfits = false;
-        _errorOutfits = 'Authentication token not found.';
-      });
-      return;
-    }
-
-    final url = widget.userId == null
-        ? Uri.parse('http://10.0.2.2:8000/api/outfits/')
-        : Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/outfits/');
-
-    final response = await http.get(url, headers: {
-      'Authorization': 'Token $token',
-    });
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-
-      final sorted = data.map((json) => Outfit.fromJson(json)).toList()
-        ..sort((a, b) => b.id.compareTo(a.id));
-
-      setState(() {
-        _recentOutfits = sorted.take(4).toList();
-        _loadingOutfits = false;
-      });
-    } else {
-      setState(() {
-        _errorOutfits = 'Failed to load outfits (Status code: ${response.statusCode})';
-        _loadingOutfits = false;
-      });
-    }
-  } catch (e) {
+  Future<void> _fetchOutfits() async {
     setState(() {
-      _errorOutfits = 'Error fetching outfits: $e';
-      _loadingOutfits = false;
+      _loadingOutfits = true;
+      _errorOutfits = '';
     });
-  }
-}
 
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        setState(() {
+          _loadingOutfits = false;
+          _errorOutfits = 'Authentication token not found.';
+        });
+        return;
+      }
+
+      final url =
+          widget.userId == null
+              ? Uri.parse('http://10.0.2.2:8000/api/outfits/')
+              : Uri.parse(
+                'http://10.0.2.2:8000/api/users/${widget.userId}/outfits/',
+              );
+
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Token $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+
+        final sorted =
+            data.map((json) => Outfit.fromJson(json)).toList()
+              ..sort((a, b) => b.id.compareTo(a.id));
+
+        setState(() {
+          _recentOutfits = sorted.take(4).toList();
+          _loadingOutfits = false;
+        });
+      } else {
+        setState(() {
+          _errorOutfits =
+              'Failed to load outfits (Status code: ${response.statusCode})';
+          _loadingOutfits = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorOutfits = 'Error fetching outfits: $e';
+        _loadingOutfits = false;
+      });
+    }
+  }
 
   // REMOVED: _loadProfileImage (unless it was actually implemented)
 
@@ -264,32 +291,40 @@ Future<void> _fetchOutfits() async {
         title: const Text('Profile'),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        actions: widget.userId == null
-          ? [
-              IconButton(
-                icon: Icon(Icons.settings,
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? Colors.white
-                        : Theme.of(context).iconTheme.color),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => SettingsPage(onThemeChange: widget.onThemeChange),
+        actions:
+            widget.userId == null
+                ? [
+                  IconButton(
+                    icon: Icon(
+                      Icons.settings,
+                      color:
+                          Theme.of(context).brightness == Brightness.light
+                              ? Colors.white
+                              : Theme.of(context).iconTheme.color,
                     ),
-                  );
-                },
-              ),
-            ]
-          : [],
-
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) => SettingsPage(
+                                onThemeChange: widget.onThemeChange,
+                              ),
+                        ),
+                      );
+                    },
+                  ),
+                ]
+                : [],
       ),
-      body: RefreshIndicator( // Optional: Add pull-to-refresh
+      body: RefreshIndicator(
+        // Optional: Add pull-to-refresh
         onRefresh: () async {
           await fetchProfileData();
           await _fetchWardrobeItems();
         },
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(), // Ensure scroll works with RefreshIndicator
+          physics:
+              const AlwaysScrollableScrollPhysics(), // Ensure scroll works with RefreshIndicator
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -301,16 +336,18 @@ Future<void> _fetchOutfits() async {
                   child: CircleAvatar(
                     radius: 50,
                     backgroundColor: Theme.of(context).colorScheme.surface,
-                    backgroundImage: profileImageUrl != null && profileImageUrl!.isNotEmpty
-                        ? NetworkImage(profileImageUrl!) 
-                        : null,
-                    child: profileImageUrl == null || profileImageUrl!.isEmpty
-                        ? Icon(
-                            Icons.person,
-                            size: 50,
-                            color: Theme.of(context).iconTheme.color,
-                          )
-                        : null,
+                    backgroundImage:
+                        profileImageUrl != null && profileImageUrl!.isNotEmpty
+                            ? NetworkImage(profileImageUrl!)
+                            : null,
+                    child:
+                        profileImageUrl == null || profileImageUrl!.isEmpty
+                            ? Icon(
+                              Icons.person,
+                              size: 50,
+                              color: Theme.of(context).iconTheme.color,
+                            )
+                            : null,
                   ),
                 ),
                 const SizedBox(height: 16.0),
@@ -327,7 +364,9 @@ Future<void> _fetchOutfits() async {
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
                       bio,
-                      style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -344,7 +383,9 @@ Future<void> _fetchOutfits() async {
                     onPressed: () async {
                       final updated = await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => EditProfilePage()),
+                        MaterialPageRoute(
+                          builder: (context) => EditProfilePage(),
+                        ),
                       );
                       if (updated == true) {
                         await fetchProfileData(); // Refresh profile after editing
@@ -353,11 +394,16 @@ Future<void> _fetchOutfits() async {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
-                    child: Text('Edit Profile', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                    child: Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                   ),
 
                 Divider(color: Theme.of(context).dividerColor),
-                
+
                 // --- Items Section Header (Navigate to modified AllItemsPage) ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -368,12 +414,17 @@ Future<void> _fetchOutfits() async {
                           context,
                           MaterialPageRoute(
                             // Navigate to the modified AllItemsPage (no args needed)
-                            builder: (context) =>  AllItemsPage(userId: widget.userId), 
+                            builder:
+                                (context) =>
+                                    AllItemsPage(userId: widget.userId),
                           ),
                         );
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(8),
@@ -396,7 +447,7 @@ Future<void> _fetchOutfits() async {
                 // --- Items Section Body (Uses fetched data) ---
                 _buildItemsSection(), // Use helper method
 
-                const SizedBox(height: 16), 
+                const SizedBox(height: 16),
 
                 // --- Outfits Section Header (Remains the same for now) ---
                 Row(
@@ -406,15 +457,19 @@ Future<void> _fetchOutfits() async {
                       onTap: () {
                         // TODO: Update AllOutfitsPage similarly if needed
                         Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) =>  AllOutfitsPage(userId: widget.userId),
-  ),
-);
-
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    AllOutfitsPage(userId: widget.userId),
+                          ),
+                        );
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(8),
@@ -436,87 +491,121 @@ Future<void> _fetchOutfits() async {
                 // --- Outfits Section Body (Still uses placeholder/old logic) ---
                 // TODO: Update this section similarly to the Items section later
                 _loadingOutfits
-    ? const Center(child: CircularProgressIndicator())
-    : _errorOutfits.isNotEmpty
-        ? Text(_errorOutfits, style: const TextStyle(color: Colors.red))
-        : Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    SizedBox(
-      height: 120,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: _recentOutfits.length + 1,
-itemBuilder: (context, index) {
-  if (index == _recentOutfits.length) {
-    // The arrow tile
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AllOutfitsPage()),
-          );
-        },
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            width: 100,
-            height: 120,
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-            child: const Center(
-              child: Icon(Icons.arrow_forward, size: 32, color: Colors.black54),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorOutfits.isNotEmpty
+                    ? Text(
+                      _errorOutfits,
+                      style: const TextStyle(color: Colors.red),
+                    )
+                    : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 120,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _recentOutfits.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == _recentOutfits.length) {
+                                // The arrow tile
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => const AllOutfitsPage(),
+                                        ),
+                                      );
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        width: 100,
+                                        height: 120,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surface.withOpacity(0.9),
+                                        child: const Center(
+                                          child: Icon(
+                                            Icons.arrow_forward,
+                                            size: 32,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
 
-  final outfit = _recentOutfits[index];
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OutfitDetailsPage(outfit: outfit),
-        ),
-      );
-    },
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 100,
-          color: Theme.of(context).colorScheme.surface,
-          child: outfit.photoPath != null
-              ? Image.network(
-                  outfit.photoPath!,
-                  fit: BoxFit.cover,
-                  width: 100,
-                  height: 120,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                  errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
-                )
-              : const Center(child: Icon(Icons.image_not_supported)),
-        ),
-      ),
-    ),
-  );
-}
-
-      ),
-    ),
-   
-
-  ],
-)
-
+                              final outfit = _recentOutfits[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) =>
+                                              OutfitDetailsPage(outfit: outfit),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      width: 100,
+                                      color:
+                                          Theme.of(context).colorScheme.surface,
+                                      child:
+                                          outfit.photoPath != null
+                                              ? Image.network(
+                                                outfit.photoPath!,
+                                                fit: BoxFit.cover,
+                                                width: 100,
+                                                height: 120,
+                                                loadingBuilder: (
+                                                  context,
+                                                  child,
+                                                  progress,
+                                                ) {
+                                                  if (progress == null)
+                                                    return child;
+                                                  return const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  );
+                                                },
+                                                errorBuilder:
+                                                    (_, __, ___) =>
+                                                        const Center(
+                                                          child: Icon(
+                                                            Icons.broken_image,
+                                                          ),
+                                                        ),
+                                              )
+                                              : const Center(
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                ),
+                                              ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
 
                 // Original Outfits ListView (commented out, needs update)
                 /*
@@ -533,112 +622,124 @@ itemBuilder: (context, index) {
   }
 
   // Helper method to build the items section
-Widget _buildItemsSection() {
-  if (_isLoadingItems) {
-    return Container(
+  Widget _buildItemsSection() {
+    if (_isLoadingItems) {
+      return Container(
+        height: 150,
+        alignment: Alignment.center,
+        child: const CircularProgressIndicator(),
+      );
+    }
+
+    if (_errorItems.isNotEmpty) {
+      return Container(
+        height: 150,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Text(
+          'Error loading items: \$_errorItems',
+          style: const TextStyle(color: Colors.red),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    final displayedItems = _wardrobeItems.take(4).toList();
+
+    return SizedBox(
       height: 150,
-      alignment: Alignment.center,
-      child: const CircularProgressIndicator(),
-    );
-  }
-
-  if (_errorItems.isNotEmpty) {
-    return Container(
-      height: 150,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Text(
-        'Error loading items: \$_errorItems',
-        style: const TextStyle(color: Colors.red),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  final displayedItems = _wardrobeItems.take(4).toList();
-
-  return SizedBox(
-    height: 150,
-    child: ListView.builder(
-      scrollDirection: Axis.horizontal,
-      itemCount: displayedItems.length + 1,
-      itemBuilder: (context, index) {
-        if (index == displayedItems.length) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AllItemsPage()),
-                );
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  width: 100,
-                  height: 150,
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-                  child: const Center(
-                    child: Icon(Icons.arrow_forward, size: 32, color: Colors.black54),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: displayedItems.length + 1,
+        itemBuilder: (context, index) {
+          if (index == displayedItems.length) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AllItemsPage()),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 100,
+                    height: 150,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.9),
+                    child: const Center(
+                      child: Icon(
+                        Icons.arrow_forward,
+                        size: 32,
+                        color: Colors.black54,
+                      ),
+                    ),
                   ),
+                ),
+              ),
+            );
+          }
+
+          final item = displayedItems[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => ItemDetails(
+                        itemId: item.id,
+                        itemName: item.material ?? 'Unnamed',
+                        color: item.color ?? 'N/A',
+                        size: item.size ?? 'N/A',
+                        material: item.material ?? 'N/A',
+                        season: item.season ?? 'N/A',
+                        tags: item.tags?.split(',') ?? [],
+                        imageUrl: item.photoPath,
+                        category: item.categoryName ?? 'N/A',
+                        subcategory: item.subcategoryName ?? 'General',
+                        userId: item.userId,
+                      ),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: Container(
+                  width: 110,
+                  color: Theme.of(context).colorScheme.surface,
+                  child:
+                      item.photoPath != null
+                          ? Image.network(
+                            item.photoPath!,
+                            fit: BoxFit.cover,
+                            width: 110,
+                            height: 150,
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return const Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            },
+                            errorBuilder:
+                                (_, __, ___) => const Center(
+                                  child: Icon(Icons.broken_image),
+                                ),
+                          )
+                          : const Center(
+                            child: Icon(Icons.image_not_supported),
+                          ),
                 ),
               ),
             ),
           );
-        }
-
-        final item = displayedItems[index];
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ItemDetails(
-                  itemId: item.id,
-                  itemName: item.material ?? 'Unnamed',
-                  color: item.color ?? 'N/A',
-                  size: item.size ?? 'N/A',
-                  material: item.material ?? 'N/A',
-                  season: item.season ?? 'N/A',
-                  tags: item.tags?.split(',') ?? [],
-                  imageUrl: item.photoPath,
-                  category: item.categoryName ?? 'N/A',
-                  subcategory: item.subcategoryName ?? 'General',
-                  userId: item.userId,
-                ),
-
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: Container(
-                width: 110,
-                color: Theme.of(context).colorScheme.surface,
-                child: item.photoPath != null
-                    ? Image.network(
-                        item.photoPath!,
-                        fit: BoxFit.cover,
-                        width: 110,
-                        height: 150,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return const Center(child: CircularProgressIndicator());
-                        },
-                        errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
-                      )
-                    : const Center(child: Icon(Icons.image_not_supported)),
-              ),
-            ),
-          ),
-        );
-      },
-    ),
-  );
+        },
+      ),
+    );
+  }
 }
-
-}
-

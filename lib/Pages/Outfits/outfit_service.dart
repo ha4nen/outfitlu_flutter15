@@ -12,9 +12,10 @@ Future<List<Outfit>> fetchOutfits({int? userId}) async {
     throw Exception('No auth token found');
   }
 
-  final url = userId != null
-      ? Uri.parse('http://10.0.2.2:8000/api/users/$userId/outfits/')
-      : Uri.parse('http://10.0.2.2:8000/api/outfits/');
+  final url =
+      userId != null
+          ? Uri.parse('http://10.0.2.2:8000/api/users/$userId/outfits/')
+          : Uri.parse('http://10.0.2.2:8000/api/outfits/');
 
   final response = await http.get(
     url,
@@ -28,13 +29,14 @@ Future<List<Outfit>> fetchOutfits({int? userId}) async {
     throw Exception('Failed to fetch outfits: ${response.statusCode}');
   }
 }
+
 Future<List<Outfit>> fetchAllOutfits() async {
   return fetchOutfits(); // No userId = current user
 }
+
 Future<List<Outfit>> fetchOutfitsByUser(int userId) async {
   return fetchOutfits(userId: userId);
 }
-
 
 Map<String, List<Outfit>> groupOutfitsBySeason(List<Outfit> outfits) {
   final Map<String, List<Outfit>> grouped = {

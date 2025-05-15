@@ -10,10 +10,17 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Dynamic app bar color
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
+        backgroundColor:
+            Theme.of(
+              context,
+            ).appBarTheme.backgroundColor, // Dynamic app bar color
+        foregroundColor:
+            Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // Explicitly set to white
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ), // Explicitly set to white
           onPressed: () {
             Navigator.of(context).pop(); // Close the settings page
           },
@@ -29,7 +36,10 @@ class SettingsPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color, // Dynamic text color
+                color:
+                    Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.color, // Dynamic text color
               ),
             ),
             const SizedBox(height: 16),
@@ -38,9 +48,14 @@ class SettingsPage extends StatelessWidget {
             ListTile(
               title: Text(
                 'Profile Info',
-                style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color), // Dynamic text color
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ), // Dynamic text color
               ),
-              trailing: Icon(Icons.arrow_forward, color: Theme.of(context).iconTheme.color), // Dynamic icon color
+              trailing: Icon(
+                Icons.arrow_forward,
+                color: Theme.of(context).iconTheme.color,
+              ), // Dynamic icon color
               onTap: () {
                 // Add functionality here in the future
               },
@@ -51,8 +66,14 @@ class SettingsPage extends StatelessWidget {
             ElevatedButton(
               onPressed: onThemeChange,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary, // Dynamic button color
-                foregroundColor: Theme.of(context).colorScheme.onPrimary, // Dynamic text color
+                backgroundColor:
+                    Theme.of(
+                      context,
+                    ).colorScheme.primary, // Dynamic button color
+                foregroundColor:
+                    Theme.of(
+                      context,
+                    ).colorScheme.onPrimary, // Dynamic text color
               ),
               child: const Text('Change Theme'),
             ),
@@ -62,11 +83,17 @@ class SettingsPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 // Redirect to the login page
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error, // Dynamic button color
-                foregroundColor: Theme.of(context).colorScheme.onError, // Dynamic text color
+                backgroundColor:
+                    Theme.of(context).colorScheme.error, // Dynamic button color
+                foregroundColor:
+                    Theme.of(context).colorScheme.onError, // Dynamic text color
               ),
               child: const Text('Sign Out'),
             ),

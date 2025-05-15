@@ -15,10 +15,14 @@ class AddItemOptionsPage extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => LoadingPage(
-            imageFile: File(pickedFile.path),
-            nextPageBuilder: () => ConfirmPhotoPage(imageFile: File(pickedFile.path)), // Navigate to ConfirmYourPhotoPage
-          ),
+          builder:
+              (_) => LoadingPage(
+                imageFile: File(pickedFile.path),
+                nextPageBuilder:
+                    () => ConfirmPhotoPage(
+                      imageFile: File(pickedFile.path),
+                    ), // Navigate to ConfirmYourPhotoPage
+              ),
         ),
       );
     }
@@ -27,9 +31,11 @@ class AddItemOptionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textColor = theme.brightness == Brightness.dark
-        ? Colors.white // White text in dark theme
-        : Colors.black; // Black text in light theme
+    final textColor =
+        theme.brightness == Brightness.dark
+            ? Colors
+                .white // White text in dark theme
+            : Colors.black; // Black text in light theme
 
     return AlertDialog(
       backgroundColor: theme.colorScheme.surface, // Dynamic surface color
@@ -41,7 +47,10 @@ class AddItemOptionsPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: Icon(Icons.camera_alt, color: theme.colorScheme.primary), // Dynamic icon color
+            leading: Icon(
+              Icons.camera_alt,
+              color: theme.colorScheme.primary,
+            ), // Dynamic icon color
             title: Text(
               "Take a Photo",
               style: TextStyle(color: textColor), // Dynamic text color
@@ -49,7 +58,10 @@ class AddItemOptionsPage extends StatelessWidget {
             onTap: () => _pickImage(context, ImageSource.camera),
           ),
           ListTile(
-            leading: Icon(Icons.photo_library, color: theme.colorScheme.primary), // Dynamic icon color
+            leading: Icon(
+              Icons.photo_library,
+              color: theme.colorScheme.primary,
+            ), // Dynamic icon color
             title: Text(
               "Choose from Library",
               style: TextStyle(color: textColor), // Dynamic text color

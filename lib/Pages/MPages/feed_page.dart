@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application_1/Pages/MPages/profile_page.dart';
 
 class WardrobePage extends StatefulWidget {
-  
   const WardrobePage({super.key, required List<Map<String, String>> posts});
 
   @override
@@ -44,26 +43,30 @@ class _WardrobePageState extends State<WardrobePage> {
 
     final url = Uri.parse('http://10.0.2.2:8000/api/feed/posts/');
     try {
-      final response = await http.get(url, headers: {
-        'Authorization': 'Token $token',
-      });
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Token $token'},
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        final formatted = data.map((post) {
-          return {
-            'id': post['id'],
-            'username': post['user']['username'],
-            'userId': post['user']['id'],
-            'profilePictureUrl': post['user']['profile']?['profile_picture'], // ✅ GET FROM profile
-            'imageUrl': post['image'] != null ? 'http://10.0.2.2:8000${post['image']}' : null,
-            'caption': post['caption'] ?? '',
-            'likeCount': post['like_count'] ?? 0,
-            'isLiked': post['is_liked_by_current_user'] ?? false,
-          };
-        }).toList();
-
-
+        final formatted =
+            data.map((post) {
+              return {
+                'id': post['id'],
+                'username': post['user']['username'],
+                'userId': post['user']['id'],
+                'profilePictureUrl':
+                    post['user']['profile']?['profile_picture'], // ✅ GET FROM profile
+                'imageUrl':
+                    post['image'] != null
+                        ? 'http://10.0.2.2:8000${post['image']}'
+                        : null,
+                'caption': post['caption'] ?? '',
+                'likeCount': post['like_count'] ?? 0,
+                'isLiked': post['is_liked_by_current_user'] ?? false,
+              };
+            }).toList();
 
         setState(() {
           posts = List<Map<String, dynamic>>.from(formatted);
@@ -89,7 +92,10 @@ class _WardrobePageState extends State<WardrobePage> {
     if (token == null) return;
 
     final url = Uri.parse('http://10.0.2.2:8000/api/feed/posts/$postId/like/');
-    final response = await http.post(url, headers: {'Authorization': 'Token $token'});
+    final response = await http.post(
+      url,
+      headers: {'Authorization': 'Token $token'},
+    );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       setState(() {
@@ -98,17 +104,15 @@ class _WardrobePageState extends State<WardrobePage> {
       });
     }
   }
-void _goToUserProfile(int userId) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ProfilePage(
-        onThemeChange: () {},
-        userId: userId, 
+
+  void _goToUserProfile(int userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfilePage(onThemeChange: () {}, userId: userId),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Future<void> _deletePost(int postId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -117,25 +121,42 @@ void _goToUserProfile(int userId) {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () async {
-            Navigator.pop(ctx, true);
-            final url = Uri.parse('http://10.0.2.2:8000/api/feed/posts/$postId/delete/');
-            final response = await http.delete(url, headers: {'Authorization': 'Token $token'});
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete Post'),
+            content: const Text('Are you sure you want to delete this post?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx, true);
+                  final url = Uri.parse(
+                    'http://10.0.2.2:8000/api/feed/posts/$postId/delete/',
+                  );
+                  final response = await http.delete(
+                    url,
+                    headers: {'Authorization': 'Token $token'},
+                  );
 
-            if (response.statusCode == 204 || response.statusCode == 200) {
-              await _fetchPosts();
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post deleted')));
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete post')));
-            }
-          }, child: const Text('Delete')),
-        ],
-      ),
+                  if (response.statusCode == 204 ||
+                      response.statusCode == 200) {
+                    await _fetchPosts();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Post deleted')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete post')),
+                    );
+                  }
+                },
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -146,20 +167,32 @@ void _goToUserProfile(int userId) {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Feed', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Feed',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
-              ? Center(child: Text(_error, style: TextStyle(color: colorScheme.error)))
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _error.isNotEmpty
+              ? Center(
+                child: Text(_error, style: TextStyle(color: colorScheme.error)),
+              )
               : posts.isEmpty
-                  ? Center(child: Text('No posts available.', style: TextStyle(color: colorScheme.onBackground)))
-                  : ListView.builder(
-                      itemCount: posts.length,
-                      itemBuilder: (context, index) => _buildPost(index, colorScheme, theme),
-                    ),
+              ? Center(
+                child: Text(
+                  'No posts available.',
+                  style: TextStyle(color: colorScheme.onBackground),
+                ),
+              )
+              : ListView.builder(
+                itemCount: posts.length,
+                itemBuilder:
+                    (context, index) => _buildPost(index, colorScheme, theme),
+              ),
     );
   }
 
@@ -187,27 +220,40 @@ void _goToUserProfile(int userId) {
             Stack(
               children: [
                 ListTile(
-  leading: GestureDetector(
-    onTap: () => _goToUserProfile(post['userId']),
-    child: CircleAvatar(
-      radius: 22,
-      backgroundImage: (post['profilePictureUrl'] != null && post['profilePictureUrl'].toString().isNotEmpty)
-    ? NetworkImage('http://10.0.2.2:8000${post['profilePictureUrl']}')
-    : null,
-      backgroundColor: colorScheme.primaryContainer,
-      child: post['profilePictureUrl'] == null
-          ? Icon(Icons.person, color: colorScheme.onPrimaryContainer)
-          : null,
-    ),
-  ),
-  title: GestureDetector(
-    onTap: () => _goToUserProfile(post['userId']),
-    child: Text(
-      post['username'] ?? 'Unknown User',
-      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-    ),
-  ),
-),
+                  leading: GestureDetector(
+                    onTap: () => _goToUserProfile(post['userId']),
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundImage:
+                          (post['profilePictureUrl'] != null &&
+                                  post['profilePictureUrl']
+                                      .toString()
+                                      .isNotEmpty)
+                              ? NetworkImage(
+                                'http://10.0.2.2:8000${post['profilePictureUrl']}',
+                              )
+                              : null,
+                      backgroundColor: colorScheme.primaryContainer,
+                      child:
+                          post['profilePictureUrl'] == null
+                              ? Icon(
+                                Icons.person,
+                                color: colorScheme.onPrimaryContainer,
+                              )
+                              : null,
+                    ),
+                  ),
+                  title: GestureDetector(
+                    onTap: () => _goToUserProfile(post['userId']),
+                    child: Text(
+                      post['username'] ?? 'Unknown User',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
 
                 if (isOwnPost)
                   Positioned(
@@ -220,18 +266,19 @@ void _goToUserProfile(int userId) {
                   ),
               ],
             ),
-          if (post['imageUrl'] != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: 1, // You can adjust this if most of your images are taller or wider
-                child: Image.network(
-                  post['imageUrl'],
-                  fit: BoxFit.contain,
-                  alignment: Alignment.center,
+            if (post['imageUrl'] != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio:
+                      1, // You can adjust this if most of your images are taller or wider
+                  child: Image.network(
+                    post['imageUrl'],
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                  ),
                 ),
               ),
-            ),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -241,9 +288,13 @@ void _goToUserProfile(int userId) {
                     onTap: () => _toggleLike(post['id'], index),
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                      transitionBuilder:
+                          (child, animation) =>
+                              ScaleTransition(scale: animation, child: child),
                       child: Icon(
-                        post['isLiked'] ? Icons.favorite : Icons.favorite_border,
+                        post['isLiked']
+                            ? Icons.favorite
+                            : Icons.favorite_border,
                         key: ValueKey(post['isLiked']),
                         color: post['isLiked'] ? Colors.red : Colors.grey,
                       ),
@@ -258,7 +309,9 @@ void _goToUserProfile(int userId) {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 post['caption'] ?? '',
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.black),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.black,
+                ),
               ),
             ),
             const SizedBox(height: 12),

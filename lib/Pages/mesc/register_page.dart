@@ -14,7 +14,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool isLoading = false;
 
@@ -51,7 +52,9 @@ class _RegisterPageState extends State<RegisterPage> {
     } catch (e) {
       print('Exception caught: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Something went wrong. Please try again.')),
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+        ),
       );
     } finally {
       setState(() => isLoading = false);
@@ -102,8 +105,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 TextFormField(
                   controller: _usernameController,
                   decoration: buildInputDecoration('Username'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter your username' : null,
+                  validator:
+                      (value) =>
+                          value == null || value.isEmpty
+                              ? 'Enter your username'
+                              : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -111,7 +117,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: _emailController,
                   decoration: buildInputDecoration('Email'),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Enter your email';
+                    if (value == null || value.isEmpty)
+                      return 'Enter your email';
                     if (!isValidEmail(value)) return 'Enter a valid email';
                     return null;
                   },
@@ -123,7 +130,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: true,
                   decoration: buildInputDecoration('Password'),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Enter your password';
+                    if (value == null || value.isEmpty)
+                      return 'Enter your password';
                     if (!isComplexPassword(value)) {
                       return 'Password must contain:\n- Uppercase\n- Number\n- Symbol\n- 6+ characters';
                     }
@@ -137,8 +145,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: true,
                   decoration: buildInputDecoration('Confirm Password'),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Confirm your password';
-                    if (value != _passwordController.text) return 'Passwords do not match';
+                    if (value == null || value.isEmpty)
+                      return 'Confirm your password';
+                    if (value != _passwordController.text)
+                      return 'Passwords do not match';
                     return null;
                   },
                 ),
@@ -147,22 +157,22 @@ class _RegisterPageState extends State<RegisterPage> {
                 isLoading
                     ? const CircularProgressIndicator()
                     : SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: registerUser,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF936DFF),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Register',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: registerUser,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF936DFF),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                       ),
+                    ),
               ],
             ),
           ),

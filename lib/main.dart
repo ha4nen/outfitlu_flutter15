@@ -23,7 +23,8 @@ class _MyAppState extends State<MyApp> {
 
   void _cycleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      _themeMode =
+          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     });
   }
 
@@ -80,7 +81,9 @@ class _MyAppState extends State<MyApp> {
           onSurface: Color(0xFFB0B0B0), // Soft Grey
         ),
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Color(0xFFD3D3D3)), // Slightly Greyish White
+          bodyLarge: TextStyle(
+            color: Color(0xFFD3D3D3),
+          ), // Slightly Greyish White
           bodyMedium: TextStyle(color: Color(0xFFB0B0B0)), // Soft Grey
         ),
         appBarTheme: const AppBarTheme(
@@ -96,13 +99,15 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => LoadingPage(
+        '/':
+            (context) => LoadingPage(
               imageFile: File('path/to/your/image'),
               nextPageBuilder: () => const LoginPage(),
             ), // Provide the required imageFile parameter
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
-        '/main': (context) => MainAppPage(items: _items, onThemeChange: _cycleTheme),
+        '/main':
+            (context) => MainAppPage(items: _items, onThemeChange: _cycleTheme),
       },
     );
   }

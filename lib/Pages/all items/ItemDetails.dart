@@ -34,14 +34,24 @@ class ItemDetails extends StatelessWidget {
   Future<void> deleteItem(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: const Text('Are you sure you want to delete this item?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
-        ],
-      ),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Item'),
+            content: const Text('Are you sure you want to delete this item?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
     );
 
     if (confirm != true) return;
@@ -60,9 +70,9 @@ class ItemDetails extends StatelessWidget {
         const SnackBar(content: Text('Item deleted successfully')),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete item')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to delete item')));
     }
   }
 
@@ -102,7 +112,9 @@ class ItemDetails extends StatelessWidget {
                       width: double.infinity,
                       height: 200,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                      errorBuilder:
+                          (_, __, ___) =>
+                              const Center(child: Icon(Icons.broken_image)),
                     ),
                   )
                 else
@@ -117,7 +129,12 @@ class ItemDetails extends StatelessWidget {
                     child: const Icon(Icons.image_not_supported),
                   ),
                 const SizedBox(height: 24),
-                Text(itemName, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                Text(
+                  itemName,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 _buildDetail('Category', category, theme),
                 _buildDetail('Subcategory', subcategory, theme),
@@ -130,9 +147,16 @@ class ItemDetails extends StatelessWidget {
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
-                  children: tags
-                      .map((tag) => Chip(label: Text(tag), backgroundColor: theme.colorScheme.primary.withOpacity(0.2)))
-                      .toList(),
+                  children:
+                      tags
+                          .map(
+                            (tag) => Chip(
+                              label: Text(tag),
+                              backgroundColor: theme.colorScheme.primary
+                                  .withOpacity(0.2),
+                            ),
+                          )
+                          .toList(),
                 ),
                 const SizedBox(height: 32),
                 if (snapshot.connectionState == ConnectionState.done && isOwner)

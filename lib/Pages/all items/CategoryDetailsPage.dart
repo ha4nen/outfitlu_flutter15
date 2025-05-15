@@ -14,7 +14,8 @@ class SubCategoryGroup {
   final List<all_items.WardrobeItem> items;
   final int? userId;
 
-  SubCategoryGroup({required this.id, required this.name,  this.userId,}) : items = [];
+  SubCategoryGroup({required this.id, required this.name, this.userId})
+    : items = [];
 }
 
 class CategoryDetailsPage extends StatefulWidget {
@@ -62,21 +63,26 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
       return;
     }
 
-    final url = widget.userId != null
-      ? Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/')
-      : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+    final url =
+        widget.userId != null
+            ? Uri.parse(
+              'http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/',
+            )
+            : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
     try {
-      final response = await http.get(url, headers: {
-        'Authorization': 'Token $token',
-      });
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Token $token'},
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
-        final items = data
-            .map((json) => all_items.WardrobeItem.fromJson(json))
-            .where((item) => item.categoryId == widget.categoryId)
-            .toList();
+        final items =
+            data
+                .map((json) => all_items.WardrobeItem.fromJson(json))
+                .where((item) => item.categoryId == widget.categoryId)
+                .toList();
 
         final Map<int, SubCategoryGroup> grouped = {};
         for (var item in items) {
@@ -118,32 +124,32 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-  onTap: () => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => SubDetails(
-        subcategoryId: group.id,
-        subcategoryName: group.name,
-        subCategory: '',
-        userId: widget.userId, 
-      ),
-    ),
-  ),
-  child: Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Text(
-      group.name,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).colorScheme.secondary,
-        decoration: TextDecoration.underline,
-      ),
-    ),
-  ),
-),
-
-
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => SubDetails(
+                        subcategoryId: group.id,
+                        subcategoryName: group.name,
+                        subCategory: '',
+                        userId: widget.userId,
+                      ),
+                ),
+              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              group.name,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.secondary,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
 
         SizedBox(
           height: 130,
@@ -154,57 +160,62 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
               if (index < previewItems.length) {
                 final item = previewItems[index];
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => details.ItemDetails(
-                        itemId: item.id,
-                        itemName: item.material ?? 'Unnamed',
-                        color: item.color ?? 'N/A',
-                        size: item.size ?? 'N/A',
-                        material: item.material ?? 'N/A',
-                        season: item.season ?? 'N/A',
-                        tags: item.tags?.split(',') ?? [],
-                        imageUrl: item.photoPath,
-                        category: item.categoryName ?? 'N/A',
-                        subcategory: item.subcategoryName ?? 'General',
-                        userId: item.userId,
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => details.ItemDetails(
+                                itemId: item.id,
+                                itemName: item.material ?? 'Unnamed',
+                                color: item.color ?? 'N/A',
+                                size: item.size ?? 'N/A',
+                                material: item.material ?? 'N/A',
+                                season: item.season ?? 'N/A',
+                                tags: item.tags?.split(',') ?? [],
+                                imageUrl: item.photoPath,
+                                category: item.categoryName ?? 'N/A',
+                                subcategory: item.subcategoryName ?? 'General',
+                                userId: item.userId,
+                              ),
+                        ),
                       ),
-                    ),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: item.photoPath != null
-                          ? Image.network(
-                              item.photoPath!,
-                              width: 100,
-                              height: 120,
-                              fit: BoxFit.cover,
-                            )
-                          : Container(
-                              width: 100,
-                              height: 120,
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.image_not_supported),
-                            ),
+                      child:
+                          item.photoPath != null
+                              ? Image.network(
+                                item.photoPath!,
+                                width: 100,
+                                height: 120,
+                                fit: BoxFit.cover,
+                              )
+                              : Container(
+                                width: 100,
+                                height: 120,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.image_not_supported),
+                              ),
                     ),
                   ),
                 );
               } else {
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SubDetails(
-                        subcategoryId: group.id,
-                        subcategoryName: group.name,
-                        subCategory: '',
-                        userId: widget.userId, // 👈 pass it down
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => SubDetails(
+                                subcategoryId: group.id,
+                                subcategoryName: group.name,
+                                subCategory: '',
+                                userId: widget.userId, // 👈 pass it down
+                              ),
+                        ),
                       ),
-                    ),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
                     child: Container(
@@ -214,7 +225,11 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
                         color: Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.arrow_forward, size: 30, color: Colors.black54),
+                      child: const Icon(
+                        Icons.arrow_forward,
+                        size: 30,
+                        color: Colors.black54,
+                      ),
                     ),
                   ),
                 );
@@ -230,21 +245,21 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.categoryName),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : error.isNotEmpty
+      appBar: AppBar(title: Text(widget.categoryName)),
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : error.isNotEmpty
               ? Center(child: Text(error))
               : subcategoryGroups.isEmpty
-                  ? const Center(child: Text('No subcategories or items found'))
-                  : ListView(
-                      padding: const EdgeInsets.all(16.0),
-                      children: subcategoryGroups.values
-                          .map((group) => _buildSubCategorySection(group))
-                          .toList(),
-                    ),
+              ? const Center(child: Text('No subcategories or items found'))
+              : ListView(
+                padding: const EdgeInsets.all(16.0),
+                children:
+                    subcategoryGroups.values
+                        .map((group) => _buildSubCategorySection(group))
+                        .toList(),
+              ),
     );
   }
 }

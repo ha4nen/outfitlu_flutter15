@@ -42,11 +42,16 @@ class _FeedPageState extends State<FeedPage> {
     final events = _getEventsForDay(_selectedDay ?? _focusedDay);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // Dynamic background color
+      backgroundColor:
+          Theme.of(context).scaffoldBackgroundColor, // Dynamic background color
       appBar: AppBar(
         title: const Text('Plan Your Look'),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Dynamic app bar color
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
+        backgroundColor:
+            Theme.of(
+              context,
+            ).appBarTheme.backgroundColor, // Dynamic app bar color
+        foregroundColor:
+            Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
       ),
       body: Column(
         children: [
@@ -76,7 +81,10 @@ class _FeedPageState extends State<FeedPage> {
                 titleTextStyle: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).textTheme.bodyLarge?.color, // Dynamic text color
+                  color:
+                      Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.color, // Dynamic text color
                 ),
                 titleTextFormatter: (date, locale) {
                   return '${_monthName(date.month)} ${date.year}';
@@ -84,11 +92,17 @@ class _FeedPageState extends State<FeedPage> {
               ),
               calendarStyle: CalendarStyle(
                 todayDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary, // Dynamic today color
+                  color:
+                      Theme.of(
+                        context,
+                      ).colorScheme.secondary, // Dynamic today color
                   shape: BoxShape.circle,
                 ),
                 selectedDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary, // Dynamic selected day color
+                  color:
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary, // Dynamic selected day color
                   shape: BoxShape.circle,
                 ),
                 outsideDaysVisible: false,
@@ -102,15 +116,18 @@ class _FeedPageState extends State<FeedPage> {
               onPressed: _toggleCalendarFormat,
               child: Text(
                 'Show Full Month',
-                style: TextStyle(color: Theme.of(context).colorScheme.primary), // Dynamic button text color
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                ), // Dynamic button text color
               ),
             ),
 
           // Expand section when a date is selected
           AnimatedCrossFade(
-            crossFadeState: _dayTapped
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
+            crossFadeState:
+                _dayTapped
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 400),
             firstChild: const SizedBox.shrink(),
             secondChild: Column(
@@ -132,7 +149,10 @@ class _FeedPageState extends State<FeedPage> {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface, // Dynamic card background color
+          color:
+              Theme.of(
+                context,
+              ).colorScheme.surface, // Dynamic card background color
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [
             BoxShadow(
@@ -151,7 +171,10 @@ class _FeedPageState extends State<FeedPage> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color, // Dynamic text color
+                color:
+                    Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.color, // Dynamic text color
               ),
             ),
             const SizedBox(height: 16),
@@ -162,7 +185,10 @@ class _FeedPageState extends State<FeedPage> {
                     'No outfit planned.',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Theme.of(context).textTheme.bodyMedium?.color, // Dynamic text color
+                      color:
+                          Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color, // Dynamic text color
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -173,7 +199,10 @@ class _FeedPageState extends State<FeedPage> {
                           icon: const Icon(Icons.auto_awesome),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: Theme.of(context).colorScheme.primary, // Dynamic button color
+                            backgroundColor:
+                                Theme.of(
+                                  context,
+                                ).colorScheme.primary, // Dynamic button color
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
@@ -182,10 +211,11 @@ class _FeedPageState extends State<FeedPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => MagicPage(
-                                  onThemeChange: () {},
-                                  fromCalendar: true,
-                                ),
+                                builder:
+                                    (context) => MagicPage(
+                                      onThemeChange: () {},
+                                      fromCalendar: true,
+                                    ),
                               ),
                             );
                           },
@@ -195,18 +225,29 @@ class _FeedPageState extends State<FeedPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
-                          icon: Icon(Icons.checkroom, color: Theme.of(context).colorScheme.onSurface), // Dynamic icon color
+                          icon: Icon(
+                            Icons.checkroom,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ), // Dynamic icon color
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: Theme.of(context).colorScheme.surface, // Dynamic button color
-                            foregroundColor: Theme.of(context).colorScheme.onSurface, // Dynamic text color
+                            backgroundColor:
+                                Theme.of(
+                                  context,
+                                ).colorScheme.surface, // Dynamic button color
+                            foregroundColor:
+                                Theme.of(
+                                  context,
+                                ).colorScheme.onSurface, // Dynamic text color
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Choose Your Outfit selected')),
+                              const SnackBar(
+                                content: Text('Choose Your Outfit selected'),
+                              ),
                             );
                           },
                           label: const Text('Choose Outfit'),
@@ -218,16 +259,22 @@ class _FeedPageState extends State<FeedPage> {
               )
             else
               Column(
-                children: events.map((event) {
-                  return ListTile(
-                    leading: Icon(Icons.event, color: Theme.of(context).colorScheme.primary), // Dynamic icon color
-                    title: Text(
-                      event,
-                      style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color), // Dynamic text color
-                    ),
-                  );
-                }).toList(),
-              )
+                children:
+                    events.map((event) {
+                      return ListTile(
+                        leading: Icon(
+                          Icons.event,
+                          color: Theme.of(context).colorScheme.primary,
+                        ), // Dynamic icon color
+                        title: Text(
+                          event,
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ), // Dynamic text color
+                        ),
+                      );
+                    }).toList(),
+              ),
           ],
         ),
       ),
@@ -246,7 +293,9 @@ class _FeedPageState extends State<FeedPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             image: const DecorationImage(
-              image: AssetImage('assets/outfit_placeholder.png'), // Replace with actual asset
+              image: AssetImage(
+                'assets/outfit_placeholder.png',
+              ), // Replace with actual asset
               fit: BoxFit.cover,
             ),
           ),
@@ -254,10 +303,14 @@ class _FeedPageState extends State<FeedPage> {
             child: Text(
               'Your planned outfit will appear here',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface, // Dynamic text color
+                color:
+                    Theme.of(
+                      context,
+                    ).colorScheme.onSurface, // Dynamic text color
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
-                backgroundColor: Theme.of(context).colorScheme.surface.withOpacity(0.7), // Dynamic background color
+                backgroundColor: Theme.of(context).colorScheme.surface
+                    .withOpacity(0.7), // Dynamic background color
               ),
             ),
           ),
@@ -268,8 +321,19 @@ class _FeedPageState extends State<FeedPage> {
 
   String _monthName(int month) {
     const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month];
   }

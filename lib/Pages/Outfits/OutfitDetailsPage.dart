@@ -11,21 +11,22 @@ class OutfitDetailsPage extends StatelessWidget {
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Outfit'),
-        content: const Text('Are you sure you want to delete this outfit?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Outfit'),
+            content: const Text('Are you sure you want to delete this outfit?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
@@ -68,10 +69,11 @@ class OutfitDetailsPage extends StatelessWidget {
                             child: Center(child: CircularProgressIndicator()),
                           );
                         },
-                        errorBuilder: (_, __, ___) => const SizedBox(
-                          height: 250,
-                          child: Center(child: Icon(Icons.broken_image)),
-                        ),
+                        errorBuilder:
+                            (_, __, ___) => const SizedBox(
+                              height: 250,
+                              child: Center(child: Icon(Icons.broken_image)),
+                            ),
                       ),
                     ),
                   const SizedBox(height: 16),
@@ -85,40 +87,50 @@ class OutfitDetailsPage extends StatelessWidget {
                     ),
                   _buildDetailRow('Type:', outfit.type ?? 'Unknown'),
                   _buildDetailRow('Season:', outfit.season ?? 'Unknown'),
-                  _buildDetailRow('Tags:', outfit.tags?.isNotEmpty == true ? outfit.tags! : 'None'),
-                  _buildDetailRow('Hijab Friendly:', outfit.isHijabFriendly ? 'Yes' : 'No'),
+                  _buildDetailRow(
+                    'Tags:',
+                    outfit.tags?.isNotEmpty == true ? outfit.tags! : 'None',
+                  ),
+                  _buildDetailRow(
+                    'Hijab Friendly:',
+                    outfit.isHijabFriendly ? 'Yes' : 'No',
+                  ),
                 ],
               ),
             ),
           ),
-         FutureBuilder<int?>(
-  future: SharedPreferences.getInstance().then((prefs) => prefs.getInt('user_id')),
-  builder: (context, snapshot) {
-    if (!snapshot.hasData) return const SizedBox.shrink();
+          FutureBuilder<int?>(
+            future: SharedPreferences.getInstance().then(
+              (prefs) => prefs.getInt('user_id'),
+            ),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox.shrink();
 
-    final loggedInUserId = snapshot.data;
-    final isOwner = loggedInUserId == outfit.userId;
+              final loggedInUserId = snapshot.data;
+              final isOwner = loggedInUserId == outfit.userId;
 
-    if (!isOwner) return const SizedBox.shrink();
+              if (!isOwner) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: Center(
-        child: ElevatedButton.icon(
-          onPressed: () => _confirmDelete(context),
-          icon: const Icon(Icons.delete),
-          label: const Text('Delete Outfit'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 24.0),
+                child: Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _confirmDelete(context),
+                    icon: const Icon(Icons.delete),
+                    label: const Text('Delete Outfit'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-        ),
-      ),
-    );
-  },
-),
-
         ],
       ),
     );
@@ -132,7 +144,10 @@ class OutfitDetailsPage extends StatelessWidget {
           children: [
             TextSpan(
               text: label + ' ',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             TextSpan(
               text: value,

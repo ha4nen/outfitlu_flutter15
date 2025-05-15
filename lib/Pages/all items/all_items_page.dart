@@ -1,11 +1,9 @@
 // ignore_for_file: deprecated_member_use, file_names
 
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_1/Pages/all%20items/SubDetails.dart';
 import 'package:flutter_application_1/Pages/all%20items/CategoryDetailsPage.dart';
 import 'package:flutter_application_1/Pages/all items/ItemDetails.dart';
 

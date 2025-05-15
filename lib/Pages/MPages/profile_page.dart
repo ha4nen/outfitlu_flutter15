@@ -14,7 +14,6 @@ import 'package:flutter_application_1/Pages/Outfits/all_outfits.dart';
 import 'package:flutter_application_1/Pages/all items/ItemDetails.dart'; // Ensure this is the correct path
 import 'package:flutter_application_1/Pages/mesc/edit_profile_page.dart';
 import 'package:flutter_application_1/Pages/Outfits/outfit.dart';
-import 'package:flutter_application_1/Pages/Outfits/outfit_service.dart';
 import 'package:flutter_application_1/Pages/Outfits/OutfitDetailsPage.dart'; // Ensure this is the correct path
 
 // Re-use the WardrobeItem model (ensure it's consistent with other pages)

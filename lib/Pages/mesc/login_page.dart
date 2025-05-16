@@ -126,30 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: const Text('Forgot Password'),
-                            content: const Text(
-                              'Password recovery is not implemented yet.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          ),
-                    );
-                  },
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                ),
+
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/register'),
                   child: Text(

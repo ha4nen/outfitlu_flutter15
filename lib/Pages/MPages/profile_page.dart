@@ -86,7 +86,7 @@ Future<String?> getToken() async {
 class ProfilePage extends StatefulWidget {
   final VoidCallback onThemeChange;
   final List<File>? items;
-  final int? userId; // 👈 added userId
+  final int? userId;
 
   // Update constructor: remove 'items' parameter
   const ProfilePage({
@@ -117,10 +117,13 @@ class _ProfilePageState extends State<ProfilePage> {
   List<WardrobeItem> _wardrobeItems = [];
   bool _isLoadingItems = true;
   String _errorItems = '';
+  bool _hideItems = false;
+  bool _hideOutfits = false;
 
   @override
   void initState() {
     super.initState();
+    _loadHideSetting(); // 👈 Add this
     fetchProfileData();
     _fetchWardrobeItems();
     _fetchOutfits();
@@ -167,6 +170,24 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       print('Error fetching profile data: $e');
+    }
+  }
+
+  Future<void> _loadHideSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final myUserId = prefs.getInt('user_id');
+    final viewedUserId = widget.userId ?? myUserId;
+
+    if (viewedUserId != null) {
+      final isItemsHidden = prefs.getBool('hide_items_$viewedUserId') ?? false;
+      final isOutfitsHidden =
+          prefs.getBool('hide_outfits_$viewedUserId') ?? false;
+
+      setState(() {
+        _hideItems = viewedUserId == myUserId ? false : isItemsHidden;
+        _hideOutfits = viewedUserId == myUserId ? false : isOutfitsHidden;
+      });
     }
   }
 
@@ -489,8 +510,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 // --- Outfits Section Body (Still uses placeholder/old logic) ---
                 // TODO: Update this section similarly to the Items section later
+                // --- Outfits Section Body ---
                 _loadingOutfits
                     ? const Center(child: CircularProgressIndicator())
+                    : _hideOutfits && widget.userId != null
+                    ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24.0),
+                      child: Text(
+                        'This user has hidden their outfits.',
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
                     : _errorOutfits.isNotEmpty
                     ? Text(
                       _errorOutfits,
@@ -506,7 +540,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             itemCount: _recentOutfits.length + 1,
                             itemBuilder: (context, index) {
                               if (index == _recentOutfits.length) {
-                                // The arrow tile
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 4.0,
@@ -517,7 +550,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                         context,
                                         MaterialPageRoute(
                                           builder:
-                                              (_) => const AllOutfitsPage(),
+                                              (_) => AllOutfitsPage(
+                                                userId: widget.userId,
+                                              ),
                                         ),
                                       );
                                     },
@@ -622,6 +657,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Helper method to build the items section
   Widget _buildItemsSection() {
+    // 👇 Check if the viewed user has hidden their items (and it's not your own profile)
+    if (_hideItems && widget.userId != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0),
+        child: Text(
+          'This user has hidden their wardrobe.',
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+            fontStyle: FontStyle.italic,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
     if (_isLoadingItems) {
       return Container(
         height: 150,
@@ -636,7 +686,7 @@ class _ProfilePageState extends State<ProfilePage> {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Text(
-          'Error loading items: \$_errorItems',
+          'Error loading items: $_errorItems', // <- fixed escaped string
           style: const TextStyle(color: Colors.red),
           textAlign: TextAlign.center,
         ),
@@ -658,7 +708,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const AllItemsPage()),
+                    MaterialPageRoute(
+                      builder: (_) => AllItemsPage(userId: widget.userId),
+                    ),
                   );
                 },
                 child: ClipRRect(

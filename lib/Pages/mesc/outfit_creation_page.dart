@@ -13,8 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 File? _combinedImageForPost;
 
 class OutfitCreationPage extends StatefulWidget {
-  const OutfitCreationPage({super.key});
+  final DateTime? selectedDate;
 
+  const OutfitCreationPage({super.key, this.selectedDate});
   @override
   State<OutfitCreationPage> createState() => _OutfitCreationPageState();
 }
@@ -198,6 +199,20 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
       final outfitData = jsonDecode(responseBody);
       final outfitId = outfitData['id'];
 
+      if (widget.selectedDate != null) {
+        await http.post(
+          Uri.parse('http://10.0.2.2:8000/api/planner/plan/'),
+          headers: {
+            'Authorization': 'Token $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'outfit_id': outfitId,
+            'date': widget.selectedDate!.toIso8601String().split('T').first,
+          }),
+        );
+      }
+
       showDialog(
         context: context,
         builder:
@@ -214,7 +229,10 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                     if (shouldPost == true) {
                       await _promptCaptionAndPost(outfitId);
                     } else {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      Navigator.pop(
+                        context,
+                        true,
+                      ); // ✅ return `true` so FeedPage knows to refresh
                     }
                   },
                   child: const Text('OK'),

@@ -6,10 +6,12 @@ import 'package:flutter_application_1/Pages/mesc/outfit_creation_page.dart';
 
 class MagicPage extends StatefulWidget {
   final VoidCallback onThemeChange;
+  final DateTime? selectedDate;
 
   const MagicPage({
     super.key,
     required this.onThemeChange,
+    this.selectedDate,
     required bool fromCalendar,
   });
 
@@ -27,41 +29,32 @@ class _MagicPageState extends State<MagicPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI/Create Outfit'),
-        backgroundColor:
-            Theme.of(
-              context,
-            ).appBarTheme.backgroundColor, // Dynamic app bar color
-        foregroundColor:
-            Theme.of(context).appBarTheme.foregroundColor, // Dynamic text color
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Description field
             Text(
               'Click the button for a Truly AI Generated OUTFIT, Choose an Item to generate around that ITEM.',
               style: TextStyle(
                 fontSize: 16,
-                color:
-                    Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.color, // Dynamic text color
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16), // Space below description
-            // Item selection grid with VFX
+            const SizedBox(height: 16),
             Expanded(
               child: AnimationLimiter(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3, // 3 items per row
+                    crossAxisCount: 3,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                   ),
-                  itemCount: 6, // Number of items (empty for now)
+                  itemCount: 6,
                   itemBuilder: (context, index) {
                     return AnimationConfiguration.staggeredList(
                       position: index,
@@ -73,7 +66,6 @@ class _MagicPageState extends State<MagicPage> {
                             onTap: () {
                               if (!mounted) return;
                               setState(() {
-                                // Toggle selection
                                 selectedItemIndex =
                                     selectedItemIndex == index ? null : index;
                               });
@@ -82,22 +74,18 @@ class _MagicPageState extends State<MagicPage> {
                               decoration: BoxDecoration(
                                 color:
                                     selectedItemIndex == index
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .secondary // Dynamic selected color
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .surface, // Dynamic unselected color
+                                        ? Theme.of(
+                                          context,
+                                        ).colorScheme.secondary
+                                        : Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color:
                                       selectedItemIndex == index
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary // Dynamic border color
-                                          : Theme.of(
+                                          ? Theme.of(
                                             context,
-                                          ).dividerColor, // Dynamic unselected border color
+                                          ).colorScheme.primary
+                                          : Theme.of(context).dividerColor,
                                   width: 2,
                                 ),
                               ),
@@ -107,13 +95,12 @@ class _MagicPageState extends State<MagicPage> {
                                   style: TextStyle(
                                     color:
                                         selectedItemIndex == index
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onSecondary // Dynamic text color
-                                            : Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.color, // Dynamic unselected text color
+                                            ? Theme.of(
+                                              context,
+                                            ).colorScheme.onSecondary
+                                            : Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ),
@@ -126,8 +113,7 @@ class _MagicPageState extends State<MagicPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 16), // Space below grid
-            // Truly AI button with VFX
+            const SizedBox(height: 16),
             GestureDetector(
               onTapDown: (_) => setState(() => _trulyAiScale = 0.95),
               onTapUp: (_) => setState(() => _trulyAiScale = 1.0),
@@ -136,7 +122,6 @@ class _MagicPageState extends State<MagicPage> {
                 duration: const Duration(milliseconds: 100),
                 child: ElevatedButton(
                   onPressed: () {
-                    // Add functionality for Truly AI button
                     if (selectedItemIndex != null) {
                       print('Help with AI for Item ${selectedItemIndex! + 1}');
                     } else {
@@ -145,18 +130,9 @@ class _MagicPageState extends State<MagicPage> {
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 20),
-                    minimumSize: const Size(
-                      double.infinity,
-                      50,
-                    ), // Full-width button
-                    backgroundColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary, // Dynamic button color
-                    foregroundColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.onPrimary, // Dynamic text color
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
                   child: Text(
                     selectedItemIndex != null ? 'Help with AI' : 'Truly AI',
@@ -164,8 +140,7 @@ class _MagicPageState extends State<MagicPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 16), // Space below Truly AI button
-            // Make your own button with VFX
+            const SizedBox(height: 16),
             GestureDetector(
               onTapDown: (_) => setState(() => _makeYourOwnScale = 0.95),
               onTapUp: (_) => setState(() => _makeYourOwnScale = 1.0),
@@ -173,28 +148,24 @@ class _MagicPageState extends State<MagicPage> {
                 scale: _makeYourOwnScale,
                 duration: const Duration(milliseconds: 100),
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
+                  onPressed: () async {
+                    final result = await Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => const OutfitCreationPage(),
+                        builder:
+                            (_) => OutfitCreationPage(
+                              selectedDate: widget.selectedDate,
+                            ),
                       ),
                     );
+                    if (result == true) {
+                      Navigator.pop(context, true);
+                    }
                   },
-
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 20),
-                    minimumSize: const Size(
-                      double.infinity,
-                      50,
-                    ), // Full-width button
-                    backgroundColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.secondary, // Dynamic button color
-                    foregroundColor:
-                        Theme.of(
-                          context,
-                        ).colorScheme.onSecondary, // Dynamic text color
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    foregroundColor: Theme.of(context).colorScheme.onSecondary,
                   ),
                   child: const Text('Make ur own'),
                 ),

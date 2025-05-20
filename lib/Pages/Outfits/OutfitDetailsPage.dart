@@ -1,12 +1,62 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
 import 'outfit.dart';
 import 'outfit_service.dart';
 
-class OutfitDetailsPage extends StatelessWidget {
+class OutfitDetailsPage extends StatefulWidget {
+  final int? outfitId;
   final Outfit outfit;
   final int? userId;
-  const OutfitDetailsPage({super.key, required this.outfit, this.userId});
+
+  const OutfitDetailsPage({super.key,required  this.outfit, this.outfitId, this.userId});
+
+  @override
+  State<OutfitDetailsPage> createState() => _OutfitDetailsPageState();
+}
+
+class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
+  Outfit? _fetchedOutfit;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.outfit != null) {
+      _fetchedOutfit = widget.outfit;
+      _loading = false;
+    } else {
+      _fetchOutfitById();
+    }
+  }
+
+  Future<void> _fetchOutfitById() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final id = widget.outfitId;
+
+    if (token == null || id == null) return;
+
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8000/api/outfits/$id/'),
+      headers: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _fetchedOutfit = Outfit.fromJson(data);
+        _loading = false;
+      });
+    } else {
+      print('❌ Failed to fetch outfit: ${response.body}');
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
 
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -29,8 +79,8 @@ class OutfitDetailsPage extends StatelessWidget {
           ),
     );
 
-    if (confirmed == true) {
-      await deleteOutfit(outfit.id);
+    if (confirmed == true && _fetchedOutfit != null) {
+      await deleteOutfit(_fetchedOutfit!.id);
       if (context.mounted) {
         Navigator.pop(context);
       }
@@ -40,6 +90,16 @@ class OutfitDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_fetchedOutfit == null) {
+      return const Scaffold(body: Center(child: Text("Outfit not found")));
+    }
+
+    final outfit = _fetchedOutfit!;
 
     return Scaffold(
       appBar: AppBar(
@@ -106,8 +166,7 @@ class OutfitDetailsPage extends StatelessWidget {
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const SizedBox.shrink();
 
-              final loggedInUserId = snapshot.data;
-              final isOwner = loggedInUserId == outfit.userId;
+              final isOwner = snapshot.data == outfit.userId;
 
               if (!isOwner) return const SizedBox.shrink();
 

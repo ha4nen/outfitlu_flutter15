@@ -5,23 +5,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application_1/Pages/MPages/profile_page.dart';
 
 class WardrobePage extends StatefulWidget {
-  const WardrobePage({super.key, required List<Map<String, String>> posts});
+  const WardrobePage({super.key});
 
   @override
   State<WardrobePage> createState() => _WardrobePageState();
 }
 
 class _WardrobePageState extends State<WardrobePage> {
-  List<Map<String, dynamic>> posts = [];
+  List<Map<String, dynamic>> allPosts = [];
+  List<Map<String, dynamic>> filteredPosts = [];
+  List<Map<String, dynamic>> followingPosts = [];
+  List<Map<String, dynamic>> discoverPosts = [];
   bool _isLoading = true;
   String _error = '';
   int? userId;
+  String selectedFilter = 'All';
 
   @override
   void initState() {
     super.initState();
     _fetchPosts();
   }
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+  ModalRoute.of(context)?.addScopedWillPopCallback(() async {
+    await _fetchPosts(); // Refresh when navigating back
+    return true;
+  });
+}
 
   Future<void> _fetchPosts() async {
     setState(() {
@@ -41,7 +53,7 @@ class _WardrobePageState extends State<WardrobePage> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2:8000/api/feed/posts/');
+    final url = Uri.parse('http://10.0.2.2:8000/api/feed/combined/');
     try {
       final response = await http.get(
         url,
@@ -49,28 +61,32 @@ class _WardrobePageState extends State<WardrobePage> {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        final formatted =
-            data.map((post) {
-              return {
-                'id': post['id'],
-                'username': post['user']['username'],
-                'userId': post['user']['id'],
-                'profilePictureUrl':
-                    post['user']['profile']?['profile_picture'], // ✅ GET FROM profile
-                'imageUrl':
-                    post['image'] != null
-                        ? 'http://10.0.2.2:8000${post['image']}'
-                        : null,
-                'caption': post['caption'] ?? '',
-                'likeCount': post['like_count'] ?? 0,
-                'isLiked': post['is_liked_by_current_user'] ?? false,
-              };
-            }).toList();
+        final data = json.decode(response.body);
+        final List<dynamic> followingRaw = data['following'];
+        final List<dynamic> discoverRaw = data['discover'];
+
+        List<Map<String, dynamic>> parsePosts(List<dynamic> raw) {
+          return raw.map((post) {
+            return {
+              'id': post['id'],
+              'username': post['user']['username'],
+              'userId': post['user']['id'],
+              'profilePictureUrl': post['user']?['profile_picture'],
+              'imageUrl': post['image'],
+              'caption': post['caption'] ?? '',
+              'likeCount': post['like_count'] ?? 0,
+              'isLiked': post['is_liked_by_current_user'] ?? false,
+            };
+          }).toList();
+        }
+
+        followingPosts = parsePosts(followingRaw);
+        discoverPosts = parsePosts(discoverRaw);
+        allPosts = [...followingPosts, ...discoverPosts];
 
         setState(() {
-          posts = List<Map<String, dynamic>>.from(formatted);
           _isLoading = false;
+          _applyFilter();
         });
       } else {
         setState(() {
@@ -86,30 +102,65 @@ class _WardrobePageState extends State<WardrobePage> {
     }
   }
 
-  Future<void> _toggleLike(int postId, int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    if (token == null) return;
-
-    final url = Uri.parse('http://10.0.2.2:8000/api/feed/posts/$postId/like/');
-    final response = await http.post(
-      url,
-      headers: {'Authorization': 'Token $token'},
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      setState(() {
-        posts[index]['isLiked'] = !posts[index]['isLiked'];
-        posts[index]['likeCount'] += posts[index]['isLiked'] ? 1 : -1;
-      });
-    }
+  void _applyFilter() {
+    setState(() {
+      switch (selectedFilter) {
+        case 'Mine':
+          filteredPosts = allPosts.where((p) => p['userId'] == userId).toList();
+          break;
+        case 'Friends':
+          filteredPosts = followingPosts.where((p) => p['userId'] != userId).toList();
+          break;
+        case 'Discover':
+          filteredPosts = discoverPosts;
+          break;
+        default:
+          filteredPosts = allPosts;
+      }
+    });
   }
 
-  void _goToUserProfile(int userId) {
+  Future<void> _toggleLike(int postId, int index) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+  if (token == null) return;
+
+  final currentIsLiked = filteredPosts[index]['isLiked'];
+  final currentLikeCount = filteredPosts[index]['likeCount'];
+
+  // ✅ Optimistically update the UI
+  setState(() {
+    filteredPosts[index]['isLiked'] = !currentIsLiked;
+    filteredPosts[index]['likeCount'] = currentIsLiked ? currentLikeCount - 1 : currentLikeCount + 1;
+  });
+
+  final url = Uri.parse('http://10.0.2.2:8000/api/feed/posts/$postId/like/');
+  final response = await http.post(
+    url,
+    headers: {'Authorization': 'Token $token'},
+  ); 
+
+  // ❌ If it fails, revert the change
+  if (response.statusCode != 200 && response.statusCode != 201) {
+    setState(() {
+      filteredPosts[index]['isLiked'] = currentIsLiked;
+      filteredPosts[index]['likeCount'] = currentLikeCount;
+    });
+  }
+}
+
+
+  Future<void> _goToUserProfile(int targetUserId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentUserId = prefs.getInt('user_id');
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ProfilePage(onThemeChange: () {}, userId: userId),
+        builder: (_) => ProfilePage(
+          onThemeChange: () {},
+          userId: (targetUserId == currentUserId) ? null : targetUserId,
+        ),
       ),
     );
   }
@@ -121,42 +172,28 @@ class _WardrobePageState extends State<WardrobePage> {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Delete Post'),
-            content: const Text('Are you sure you want to delete this post?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.pop(ctx, true);
-                  final url = Uri.parse(
-                    'http://10.0.2.2:8000/api/feed/posts/$postId/delete/',
-                  );
-                  final response = await http.delete(
-                    url,
-                    headers: {'Authorization': 'Token $token'},
-                  );
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: const Text('Are you sure you want to delete this post?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx, true);
+              final url = Uri.parse('http://10.0.2.2:8000/api/feed/posts/$postId/delete/');
+              final response = await http.delete(url, headers: {'Authorization': 'Token $token'});
 
-                  if (response.statusCode == 204 ||
-                      response.statusCode == 200) {
-                    await _fetchPosts();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Post deleted')),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to delete post')),
-                    );
-                  }
-                },
-                child: const Text('Delete'),
-              ),
-            ],
+              if (response.statusCode == 204 || response.statusCode == 200) {
+                await _fetchPosts();
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post deleted')));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete post')));
+              }
+            },
+            child: const Text('Delete'),
           ),
+        ],
+      ),
     );
   }
 
@@ -167,37 +204,40 @@ class _WardrobePageState extends State<WardrobePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Feed',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Feed', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: PopupMenuButton<String>(
+              icon: const Icon(Icons.filter_list),
+              onSelected: (value) {
+                selectedFilter = value;
+                _applyFilter();
+              },
+              itemBuilder: (context) => ['All', 'Mine', 'Friends', 'Discover']
+                  .map((filter) => PopupMenuItem(value: filter, child: Text(filter)))
+                  .toList(),
+            ),
+          ),
+        ],
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error.isNotEmpty
-              ? Center(
-                child: Text(_error, style: TextStyle(color: colorScheme.error)),
-              )
-              : posts.isEmpty
-              ? Center(
-                child: Text(
-                  'No posts available.',
-                  style: TextStyle(color: colorScheme.onBackground),
-                ),
-              )
-              : ListView.builder(
-                itemCount: posts.length,
-                itemBuilder:
-                    (context, index) => _buildPost(index, colorScheme, theme),
-              ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error.isNotEmpty
+              ? Center(child: Text(_error, style: TextStyle(color: colorScheme.error)))
+              : filteredPosts.isEmpty
+                  ? const Center(child: Text('No posts found.'))
+                  : ListView.builder(
+                      itemCount: filteredPosts.length,
+                      itemBuilder: (context, index) => _buildPost(index, colorScheme, theme),
+                    ),
     );
   }
 
   Widget _buildPost(int index, ColorScheme colorScheme, dynamic theme) {
-    final post = posts[index];
+    final post = filteredPosts[index];
     final isOwnPost = userId != null && post['userId'] == userId;
 
     return Padding(
@@ -224,37 +264,24 @@ class _WardrobePageState extends State<WardrobePage> {
                     onTap: () => _goToUserProfile(post['userId']),
                     child: CircleAvatar(
                       radius: 22,
-                      backgroundImage:
-                          (post['profilePictureUrl'] != null &&
-                                  post['profilePictureUrl']
-                                      .toString()
-                                      .isNotEmpty)
-                              ? NetworkImage(
-                                'http://10.0.2.2:8000${post['profilePictureUrl']}',
-                              )
-                              : null,
+                      backgroundImage: (post['profilePictureUrl'] != null &&
+                              post['profilePictureUrl'].toString().isNotEmpty)
+                          ? NetworkImage(post['profilePictureUrl'])
+                          : null,
                       backgroundColor: colorScheme.primaryContainer,
-                      child:
-                          post['profilePictureUrl'] == null
-                              ? Icon(
-                                Icons.person,
-                                color: colorScheme.onPrimaryContainer,
-                              )
-                              : null,
+                      child: post['profilePictureUrl'] == null
+                          ? Icon(Icons.person, color: colorScheme.onPrimaryContainer)
+                          : null,
                     ),
                   ),
                   title: GestureDetector(
                     onTap: () => _goToUserProfile(post['userId']),
                     child: Text(
                       post['username'] ?? 'Unknown User',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                   ),
                 ),
-
                 if (isOwnPost)
                   Positioned(
                     top: 4,
@@ -267,19 +294,14 @@ class _WardrobePageState extends State<WardrobePage> {
               ],
             ),
             if (post['imageUrl'] != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: AspectRatio(
-                  aspectRatio:
-                      1, // You can adjust this if most of your images are taller or wider
-                  child: Image.network(
-                    post['imageUrl'],
-                    fit: BoxFit.contain,
-                    alignment: Alignment.center,
-                  ),
+              GestureDetector(
+                onDoubleTap: () => _toggleLike(post['id'], index),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: AspectRatio(
+                    aspectRatio: 1, child: Image.network( post['imageUrl'], fit: BoxFit.contain, alignment: Alignment.center, ), ),
                 ),
               ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -288,13 +310,10 @@ class _WardrobePageState extends State<WardrobePage> {
                     onTap: () => _toggleLike(post['id'], index),
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      transitionBuilder:
-                          (child, animation) =>
-                              ScaleTransition(scale: animation, child: child),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
                       child: Icon(
-                        post['isLiked']
-                            ? Icons.favorite
-                            : Icons.favorite_border,
+                        post['isLiked'] ? Icons.favorite : Icons.favorite_border,
                         key: ValueKey(post['isLiked']),
                         color: post['isLiked'] ? Colors.red : Colors.grey,
                       ),
@@ -309,9 +328,7 @@ class _WardrobePageState extends State<WardrobePage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 post['caption'] ?? '',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.black,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.black),
               ),
             ),
             const SizedBox(height: 12),

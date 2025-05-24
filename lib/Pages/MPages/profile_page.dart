@@ -15,6 +15,7 @@ import 'package:flutter_application_1/Pages/all items/ItemDetails.dart'; // Ensu
 import 'package:flutter_application_1/Pages/mesc/edit_profile_page.dart';
 import 'package:flutter_application_1/Pages/Outfits/outfit.dart';
 import 'package:flutter_application_1/Pages/Outfits/OutfitDetailsPage.dart'; // Ensure this is the correct path
+import 'package:flutter_application_1/Pages/mesc/FollowersFollowingListPage.dart'; // <-- Add this import, adjust path if needed
 
 // Re-use the WardrobeItem model (ensure it's consistent with other pages)
 class WardrobeItem {
@@ -29,7 +30,7 @@ class WardrobeItem {
   final String? categoryName;
   final int? subcategoryId;
   final String? subcategoryName;
-  final int? userId; // <-- Added userId field
+  final int? userId;
 
   WardrobeItem({
     required this.id,
@@ -43,7 +44,7 @@ class WardrobeItem {
     this.categoryName,
     this.subcategoryId,
     this.subcategoryName,
-    this.userId, // <-- Added userId to constructor
+    this.userId,
   });
 
   factory WardrobeItem.fromJson(Map<String, dynamic> json) {
@@ -51,10 +52,7 @@ class WardrobeItem {
     String? subcatName = json['subcategory']?['name'];
     int? catId = json['category']?['id'];
     int? subcatId = json['subcategory']?['id'];
-    int? userId =
-        json['user'] is int
-            ? json['user']
-            : (json['user']?['id']); // Try both int or nested object
+    int? userId = json['user'] is int ? json['user'] : (json['user']?['id']);
 
     return WardrobeItem(
       id: json['id'],
@@ -71,16 +69,16 @@ class WardrobeItem {
       categoryName: catName,
       subcategoryId: subcatId,
       subcategoryName: subcatName,
-      userId: userId, // <-- Assign userId
+      userId: userId,
     );
   }
 }
 
-final storage = FlutterSecureStorage(); // Keep if used elsewhere
 
 // Function to get token (keep if used elsewhere)
 Future<String?> getToken() async {
-  return await storage.read(key: 'auth_token');
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('auth_token');
 }
 
 class ProfilePage extends StatefulWidget {
@@ -88,7 +86,6 @@ class ProfilePage extends StatefulWidget {
   final List<File>? items;
   final int? userId;
 
-  // Update constructor: remove 'items' parameter
   const ProfilePage({
     super.key,
     required this.onThemeChange,
@@ -119,18 +116,61 @@ class _ProfilePageState extends State<ProfilePage> {
   String _errorItems = '';
   bool _hideItems = false;
   bool _hideOutfits = false;
-
+  int followersCount = 0;
+  int followingCount = 0;
+  bool isFollowing = false;
+  bool isMyProfile = true;
+  
+  int? currentUserId;
   @override
   void initState() {
     super.initState();
-    _loadHideSetting(); // 👈 Add this
+    _loadHideSetting();
     fetchProfileData();
     _fetchWardrobeItems();
     _fetchOutfits();
   }
 
+Future<void> toggleFollow() async {
+  print('widget.userId = ${widget.userId}');
+print('isMyProfile = $isMyProfile');
+
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+    print('Token = $token');
+  if (token == null || widget.userId == null) {
+    print('Missing token or userId');
+    return;
+  }
+
+  final url = Uri.parse('http://10.0.2.2:8000/api/feed/follow/${widget.userId}/');
+  print('Sending POST to $url');
+
+  final response = await http.post(
+    url,
+    headers: {
+      'Authorization': 'Token $token',
+    },
+  );
+
+  print('Response ${response.statusCode}');
+  print(response.body);
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    setState(() {
+      isFollowing = !isFollowing;
+      followersCount += isFollowing ? 1 : -1;
+    });
+  } else {
+    print('Failed to toggle follow: ${response.body}');
+  }
+}
+
+
   Future<void> fetchProfileData() async {
     final prefs = await SharedPreferences.getInstance();
+    currentUserId = prefs.getInt('user_id');
+
     final token = prefs.getString('auth_token');
 
     if (token == null) {
@@ -159,11 +199,17 @@ class _ProfilePageState extends State<ProfilePage> {
           location = data['location'] ?? '';
           gender = data['gender'] ?? '';
           modestyPreference = data['modesty_preference'] ?? '';
-          profileImageUrl =
-              data['profile_picture'] != null &&
-                      data['profile_picture'].isNotEmpty
-                  ? 'http://10.0.2.2:8000${data['profile_picture']}'
-                  : null;
+          followersCount = data['followers_count'] ?? 0;
+          followingCount = data['following_count'] ?? 0;
+          isFollowing = data['is_following'] ?? false;
+          isMyProfile = widget.userId == null;
+          final pic = data['profile_picture'];
+          if (pic != null && pic.isNotEmpty) {
+            profileImageUrl =
+                pic.startsWith('http') ? pic : 'http://10.0.2.2:8000$pic';
+          } else {
+            profileImageUrl = null;
+          }
         });
       } else {
         print('Failed to load profile data: ${response.statusCode}');
@@ -372,7 +418,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 16.0),
                 Text(
-                  '@$username',
+                  '$username',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -390,13 +436,70 @@ class _ProfilePageState extends State<ProfilePage> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                Text(
-                  '0 Following  |  0 Followers', // TODO: Implement Follower counts
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FollowersFollowingListPage(
+              userId:  widget.userId ?? currentUserId!,
+              showFollowers: false,
+            ),
+          ),
+        );
+      },
+      child: Text(
+        '$followingCount Following',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).textTheme.bodyMedium?.color,
+        ),
+      ),
+    ),
+    const Text('  |  '),
+    GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FollowersFollowingListPage(
+              userId:  widget.userId ?? currentUserId!,
+              showFollowers: true,
+            ),
+          ),
+        );
+      },
+      child: Text(
+        '$followersCount Followers',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).textTheme.bodyMedium?.color,
+        ),
+      ),
+    ),
+  ],
+),
+
+                if (!isMyProfile)
+                  ElevatedButton(
+                    onPressed: toggleFollow,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isFollowing
+                              ? Colors.grey
+                              : Theme.of(context).colorScheme.primary,
+                    ),
+                    child: Text(
+                      isFollowing ? 'Unfollow' : 'Follow',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
                   ),
-                ),
+
                 const SizedBox(height: 16),
                 if (widget.userId == null)
                   ElevatedButton(
@@ -429,17 +532,20 @@ class _ProfilePageState extends State<ProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            // Navigate to the modified AllItemsPage (no args needed)
-                            builder:
-                                (context) =>
-                                    AllItemsPage(userId: widget.userId),
-                          ),
-                        );
-                      },
+                      onTap:
+                          (_hideItems && widget.userId != null)
+                              ? null
+                              : () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            AllItemsPage(userId: widget.userId),
+                                  ),
+                                );
+                              },
+
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -474,17 +580,21 @@ class _ProfilePageState extends State<ProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        // TODO: Update AllOutfitsPage similarly if needed
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    AllOutfitsPage(userId: widget.userId),
-                          ),
-                        );
-                      },
+                      onTap:
+                          (_hideOutfits && widget.userId != null)
+                              ? null
+                              : () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => AllOutfitsPage(
+                                          userId: widget.userId,
+                                        ),
+                                  ),
+                                );
+                              },
+                      // Disable for other users
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -640,13 +750,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ],
                     ),
-
-                // Original Outfits ListView (commented out, needs update)
-                /*
-                widget.items.isEmpty // This logic is now incorrect
-                    ? Container(...) 
-                    : SizedBox(...ListView.builder using widget.items...)
-                */
               ],
             ),
           ),

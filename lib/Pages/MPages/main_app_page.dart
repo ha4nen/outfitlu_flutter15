@@ -36,12 +36,8 @@ class _MainAppPageState extends State<MainAppPage>
   void initState() {
     super.initState();
     _pages = [
-      WardrobePage(
-        key: const ValueKey('FeedPage'),
-        posts: [
-          {'username': 'han', 'caption': 'Outfit of the day!'},
-        ],
-      ),
+      WardrobePage(key: const ValueKey('FeedPage')),
+
       MagicPage(
         key: const ValueKey('MagicPage'),
         onThemeChange: widget.onThemeChange,

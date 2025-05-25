@@ -16,16 +16,26 @@ class _WardrobePageState extends State<WardrobePage> {
   List<Map<String, dynamic>> filteredPosts = [];
   List<Map<String, dynamic>> followingPosts = [];
   List<Map<String, dynamic>> discoverPosts = [];
+  List<Map<String, dynamic>> searchResults = [];
   bool _isLoading = true;
   String _error = '';
   int? userId;
   String selectedFilter = 'All';
   bool isAnimating = false;
+  bool _showSearchBar = false;
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchPosts();
+    _loadRecentSearches();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -35,6 +45,31 @@ class _WardrobePageState extends State<WardrobePage> {
       await _fetchPosts(); // Refresh when navigating back
       return true;
     });
+  }
+
+  List<String> recentSearches = [];
+
+  void _addToRecentSearches(String username) {
+    if (!recentSearches.contains(username)) {
+      setState(() {
+        recentSearches.insert(0, username);
+        if (recentSearches.length > 5) {
+          recentSearches = recentSearches.sublist(0, 5);
+        }
+      });
+      _saveRecentSearches(); // Save after update
+    }
+  }
+
+  Future<void> _loadRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    recentSearches = prefs.getStringList('recent_searches') ?? [];
+    setState(() {});
+  }
+
+  Future<void> _saveRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('recent_searches', recentSearches);
   }
 
   Future<void> _fetchPosts() async {
@@ -103,6 +138,43 @@ class _WardrobePageState extends State<WardrobePage> {
       });
     }
   }
+
+ Future<void> _searchUsers(String query) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+  if (token == null) return;
+
+
+  final url = Uri.parse('http://10.0.2.2:8000/api/users/search/?q=$query');
+  final response = await http.get(
+    url,
+    headers: {'Authorization': 'Token $token'},
+  );
+
+  if (response.statusCode == 200) {
+    final List data = json.decode(response.body);
+
+    final results = data.map<Map<String, dynamic>>((user) {
+      final rawPic = user['profile_picture'];
+     final fullProfilePicUrl = (rawPic != null && rawPic.toString().isNotEmpty)
+    ? rawPic
+    : '';
+
+      print('User profile pic: $fullProfilePicUrl');
+
+      return {
+        'id': user['id'] ?? -1,
+        'username': user['username'] ?? 'User',
+        'profile_picture': fullProfilePicUrl,
+      };
+    }).toList();
+
+    setState(() {
+      searchResults = results;
+    });
+  }
+}
+
 
   void _applyFilter() {
     setState(() {
@@ -222,32 +294,64 @@ class _WardrobePageState extends State<WardrobePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Feed',
-          style: TextStyle(fontWeight: FontWeight.bold),
+      title: !_showSearchBar
+    ? const Text(
+        'Feed',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      )
+    : Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.light
+              ? const Color.fromARGB(255, 168, 167, 167)
+              : const Color.fromARGB(255, 110, 109, 109),
+          borderRadius: BorderRadius.circular(8),
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: TextField(
+          controller: _searchController,
+          autofocus: true,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          decoration: InputDecoration(
+            hintText: 'Search users...',
+            hintStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+            border: InputBorder.none,
+            icon: const Icon(Icons.search),
+          ),
+          onChanged: _searchUsers,
+        ),
+      ),
+
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: PopupMenuButton<String>(
-              icon: const Icon(Icons.filter_list),
-              onSelected: (value) {
-                selectedFilter = value;
-                _applyFilter();
-              },
-              itemBuilder:
-                  (context) =>
-                      ['All', 'Mine', 'Friends', 'Discover']
-                          .map(
-                            (filter) => PopupMenuItem(
-                              value: filter,
-                              child: Text(filter),
-                            ),
-                          )
-                          .toList(),
-            ),
+          IconButton(
+            icon: Icon(_showSearchBar ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _showSearchBar = !_showSearchBar;
+                _searchController.clear();
+                searchResults.clear();
+              });
+            },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.filter_list),
+            onSelected: (value) {
+              selectedFilter = value;
+              _applyFilter();
+            },
+            itemBuilder:
+                (context) =>
+                    ['All', 'Mine', 'Friends', 'Discover']
+                        .map(
+                          (filter) =>
+                              PopupMenuItem(value: filter, child: Text(filter)),
+                        )
+                        .toList(),
           ),
         ],
       ),
@@ -257,6 +361,110 @@ class _WardrobePageState extends State<WardrobePage> {
               : _error.isNotEmpty
               ? Center(
                 child: Text(_error, style: TextStyle(color: colorScheme.error)),
+              )
+              : _showSearchBar
+              ? ListView(
+                children: [
+                  if (recentSearches.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Text(
+                        'Recent Searches',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onBackground,
+                        ),
+                      ),
+                    ),
+                ...recentSearches.map(
+  (username) => ListTile(
+    leading: Icon(Icons.history, color: Theme.of(context).colorScheme.onBackground),
+    title: Text(
+      username,
+      style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
+    ),
+    trailing: IconButton(
+      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onBackground),
+      onPressed: () {
+        setState(() {
+          recentSearches.remove(username);
+        });
+        _saveRecentSearches();
+      },
+    ),
+    onTap: () {
+      _searchController.text = username;
+      _searchUsers(username);
+    },
+  ),
+),
+
+
+                    const Divider(),
+                  ],
+                  if (searchResults.isNotEmpty)
+                    ...searchResults.map(
+                      (user) => ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage:
+                              (user['profile_picture'] != null &&
+                                      user['profile_picture']
+                                          .toString()
+                                          .isNotEmpty)
+                                  ? NetworkImage(user['profile_picture']!)
+                                  : null,
+                          backgroundColor: Colors.grey.shade200,
+                          child:
+                              (user['profile_picture'] == null ||
+                                      user['profile_picture']
+                                          .toString()
+                                          .isEmpty)
+                                  ? const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                  )
+                                  : null,
+                        ),
+
+                        title: Text(
+                          user['username'] ?? 'User',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onBackground,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        subtitle: Text(
+                          'Tap to view profile',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onBackground.withOpacity(0.6),
+                          ),
+                        ),
+
+                        onTap: () {
+                          _addToRecentSearches(user['username']);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => ProfilePage(
+                                    onThemeChange: () {},
+                                    userId:
+                                        (user['id'] != -1) ? user['id'] : null,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  if (searchResults.isEmpty &&
+                      _searchController.text.isNotEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('No users found.'),
+                    ),
+                ],
               )
               : filteredPosts.isEmpty
               ? const Center(child: Text('No posts found.'))

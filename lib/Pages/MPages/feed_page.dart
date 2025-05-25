@@ -29,7 +29,6 @@ class _WardrobePageState extends State<WardrobePage> {
   void initState() {
     super.initState();
     _fetchPosts();
-    _loadRecentSearches();
   }
 
   @override
@@ -49,6 +48,16 @@ class _WardrobePageState extends State<WardrobePage> {
 
   List<String> recentSearches = [];
 
+Future<String> _getRecentSearchKey() async {
+  final prefs = await SharedPreferences.getInstance();
+  final id = prefs.getInt('user_id');
+  if (id == null) {
+    throw Exception("User ID not found when building recent search key.");
+  }
+  return 'recent_searches_user_$id';
+}
+
+
   void _addToRecentSearches(String username) {
     if (!recentSearches.contains(username)) {
       setState(() {
@@ -62,15 +71,18 @@ class _WardrobePageState extends State<WardrobePage> {
   }
 
   Future<void> _loadRecentSearches() async {
-    final prefs = await SharedPreferences.getInstance();
-    recentSearches = prefs.getStringList('recent_searches') ?? [];
-    setState(() {});
-  }
+  final prefs = await SharedPreferences.getInstance();
+  final key = await _getRecentSearchKey();
+  recentSearches = prefs.getStringList(key) ?? [];
+  setState(() {});
+}
 
   Future<void> _saveRecentSearches() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('recent_searches', recentSearches);
-  }
+  final prefs = await SharedPreferences.getInstance();
+  final key = await _getRecentSearchKey();
+  await prefs.setStringList(key, recentSearches);
+}
+
 
   Future<void> _fetchPosts() async {
     setState(() {
@@ -133,9 +145,11 @@ class _WardrobePageState extends State<WardrobePage> {
       }
     } catch (e) {
       setState(() {
-        _isLoading = false;
-        _error = 'An error occurred: $e';
-      });
+  _isLoading = false;
+  _applyFilter();
+});
+await _loadRecentSearches(); 
+
     }
   }
 

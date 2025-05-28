@@ -23,7 +23,7 @@ class _WardrobePageState extends State<WardrobePage> {
   String selectedFilter = 'All';
   bool isAnimating = false;
   bool _showSearchBar = false;
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -385,19 +385,19 @@ await _loadRecentSearches();
                       child: Text(
                         'Recent Searches',
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onBackground,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
                 ...recentSearches.map(
   (username) => ListTile(
-    leading: Icon(Icons.history, color: Theme.of(context).colorScheme.onBackground),
+    leading: Icon(Icons.history, color: Theme.of(context).colorScheme.onSurface),
     title: Text(
       username,
-      style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
     ),
     trailing: IconButton(
-      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onBackground),
+      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
       onPressed: () {
         setState(() {
           recentSearches.remove(username);
@@ -442,7 +442,7 @@ await _loadRecentSearches();
                         title: Text(
                           user['username'] ?? 'User',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onBackground,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -452,7 +452,7 @@ await _loadRecentSearches();
                           style: TextStyle(
                             color: Theme.of(
                               context,
-                            ).colorScheme.onBackground.withOpacity(0.6),
+                            ).colorScheme.onSurface.withOpacity(0.6),
                           ),
                         ),
 

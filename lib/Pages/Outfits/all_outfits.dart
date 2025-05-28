@@ -261,8 +261,9 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
                                                             progress,
                                                           ) {
                                                             if (progress ==
-                                                                null)
+                                                                null) {
                                                               return child;
+                                                            }
                                                             return const Center(
                                                               child:
                                                                   CircularProgressIndicator(),
@@ -331,7 +332,7 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
                             const SizedBox(height: 24),
                           ],
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),

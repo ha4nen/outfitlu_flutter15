@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
       labelStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
-      fillColor: theme.colorScheme.surfaceVariant,
+      fillColor: theme.colorScheme.surfaceContainerHighest,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text('Login', style: TextStyle(color: Colors.white)),
         backgroundColor: theme.colorScheme.primary,

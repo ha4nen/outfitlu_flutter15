@@ -117,8 +117,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: _emailController,
                   decoration: buildInputDecoration('Email'),
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Enter your email';
+                    }
                     if (!isValidEmail(value)) return 'Enter a valid email';
                     return null;
                   },
@@ -130,8 +131,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: true,
                   decoration: buildInputDecoration('Password'),
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Enter your password';
+                    }
                     if (!isComplexPassword(value)) {
                       return 'Password must contain:\n- Uppercase\n- Number\n- Symbol\n- 6+ characters';
                     }
@@ -145,10 +147,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: true,
                   decoration: buildInputDecoration('Confirm Password'),
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Confirm your password';
-                    if (value != _passwordController.text)
+                    }
+                    if (value != _passwordController.text) {
                       return 'Passwords do not match';
+                    }
                     return null;
                   },
                 ),

@@ -418,7 +418,7 @@ print('isMyProfile = $isMyProfile');
                 ),
                 const SizedBox(height: 16.0),
                 Text(
-                  '$username',
+                  username,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -721,8 +721,9 @@ print('isMyProfile = $isMyProfile');
                                                   child,
                                                   progress,
                                                 ) {
-                                                  if (progress == null)
+                                                  if (progress == null) {
                                                     return child;
+                                                  }
                                                   return const Center(
                                                     child:
                                                         CircularProgressIndicator(),

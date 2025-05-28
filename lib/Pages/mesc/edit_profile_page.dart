@@ -171,8 +171,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
     final onPrimaryColor = theme.colorScheme.onPrimary;
-    final backgroundColor = theme.colorScheme.background;
-    final onBackgroundColor = theme.colorScheme.onBackground;
+    final backgroundColor = theme.colorScheme.surface;
+    final onBackgroundColor = theme.colorScheme.onSurface;
 
     if (_loading) {
       return Scaffold(

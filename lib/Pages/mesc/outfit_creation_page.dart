@@ -231,8 +231,8 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
                     } else {
                       Navigator.pop(
                         context,
-                        true,
-                      ); // ✅ return `true` so FeedPage knows to refresh
+                        outfitId,
+                      ); // ✅ return the outfit ID so planner can use it
                     }
                   },
                   child: const Text('OK'),

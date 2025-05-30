@@ -48,15 +48,14 @@ class _WardrobePageState extends State<WardrobePage> {
 
   List<String> recentSearches = [];
 
-Future<String> _getRecentSearchKey() async {
-  final prefs = await SharedPreferences.getInstance();
-  final id = prefs.getInt('user_id');
-  if (id == null) {
-    throw Exception("User ID not found when building recent search key.");
+  Future<String> _getRecentSearchKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getInt('user_id');
+    if (id == null) {
+      throw Exception("User ID not found when building recent search key.");
+    }
+    return 'recent_searches_user_$id';
   }
-  return 'recent_searches_user_$id';
-}
-
 
   void _addToRecentSearches(String username) {
     if (!recentSearches.contains(username)) {
@@ -71,18 +70,17 @@ Future<String> _getRecentSearchKey() async {
   }
 
   Future<void> _loadRecentSearches() async {
-  final prefs = await SharedPreferences.getInstance();
-  final key = await _getRecentSearchKey();
-  recentSearches = prefs.getStringList(key) ?? [];
-  setState(() {});
-}
+    final prefs = await SharedPreferences.getInstance();
+    final key = await _getRecentSearchKey();
+    recentSearches = prefs.getStringList(key) ?? [];
+    setState(() {});
+  }
 
   Future<void> _saveRecentSearches() async {
-  final prefs = await SharedPreferences.getInstance();
-  final key = await _getRecentSearchKey();
-  await prefs.setStringList(key, recentSearches);
-}
-
+    final prefs = await SharedPreferences.getInstance();
+    final key = await _getRecentSearchKey();
+    await prefs.setStringList(key, recentSearches);
+  }
 
   Future<void> _fetchPosts() async {
     setState(() {
@@ -145,50 +143,47 @@ Future<String> _getRecentSearchKey() async {
       }
     } catch (e) {
       setState(() {
-  _isLoading = false;
-  _applyFilter();
-});
-await _loadRecentSearches(); 
-
+        _isLoading = false;
+        _applyFilter();
+      });
+      await _loadRecentSearches();
     }
   }
 
- Future<void> _searchUsers(String query) async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
-  if (token == null) return;
+  Future<void> _searchUsers(String query) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    if (token == null) return;
 
+    final url = Uri.parse('http://10.0.2.2:8000/api/users/search/?q=$query');
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Token $token'},
+    );
 
-  final url = Uri.parse('http://10.0.2.2:8000/api/users/search/?q=$query');
-  final response = await http.get(
-    url,
-    headers: {'Authorization': 'Token $token'},
-  );
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
 
-  if (response.statusCode == 200) {
-    final List data = json.decode(response.body);
+      final results =
+          data.map<Map<String, dynamic>>((user) {
+            final rawPic = user['profile_picture'];
+            final fullProfilePicUrl =
+                (rawPic != null && rawPic.toString().isNotEmpty) ? rawPic : '';
 
-    final results = data.map<Map<String, dynamic>>((user) {
-      final rawPic = user['profile_picture'];
-     final fullProfilePicUrl = (rawPic != null && rawPic.toString().isNotEmpty)
-    ? rawPic
-    : '';
+            print('User profile pic: $fullProfilePicUrl');
 
-      print('User profile pic: $fullProfilePicUrl');
+            return {
+              'id': user['id'] ?? -1,
+              'username': user['username'] ?? 'User',
+              'profile_picture': fullProfilePicUrl,
+            };
+          }).toList();
 
-      return {
-        'id': user['id'] ?? -1,
-        'username': user['username'] ?? 'User',
-        'profile_picture': fullProfilePicUrl,
-      };
-    }).toList();
-
-    setState(() {
-      searchResults = results;
-    });
+      setState(() {
+        searchResults = results;
+      });
+    }
   }
-}
-
 
   void _applyFilter() {
     setState(() {
@@ -308,36 +303,40 @@ await _loadRecentSearches();
 
     return Scaffold(
       appBar: AppBar(
-      title: !_showSearchBar
-    ? const Text(
-        'Feed',
-        style: TextStyle(fontWeight: FontWeight.bold),
-      )
-    : Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.light
-              ? const Color.fromARGB(255, 168, 167, 167)
-              : const Color.fromARGB(255, 110, 109, 109),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: TextField(
-          controller: _searchController,
-          autofocus: true,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-          decoration: InputDecoration(
-            hintText: 'Search users...',
-            hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-            ),
-            border: InputBorder.none,
-            icon: const Icon(Icons.search),
-          ),
-          onChanged: _searchUsers,
-        ),
-      ),
+        title:
+            !_showSearchBar
+                ? const Text(
+                  'Feed',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                )
+                : Container(
+                  decoration: BoxDecoration(
+                    color:
+                        Theme.of(context).brightness == Brightness.light
+                            ? const Color.fromARGB(255, 168, 167, 167)
+                            : const Color.fromARGB(255, 110, 109, 109),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Search users...',
+                      hintStyle: TextStyle(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                      border: InputBorder.none,
+                      icon: const Icon(Icons.search),
+                    ),
+                    onChanged: _searchUsers,
+                  ),
+                ),
 
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
@@ -389,29 +388,36 @@ await _loadRecentSearches();
                         ),
                       ),
                     ),
-                ...recentSearches.map(
-  (username) => ListTile(
-    leading: Icon(Icons.history, color: Theme.of(context).colorScheme.onSurface),
-    title: Text(
-      username,
-      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-    ),
-    trailing: IconButton(
-      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
-      onPressed: () {
-        setState(() {
-          recentSearches.remove(username);
-        });
-        _saveRecentSearches();
-      },
-    ),
-    onTap: () {
-      _searchController.text = username;
-      _searchUsers(username);
-    },
-  ),
-),
-
+                    ...recentSearches.map(
+                      (username) => ListTile(
+                        leading: Icon(
+                          Icons.history,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        title: Text(
+                          username,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              recentSearches.remove(username);
+                            });
+                            _saveRecentSearches();
+                          },
+                        ),
+                        onTap: () {
+                          _searchController.text = username;
+                          _searchUsers(username);
+                        },
+                      ),
+                    ),
 
                     const Divider(),
                   ],

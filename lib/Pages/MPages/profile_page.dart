@@ -74,7 +74,6 @@ class WardrobeItem {
   }
 }
 
-
 // Function to get token (keep if used elsewhere)
 Future<String?> getToken() async {
   final prefs = await SharedPreferences.getInstance();
@@ -120,7 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
   int followingCount = 0;
   bool isFollowing = false;
   bool isMyProfile = true;
-  
+
   int? currentUserId;
   @override
   void initState() {
@@ -131,41 +130,40 @@ class _ProfilePageState extends State<ProfilePage> {
     _fetchOutfits();
   }
 
-Future<void> toggleFollow() async {
-  print('widget.userId = ${widget.userId}');
-print('isMyProfile = $isMyProfile');
+  Future<void> toggleFollow() async {
+    print('widget.userId = ${widget.userId}');
+    print('isMyProfile = $isMyProfile');
 
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
     print('Token = $token');
-  if (token == null || widget.userId == null) {
-    print('Missing token or userId');
-    return;
+    if (token == null || widget.userId == null) {
+      print('Missing token or userId');
+      return;
+    }
+
+    final url = Uri.parse(
+      'http://10.0.2.2:8000/api/feed/follow/${widget.userId}/',
+    );
+    print('Sending POST to $url');
+
+    final response = await http.post(
+      url,
+      headers: {'Authorization': 'Token $token'},
+    );
+
+    print('Response ${response.statusCode}');
+    print(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      setState(() {
+        isFollowing = !isFollowing;
+        followersCount += isFollowing ? 1 : -1;
+      });
+    } else {
+      print('Failed to toggle follow: ${response.body}');
+    }
   }
-
-  final url = Uri.parse('http://10.0.2.2:8000/api/feed/follow/${widget.userId}/');
-  print('Sending POST to $url');
-
-  final response = await http.post(
-    url,
-    headers: {
-      'Authorization': 'Token $token',
-    },
-  );
-
-  print('Response ${response.statusCode}');
-  print(response.body);
-
-  if (response.statusCode == 200 || response.statusCode == 201) {
-    setState(() {
-      isFollowing = !isFollowing;
-      followersCount += isFollowing ? 1 : -1;
-    });
-  } else {
-    print('Failed to toggle follow: ${response.body}');
-  }
-}
-
 
   Future<void> fetchProfileData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -437,51 +435,53 @@ print('isMyProfile = $isMyProfile');
                     ),
                   ),
                 Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => FollowersFollowingListPage(
-              userId:  widget.userId ?? currentUserId!,
-              showFollowers: false,
-            ),
-          ),
-        );
-      },
-      child: Text(
-        '$followingCount Following',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).textTheme.bodyMedium?.color,
-        ),
-      ),
-    ),
-    const Text('  |  '),
-    GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => FollowersFollowingListPage(
-              userId:  widget.userId ?? currentUserId!,
-              showFollowers: true,
-            ),
-          ),
-        );
-      },
-      child: Text(
-        '$followersCount Followers',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).textTheme.bodyMedium?.color,
-        ),
-      ),
-    ),
-  ],
-),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => FollowersFollowingListPage(
+                                  userId: widget.userId ?? currentUserId!,
+                                  showFollowers: false,
+                                ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        '$followingCount Following',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                    ),
+                    const Text('  |  '),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => FollowersFollowingListPage(
+                                  userId: widget.userId ?? currentUserId!,
+                                  showFollowers: true,
+                                ),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        '$followersCount Followers',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
 
                 if (!isMyProfile)
                   ElevatedButton(

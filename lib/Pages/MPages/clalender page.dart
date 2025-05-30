@@ -84,9 +84,9 @@ class _FeedPageState extends State<FeedPage> {
     );
 
     if (response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Outfit assigned to date!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Outfit assigned to date!")));
       _fetchPlannedOutfits();
     } else {
       print("❌ Failed to assign outfit: ${response.body}");
@@ -103,9 +103,9 @@ class _FeedPageState extends State<FeedPage> {
     );
 
     if (response.statusCode == 204) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Planned outfit deleted.")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Planned outfit deleted.")));
       _fetchPlannedOutfits();
     } else {
       print("❌ Failed to delete planned outfit: ${response.body}");
@@ -114,10 +114,8 @@ class _FeedPageState extends State<FeedPage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedDateKey = (_selectedDay ?? _focusedDay)
-        .toIso8601String()
-        .split('T')
-        .first;
+    final selectedDateKey =
+        (_selectedDay ?? _focusedDay).toIso8601String().split('T').first;
     final events = _plannedOutfits[selectedDateKey] ?? [];
 
     return Scaffold(
@@ -165,7 +163,10 @@ class _FeedPageState extends State<FeedPage> {
                   child: Center(
                     child: Text(
                       '${_monthName(date.month)} ${date.year}',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 );
@@ -174,13 +175,17 @@ class _FeedPageState extends State<FeedPage> {
           ),
           if (_calendarFormat == CalendarFormat.week)
             TextButton(
-              onPressed: () => setState(() => _calendarFormat = CalendarFormat.month),
+              onPressed:
+                  () => setState(() => _calendarFormat = CalendarFormat.month),
               child: const Text('Show Full Month'),
             ),
           const SizedBox(height: 8),
           Expanded(
             child: SingleChildScrollView(
-              child: events.isNotEmpty ? _buildOutfitCard(events.first) : _buildEmptyState(),
+              child:
+                  events.isNotEmpty
+                      ? _buildOutfitCard(events.first)
+                      : _buildEmptyState(),
             ),
           ),
         ],
@@ -189,70 +194,76 @@ class _FeedPageState extends State<FeedPage> {
   }
 
   Widget _buildOutfitCard(OutfitPlan plan) => Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              "This is your planned outfit",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                plan.outfitImageUrl,
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      children: [
+        const Text(
+          "This is your planned outfit",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            plan.outfitImageUrl,
+            height: 160,
+            width: double.infinity,
+            fit: BoxFit.contain,
+            errorBuilder:
+                (context, error, stackTrace) => const SizedBox(
                   height: 160,
                   child: Center(child: Icon(Icons.broken_image)),
                 ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: Column(
+            children: [
+              Text(
+                plan.outfitDescription,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    plan.outfitDescription,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap:
+                    () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => OutfitDetailsPage(
-                          outfit: Outfit(
-                            id: plan.outfitId,
-                            description: plan.outfitDescription,
-                            photoPath: plan.outfitImageUrl,
-                            type: plan.outfitType,
-                            season: plan.outfitSeason,
-                            tags: plan.outfitTags,
-                            isHijabFriendly: plan.isHijabFriendly,
-                          ),
-                        ),
+                        builder:
+                            (_) => OutfitDetailsPage(
+                              outfit: Outfit(
+                                id: plan.outfitId,
+                                description: plan.outfitDescription,
+                                photoPath: plan.outfitImageUrl,
+                                type: plan.outfitType,
+                                season: plan.outfitSeason,
+                                tags: plan.outfitTags,
+                                isHijabFriendly: plan.isHijabFriendly,
+                              ),
+                            ),
                       ),
                     ),
-                    child: Text(
-                      'See the outfit details >',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                child: Text(
+                  'See the outfit details >',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (ctx) => AlertDialog(
                           title: const Text("Delete Planned Outfit"),
-                          content: const Text("Are you sure you want to delete this planned outfit?"),
+                          content: const Text(
+                            "Are you sure you want to delete this planned outfit?",
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
@@ -260,62 +271,65 @@ class _FeedPageState extends State<FeedPage> {
                             ),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
                               child: const Text("Delete"),
                             ),
                           ],
                         ),
-                      );
-                      if (confirmed == true) {
-                        await _deletePlannedOutfit(plan.id);
-                      }
-                    },
-                    child: const Text("Delete Planned Outfit"),
-                  ),
-                ],
+                  );
+                  if (confirmed == true) {
+                    await _deletePlannedOutfit(plan.id);
+                  }
+                },
+                child: const Text("Delete Planned Outfit"),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _buildEmptyState() => Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text("No outfit planned for this day."),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MagicPage(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      children: [
+        const Text("No outfit planned for this day."),
+        const SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => MagicPage(
                       onThemeChange: () {},
                       fromCalendar: true,
                       selectedDate: _selectedDay,
                     ),
-                  ),
-                );
-                if (result == true) _fetchPlannedOutfits();
-              },
-              child: const Text('Create Your Outfit'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final selectedOutfit = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ChooseOutfitPage()),
-                );
-                if (selectedOutfit != null) {
-                  await _assignOutfitToDate(selectedOutfit.id);
-                }
-              },
-              child: const Text('Choose Existing Outfit'),
-            ),
-          ],
+              ),
+            );
+            if (result == true) _fetchPlannedOutfits();
+          },
+          child: const Text('Create Your Outfit'),
         ),
-      );
+        ElevatedButton(
+          onPressed: () async {
+            final selectedOutfit = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChooseOutfitPage()),
+            );
+            if (selectedOutfit != null) {
+              await _assignOutfitToDate(selectedOutfit.id);
+            }
+          },
+          child: const Text('Choose Existing Outfit'),
+        ),
+      ],
+    ),
+  );
 }
 
 class OutfitPlan {
@@ -369,8 +383,18 @@ Future<String?> getToken() async {
 String _monthName(int month) {
   const months = [
     '',
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   return months[month];
 }

@@ -48,7 +48,8 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
     }
 
     if (_fetchedOutfit != null) {
-      _alreadyPosted = prefs.getBool('outfit_posted_${_fetchedOutfit!.id}') ?? false;
+      _alreadyPosted =
+          prefs.getBool('outfit_posted_${_fetchedOutfit!.id}') ?? false;
       if (!_alreadyPosted) {
         await _checkIfAlreadyPosted(_fetchedOutfit!.id);
       }
@@ -98,26 +99,27 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Post Outfit"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Add a caption (optional):"),
-            TextField(controller: captionController),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Post Outfit"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Add a caption (optional):"),
+                TextField(controller: captionController),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Post"),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Post"),
-          ),
-        ],
-      ),
     );
 
     if (confirmed != true) return;
@@ -147,21 +149,22 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Outfit'),
-        content: const Text('Are you sure you want to delete this outfit?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Delete Outfit'),
+            content: const Text('Are you sure you want to delete this outfit?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true && _fetchedOutfit != null) {
@@ -198,17 +201,21 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                         outfit.photoPath!,
                         fit: BoxFit.contain,
                         width: double.infinity,
-                        loadingBuilder: (context, child, progress) =>
-                            progress == null
-                                ? child
-                                : const SizedBox(
-                                    height: 250,
-                                    child: Center(child: CircularProgressIndicator()),
-                                  ),
-                        errorBuilder: (_, __, ___) => const SizedBox(
-                          height: 250,
-                          child: Center(child: Icon(Icons.broken_image)),
-                        ),
+                        loadingBuilder:
+                            (context, child, progress) =>
+                                progress == null
+                                    ? child
+                                    : const SizedBox(
+                                      height: 250,
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                        errorBuilder:
+                            (_, __, ___) => const SizedBox(
+                              height: 250,
+                              child: Center(child: Icon(Icons.broken_image)),
+                            ),
                       ),
                     ),
                   const SizedBox(height: 16),
@@ -222,8 +229,14 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                     ),
                   _buildDetailRow('Type:', outfit.type ?? 'Unknown'),
                   _buildDetailRow('Season:', outfit.season ?? 'Unknown'),
-                  _buildDetailRow('Tags:', outfit.tags?.isNotEmpty == true ? outfit.tags! : 'None'),
-                  _buildDetailRow('Hijab Friendly:', outfit.isHijabFriendly ? 'Yes' : 'No'),
+                  _buildDetailRow(
+                    'Tags:',
+                    outfit.tags?.isNotEmpty == true ? outfit.tags! : 'None',
+                  ),
+                  _buildDetailRow(
+                    'Hijab Friendly:',
+                    outfit.isHijabFriendly ? 'Yes' : 'No',
+                  ),
                 ],
               ),
             ),
@@ -241,7 +254,10 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                   if (!_alreadyPosted)
@@ -252,7 +268,10 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                 ],
@@ -271,7 +290,10 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
           children: [
             TextSpan(
               text: '$label ',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             TextSpan(
               text: value,

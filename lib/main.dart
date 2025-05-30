@@ -61,7 +61,7 @@ class _MyAppState extends State<MyApp> {
           background: Color(0xFFFFFFFF), // White
           onBackground: Color.fromARGB(255, 0, 0, 0), // black nav buttons
           surface: Color(0xFFF0F0F0), // Light Grey
-          onSurface: Color(0xFFFFFFFF), // White
+          onSurface: Color.fromARGB(255, 0, 0, 0), // White
         ),
       ),
       darkTheme: ThemeData.dark().copyWith(

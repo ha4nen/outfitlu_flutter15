@@ -15,7 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-
+  bool _obscurePassword = true;
   Future<void> loginUser(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -97,8 +97,25 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: passwordController,
-                  obscureText: true,
-                  decoration: buildInputDecoration('Password', context),
+                  obscureText: _obscurePassword,
+                  decoration: buildInputDecoration(
+                    'Password',
+                    context,
+                  ).copyWith(
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
                   validator:
                       (value) =>
                           value == null || value.isEmpty

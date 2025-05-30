@@ -200,7 +200,8 @@ class _ProfilePageState extends State<ProfilePage> {
           followersCount = data['followers_count'] ?? 0;
           followingCount = data['following_count'] ?? 0;
           isFollowing = data['is_following'] ?? false;
-          isMyProfile = widget.userId == null;
+          isMyProfile =
+              (widget.userId == null) || (widget.userId == currentUserId);
           final pic = data['profile_picture'];
           if (pic != null && pic.isNotEmpty) {
             profileImageUrl =

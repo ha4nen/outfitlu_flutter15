@@ -102,7 +102,7 @@ class _FollowersFollowingListPageState
                       backgroundImage:
                           (profilePic != null &&
                                   profilePic.toString().isNotEmpty)
-                              ? NetworkImage(profilePic)  
+                              ? NetworkImage(profilePic)
                               : null,
                       backgroundColor: Colors.grey.shade300,
                       child:

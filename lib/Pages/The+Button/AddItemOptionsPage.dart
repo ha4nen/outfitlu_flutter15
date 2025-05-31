@@ -41,7 +41,7 @@ class AddItemOptionsPage extends StatelessWidget {
       // Show loading UI
       Navigator.push(
         context,
-         MaterialPageRoute(
+        MaterialPageRoute(
           builder:
               (_) => LoadingPage(
                 imageFile: File(pickedFile.path),

@@ -57,17 +57,31 @@ class ConfirmPhotoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Confirm Your Item")),
+      appBar: AppBar(
+        title: const Text("Confirm Your Item"),
+        backgroundColor: theme.colorScheme.primary,
+      ),
       body: Column(
         children: [
-          Expanded(child: Image.file(imageFile)),
+          Expanded(
+            child: Container(
+              color: theme.colorScheme.surfaceVariant,
+              child: Image.file(imageFile),
+            ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton.icon(
                 icon: const Icon(Icons.check),
                 label: const Text("Use Photo"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                ),
                 onPressed: () async {
                   try {
                     final data = await fetchCategories();
@@ -87,7 +101,13 @@ class ConfirmPhotoPage extends StatelessWidget {
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Error: ${e.toString()}")),
+                      SnackBar(
+                        content: Text(
+                          "Error: ${e.toString()}",
+                          style: TextStyle(color: theme.colorScheme.onError),
+                        ),
+                        backgroundColor: theme.colorScheme.error,
+                      ),
                     );
                   }
                 },
@@ -95,6 +115,10 @@ class ConfirmPhotoPage extends StatelessWidget {
               ElevatedButton.icon(
                 icon: const Icon(Icons.refresh),
                 label: const Text("Retake"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.secondary,
+                  foregroundColor: theme.colorScheme.onSecondary,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
             ],

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Pages/mesc/loading_page.dart';
 import 'package:flutter_application_1/Pages/mesc/login_page.dart';
 import 'package:flutter_application_1/Pages/mesc/register_page.dart';
+import 'package:flutter_application_1/Pages/mesc/GetStartedPage.dart';
 import 'package:flutter_application_1/Pages/MPages/main_app_page.dart';
 import 'dart:io';
 
@@ -56,7 +57,7 @@ class _MyAppState extends State<MyApp> {
           onPrimary: Color(0xFFFFFFFF), // White
           secondary: Color(0xFFC77DFF), // Electric Purple
           onSecondary: Color(0xFFFFFFFF), // White
-          error: Color(0xFFB00020), // Error Red
+          error: Color.from(alpha: 1, red: 0.69, green: 0, blue: 0.125), // Error Red
           onError: Color(0xFFFFFFFF), // White
           background: Color(0xFFFFFFFF), // White
           onBackground: Color.fromARGB(255, 0, 0, 0), // black nav buttons
@@ -99,11 +100,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/':
-            (context) => LoadingPage(
-              imageFile: File('path/to/your/image'),
-              nextPageBuilder: () => const LoginPage(),
-            ), // Provide the required imageFile parameter
+        '/': (context) => const GetStartedPage(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
         '/main':

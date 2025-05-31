@@ -1,3 +1,4 @@
+// ✅ Login Page with animated draggable height and password toggle
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,9 +17,10 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  double cardHeightFraction = 0.55;
+
   Future<void> loginUser(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     final response = await http.post(
@@ -37,14 +39,13 @@ class _LoginPageState extends State<LoginPage> {
       final token = responseBody['token'];
       final userId = responseBody['user_id'];
 
-      // Store token and user ID
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', token);
       await prefs.setInt('user_id', userId);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login successful!')),
+      );
 
       Navigator.pushReplacementNamed(context, '/main');
     } else {
@@ -54,106 +55,143 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  InputDecoration buildInputDecoration(String label, BuildContext context) {
-    final theme = Theme.of(context);
+  InputDecoration buildInputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      filled: true,
-      fillColor: theme.colorScheme.surfaceContainerHighest,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      prefixIcon: Icon(icon, color: Colors.grey),
+      labelStyle: const TextStyle(color: Colors.grey),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey),
+      ),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.black),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('Login', style: TextStyle(color: Colors.white)),
-        backgroundColor: theme.colorScheme.primary,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: emailController,
-                  decoration: buildInputDecoration(
-                    'Email or Username',
-                    context,
+    return GestureDetector(
+      onHorizontalDragUpdate: (details) {
+        if (details.delta.dx > 10) Navigator.pop(context);
+      },
+      onVerticalDragUpdate: (details) {
+        setState(() {
+          cardHeightFraction = (cardHeightFraction - details.primaryDelta! / MediaQuery.of(context).size.height).clamp(0.3, 0.9);
+        });
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/models/background.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: AnimatedContainer(
+                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 300),
+                height: MediaQuery.of(context).size.height * cardHeightFraction,
+                width: MediaQuery.of(context).size.width,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.95),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
                   ),
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Enter your Email or Username'
-                              : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: buildInputDecoration(
-                    'Password',
-                    context,
-                  ).copyWith(
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
                     ),
-                  ),
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Enter your password'
-                              : null,
+                  ],
                 ),
-                const SizedBox(height: 24),
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => loginUser(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                child: Form(
+                  key: _formKey,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    reverse: true,
+                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Welcome Back',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
                           ),
                         ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(fontSize: 16),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: emailController,
+                          decoration: buildInputDecoration('Email or Username', Icons.email),
+                          validator: (value) => value == null || value.isEmpty ? 'Enter your Email or Username' : null,
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: buildInputDecoration('Password', Icons.lock).copyWith(
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                          ),
+                          validator: (value) => value == null || value.isEmpty ? 'Enter your password' : null,
+                        ),
+                        const SizedBox(height: 30),
+                        _isLoading
+                            ? const CircularProgressIndicator()
+                            : GestureDetector(
+                                onTap: () => loginUser(context),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFDA5D1C), Color(0xFFC5426C)],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          child: const Text(
+                            'Create New Account',
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        ),
+                      ],
                     ),
-                const SizedBox(height: 16),
-
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/register'),
-                  child: Text(
-                    'Create New Account',
-                    style: TextStyle(color: theme.colorScheme.primary),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

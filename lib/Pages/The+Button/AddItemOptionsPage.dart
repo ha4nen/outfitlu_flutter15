@@ -41,7 +41,16 @@ class AddItemOptionsPage extends StatelessWidget {
       // Show loading UI
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => LoadingPage(nextPageBuilder: () => Container(),)),
+         MaterialPageRoute(
+          builder:
+              (_) => LoadingPage(
+                imageFile: File(pickedFile.path),
+                nextPageBuilder:
+                    () => ConfirmPhotoPage(
+                      imageFile: File(pickedFile.path),
+                    ), // Navigate to ConfirmYourPhotoPage
+              ),
+        ),
       );
 
       final cutoutFile = await removeBackground(originalFile);

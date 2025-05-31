@@ -30,7 +30,7 @@ class ItemDetails extends StatelessWidget {
     final token = prefs.getString('auth_token');
 
     final response = await http.delete(
-Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/'),
+      Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/'),
       headers: {'Authorization': 'Token $token'},
     );
 
@@ -47,9 +47,7 @@ Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/'),
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(itemName),
-      ),
+      appBar: AppBar(title: Text(itemName)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -62,15 +60,22 @@ Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/'),
                   width: 200,
                   height: 200,
                   color: Theme.of(context).colorScheme.surface,
-                  child: imageUrl != null
-                      ? Image.network(
-                          imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
-                          loadingBuilder: (context, child, progress) =>
-                              progress == null ? child : const Center(child: CircularProgressIndicator()),
-                        )
-                      : const Icon(Icons.image_not_supported, size: 50),
+                  child:
+                      imageUrl != null
+                          ? Image.network(
+                            imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (_, __, ___) => const Icon(Icons.broken_image),
+                            loadingBuilder:
+                                (context, child, progress) =>
+                                    progress == null
+                                        ? child
+                                        : const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                          )
+                          : const Icon(Icons.image_not_supported, size: 50),
                 ),
               ),
             ),
@@ -94,24 +99,29 @@ Uri.parse('http://10.0.2.2:8000/api/wardrobe/$itemId/'),
                 onPressed: () {
                   showDialog(
                     context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Delete Item'),
-                      content: const Text('Are you sure you want to delete this item?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
+                    builder:
+                        (_) => AlertDialog(
+                          title: const Text('Delete Item'),
+                          content: const Text(
+                            'Are you sure you want to delete this item?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                Navigator.pop(context); // close dialog
+                                await deleteItem(context);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              child: const Text('Delete'),
+                            ),
+                          ],
                         ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            Navigator.pop(context); // close dialog
-                            await deleteItem(context);
-                          },
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
                   );
                 },
                 icon: const Icon(Icons.delete),

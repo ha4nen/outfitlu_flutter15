@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_application_1/Pages/The+Button/clothing_item.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class ClothingStorage {
   static const String _key = 'clothing_items';
 

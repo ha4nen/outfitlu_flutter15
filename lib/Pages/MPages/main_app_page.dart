@@ -10,13 +10,18 @@ class MainAppPage extends StatefulWidget {
   final List<File> items;
   final VoidCallback onThemeChange;
 
-  const MainAppPage({super.key, required this.items, required this.onThemeChange});
+  const MainAppPage({
+    super.key,
+    required this.items,
+    required this.onThemeChange,
+  });
 
   @override
   State<MainAppPage> createState() => _MainAppPageState();
 }
 
-class _MainAppPageState extends State<MainAppPage> with SingleTickerProviderStateMixin {
+class _MainAppPageState extends State<MainAppPage>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   int _nextIndex = 0;
   Offset _tapPosition = Offset.zero;
@@ -31,23 +36,14 @@ class _MainAppPageState extends State<MainAppPage> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _pages = [
-      WardrobePage(
-        key: const ValueKey('FeedPage'),
-        posts: [
-          {
-            'username': 'han',
-            'caption': 'Outfit of the day!',
-          },
-        ],
-      ),
+      WardrobePage(key: const ValueKey('FeedPage')),
+
       MagicPage(
         key: const ValueKey('MagicPage'),
         onThemeChange: widget.onThemeChange,
         fromCalendar: false,
       ),
-      const FeedPage(
-        key: ValueKey('CalendarPage'),
-      ),
+      const FeedPage(key: ValueKey('CalendarPage')),
       ProfilePage(
         key: const ValueKey('ProfilePage'),
         items: widget.items,
@@ -58,10 +54,7 @@ class _MainAppPageState extends State<MainAppPage> with SingleTickerProviderStat
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -121,7 +114,10 @@ class _MainAppPageState extends State<MainAppPage> with SingleTickerProviderStat
           double x = itemWidth * (index + 0.5); // center of tapped item
           double y = MediaQuery.of(context).size.height; // bottom of screen
 
-          _navigateToPage(index, Offset(x, y - 30)); // Adjust slightly up to look cleaner
+          _navigateToPage(
+            index,
+            Offset(x, y - 30),
+          ); // Adjust slightly up to look cleaner
         },
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         selectedItemColor: Theme.of(context).colorScheme.secondary,
@@ -139,10 +135,7 @@ class _MainAppPageState extends State<MainAppPage> with SingleTickerProviderStat
             icon: Icon(Icons.calendar_today),
             label: 'Calendar',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -153,7 +146,10 @@ class _MainAppPageState extends State<MainAppPage> with SingleTickerProviderStat
           );
         },
         backgroundColor: Theme.of(context).colorScheme.secondary,
-        child: Icon(Icons.add, color: Theme.of(context).colorScheme.onSecondary),
+        child: Icon(
+          Icons.add,
+          color: Theme.of(context).colorScheme.onSecondary,
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );

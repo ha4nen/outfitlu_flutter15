@@ -15,7 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-
+  bool _obscurePassword = true;
   Future<void> loginUser(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -42,9 +42,9 @@ class _LoginPageState extends State<LoginPage> {
       await prefs.setString('auth_token', token);
       await prefs.setInt('user_id', userId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login successful!')));
 
       Navigator.pushReplacementNamed(context, '/main');
     } else {
@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
       labelStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
-      fillColor: theme.colorScheme.surfaceVariant,
+      fillColor: theme.colorScheme.surfaceContainerHighest,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text('Login', style: TextStyle(color: Colors.white)),
         backgroundColor: theme.colorScheme.primary,
@@ -84,60 +84,66 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 TextFormField(
                   controller: emailController,
-                  decoration: buildInputDecoration('Email or Username', context),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter your Email or Username' : null,
+                  decoration: buildInputDecoration(
+                    'Email or Username',
+                    context,
+                  ),
+                  validator:
+                      (value) =>
+                          value == null || value.isEmpty
+                              ? 'Enter your Email or Username'
+                              : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: passwordController,
-                  obscureText: true,
-                  decoration: buildInputDecoration('Password', context),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter your password' : null,
+                  obscureText: _obscurePassword,
+                  decoration: buildInputDecoration(
+                    'Password',
+                    context,
+                  ).copyWith(
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  validator:
+                      (value) =>
+                          value == null || value.isEmpty
+                              ? 'Enter your password'
+                              : null,
                 ),
                 const SizedBox(height: 24),
                 _isLoading
                     ? const CircularProgressIndicator()
                     : SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => loginUser(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(fontSize: 16),
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => loginUser(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(fontSize: 16),
+                        ),
                       ),
+                    ),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Forgot Password'),
-                        content: const Text('Password recovery is not implemented yet.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                ),
+
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/register'),
                   child: Text(

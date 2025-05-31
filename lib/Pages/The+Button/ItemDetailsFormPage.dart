@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 class ItemDetailsFormPage extends StatefulWidget {
   final File imageFile;
@@ -37,10 +36,27 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
   String? token;
   List<Map<String, dynamic>> subCategories = [];
 
-  final List<String> colorSuggestions = ['Red', 'Blue', 'Black', 'White', 'Green'];
+  final List<String> colorSuggestions = [
+    'Red',
+    'Blue',
+    'Black',
+    'White',
+    'Green',
+  ];
   final List<String> sizeSuggestions = ['S', 'M', 'L', 'XL'];
-  final List<String> materialSuggestions = ['Cotton', 'Polyester', 'Wool', 'Silk'];
-  final List<String> tagSuggestions = ['Casual', 'Work', 'Formal', 'Comfy', 'Chic'];
+  final List<String> materialSuggestions = [
+    'Cotton',
+    'Polyester',
+    'Wool',
+    'Silk',
+  ];
+  final List<String> tagSuggestions = [
+    'Casual',
+    'Work',
+    'Formal',
+    'Comfy',
+    'Chic',
+  ];
 
   final Map<String, TextEditingController> _controllers = {
     'color': TextEditingController(),
@@ -100,7 +116,9 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
         'tags': _controllers['tags']!.text,
       });
 
-      request.files.add(await http.MultipartFile.fromPath('photo_path', widget.imageFile.path));
+      request.files.add(
+        await http.MultipartFile.fromPath('photo_path', widget.imageFile.path),
+      );
 
       final streamedResponse = await request.send();
       final responseBody = await streamedResponse.stream.bytesToString();
@@ -124,19 +142,22 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
   void _showSuccessDialog() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Success"),
-        content: const Text("Item saved successfully!"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pushNamedAndRemoveUntil('/main', (route) => false);
-            },
-            child: const Text("Go to Home"),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text("Success"),
+            content: const Text("Item saved successfully!"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/main', (route) => false);
+                },
+                child: const Text("Go to Home"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -185,25 +206,28 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
   }
 
   Widget _buildLabel(String label) => Padding(
-        padding: const EdgeInsets.only(top: 10, bottom: 4),
-        child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-      );
+    padding: const EdgeInsets.only(top: 10, bottom: 4),
+    child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+  );
 
   Widget _buildDropdown(String hint, Widget child) => Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: Colors.white,
-        ),
-        child: child,
-      );
+    data: Theme.of(context).copyWith(canvasColor: Colors.white),
+    child: child,
+  );
 
-  Widget _buildCategoryDropdown() => DropdownButtonFormField<Map<String, dynamic>>(
+  Widget _buildCategoryDropdown() =>
+      DropdownButtonFormField<Map<String, dynamic>>(
         decoration: _inputDecoration("Select category"),
-        items: widget.categoryList.map((category) {
-          return DropdownMenuItem<Map<String, dynamic>>(
-            value: category,
-            child: Text(category['name'], style: const TextStyle(color: Colors.black)),
-          );
-        }).toList(),
+        items:
+            widget.categoryList.map((category) {
+              return DropdownMenuItem<Map<String, dynamic>>(
+                value: category,
+                child: Text(
+                  category['name'],
+                  style: const TextStyle(color: Colors.black),
+                ),
+              );
+            }).toList(),
         onChanged: (value) {
           if (value != null) {
             final relatedSubCategories = widget.categories[value['name']] ?? [];
@@ -218,69 +242,92 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
         validator: (value) => value == null ? 'Select a category' : null,
       );
 
-  Widget _buildSubCategoryDropdown() => DropdownButtonFormField<Map<String, dynamic>>(
+  Widget _buildSubCategoryDropdown() =>
+      DropdownButtonFormField<Map<String, dynamic>>(
         decoration: _inputDecoration("Select subcategory"),
-        items: subCategories.map((subcategory) {
-          return DropdownMenuItem<Map<String, dynamic>>(
-            value: subcategory,
-            child: Text(subcategory['name'], style: const TextStyle(color: Colors.black)),
-          );
-        }).toList(),
+        items:
+            subCategories.map((subcategory) {
+              return DropdownMenuItem<Map<String, dynamic>>(
+                value: subcategory,
+                child: Text(
+                  subcategory['name'],
+                  style: const TextStyle(color: Colors.black),
+                ),
+              );
+            }).toList(),
         onChanged: (value) => setState(() => itemData['subcategory'] = value),
         value: itemData['subcategory'],
         validator: (value) => value == null ? 'Select a subcategory' : null,
       );
 
   Widget _buildSeasonDropdown() => DropdownButtonFormField<String>(
-        decoration: _inputDecoration("Select season"),
-        items: ['Winter', 'Spring', 'Summer', 'Autumn', 'All-Season'].map((season) {
+    decoration: _inputDecoration("Select season"),
+    items:
+        ['Winter', 'Spring', 'Summer', 'Autumn', 'All-Season'].map((season) {
           return DropdownMenuItem<String>(
             value: season,
             child: Text(season, style: const TextStyle(color: Colors.black)),
           );
         }).toList(),
-        onChanged: (value) => setState(() => itemData['season'] = value!),
-        value: itemData['season'],
-      );
+    onChanged: (value) => setState(() => itemData['season'] = value!),
+    value: itemData['season'],
+  );
 
-  Widget _buildWithSuggestions(String key, List<String> suggestions, {bool isMulti = false}) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: _controllers[key],
-            decoration: _inputDecoration("Type or tap a suggestion"),
-            onChanged: (value) => itemData[key] = value,
-            validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-          ),
-          Wrap(
-            spacing: 8,
-            children: suggestions.map((s) => ActionChip(
-              label: Text(s, style: const TextStyle(color: Colors.black)),
-              backgroundColor: Colors.grey.shade200,
-              onPressed: () {
-                setState(() {
-                  if (isMulti) {
-                    final currentText = _controllers[key]!.text.trim();
-                    final tags = currentText.isEmpty ? <String>{} : currentText.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toSet();
-                    tags.add(s);
-                    _controllers[key]!.text = tags.join(', ');
-                    itemData[key] = _controllers[key]!.text;
-                  } else {
-                    _controllers[key]!.text = s;
-                    itemData[key] = s;
-                  }
-                });
-              },
-            )).toList(),
-          )
-        ],
-      );
+  Widget _buildWithSuggestions(
+    String key,
+    List<String> suggestions, {
+    bool isMulti = false,
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      TextFormField(
+        controller: _controllers[key],
+        decoration: _inputDecoration("Type or tap a suggestion"),
+        onChanged: (value) => itemData[key] = value,
+        validator:
+            (value) => (value == null || value.isEmpty) ? 'Required' : null,
+      ),
+      Wrap(
+        spacing: 8,
+        children:
+            suggestions
+                .map(
+                  (s) => ActionChip(
+                    label: Text(s, style: const TextStyle(color: Colors.black)),
+                    backgroundColor: Colors.grey.shade200,
+                    onPressed: () {
+                      setState(() {
+                        if (isMulti) {
+                          final currentText = _controllers[key]!.text.trim();
+                          final tags =
+                              currentText.isEmpty
+                                  ? <String>{}
+                                  : currentText
+                                      .split(',')
+                                      .map((e) => e.trim())
+                                      .where((e) => e.isNotEmpty)
+                                      .toSet();
+                          tags.add(s);
+                          _controllers[key]!.text = tags.join(', ');
+                          itemData[key] = _controllers[key]!.text;
+                        } else {
+                          _controllers[key]!.text = s;
+                          itemData[key] = s;
+                        }
+                      });
+                    },
+                  ),
+                )
+                .toList(),
+      ),
+    ],
+  );
 
   InputDecoration _inputDecoration(String label) => InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.black87),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        filled: true,
-        fillColor: Colors.grey.shade100,
-      );
+    labelText: label,
+    labelStyle: const TextStyle(color: Colors.black87),
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+    filled: true,
+    fillColor: Colors.grey.shade100,
+  );
 }

@@ -63,44 +63,64 @@ class _LikesListPageState extends State<LikesListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Liked by')),
-      body:
-          _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error.isNotEmpty
-              ? Center(child: Text(_error))
+      appBar: AppBar(
+        title: const Text('Liked by'),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error.isNotEmpty
+              ? Center(
+                  child: Text(
+                    _error,
+                    style: TextStyle(color: colorScheme.error),
+                  ),
+                )
               : ListView.builder(
-                itemCount: likedUsers.length,
-                itemBuilder: (context, index) {
-                  final user = likedUsers[index];
-                  return ListTile(
-                    leading:
-                        user['profile_picture'] != null
-                            ? CircleAvatar(
+                  itemCount: likedUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = likedUsers[index];
+                    return ListTile(
+                      leading: user['profile_picture'] != null
+                          ? CircleAvatar(
                               backgroundImage: NetworkImage(
                                 user['profile_picture'],
                               ),
+                              backgroundColor: colorScheme.secondary,
                             )
-                            : const CircleAvatar(child: Icon(Icons.person)),
-                    title: Text(user['username'] ?? 'User'),
-                    subtitle: const Text('Tap to view profile'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (_) => ProfilePage(
-                                onThemeChange:
-                                    () {}, // Provide an empty callback
-                                userId: user['id'], // Pass the user ID
-                              ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                          : CircleAvatar(
+                              child: Icon(Icons.person, color: colorScheme.onSecondary),
+                              backgroundColor: colorScheme.secondary,
+                            ),
+                      title: Text(
+                        user['username'] ?? 'User',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(
+                        'Tap to view profile',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProfilePage(
+                              onThemeChange: () {},
+                              userId: user['id'],
+                            ),
+                          ),
+                        );
+                      },
+                      tileColor: colorScheme.surface,
+                    );
+                  },
+                ),
+      backgroundColor: colorScheme.background,
     );
   }
 }

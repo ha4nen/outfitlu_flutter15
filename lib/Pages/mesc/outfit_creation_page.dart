@@ -343,229 +343,215 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Create Outfit',
-          style: TextStyle(
-            color: ui.Color.fromARGB(255, 255, 255, 255),
-          ), // Changed to black
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: colorScheme.onPrimary,
+          ),
         ),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel("Description"),
-                    TextField(
-                      controller: _descriptionController,
-                      maxLines: 3,
-                      style: const TextStyle(
-                        color: Colors.black,
-                      ), // Changed to black
-                      decoration: InputDecoration(
-                        labelText: 'Enter outfit description',
-                        labelStyle: const TextStyle(
-                          color: Colors.black,
-                        ), // Changed to black
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: colorScheme.surfaceVariant,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel("Description", theme, colorScheme),
+                  TextField(
+                    controller: _descriptionController,
+                    maxLines: 3,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Enter outfit description',
+                      labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface,
                       ),
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant,
                     ),
-                    const SizedBox(height: 10),
-                    _buildLabel("Season"),
-                    DropdownButtonFormField<String>(
-                      value: selectedSeason,
-                      items:
-                          seasonOptions.map((season) {
-                            return DropdownMenuItem<String>(
-                              value: season,
-                              child: Text(
-                                season,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                ), // Changed to black
-                              ),
-                            );
-                          }).toList(),
-                      onChanged:
-                          (value) => setState(() => selectedSeason = value!),
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: colorScheme.surfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildLabel("Tags"),
-                    TextFormField(
-                      controller: _tagsController,
-                      decoration: InputDecoration(
-                        labelText: 'Type or tap a suggestion',
-                        labelStyle: const TextStyle(
-                          color: Colors.black,
-                        ), // Changed to black
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: colorScheme.surfaceVariant,
-                      ),
-                    ),
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          tagSuggestions
-                              .map(
-                                (s) => ActionChip(
-                                  label: Text(
-                                    s,
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                    ), // Changed to black
-                                  ),
-                                  backgroundColor:
-                                      colorScheme.secondaryContainer,
-                                  onPressed: () {
-                                    final currentText =
-                                        _tagsController.text.trim();
-                                    final tags =
-                                        currentText.isEmpty
-                                            ? <String>{}
-                                            : currentText
-                                                .split(',')
-                                                .map((e) => e.trim())
-                                                .where((e) => e.isNotEmpty)
-                                                .toSet();
-                                    tags.add(s);
-                                    setState(
-                                      () =>
-                                          _tagsController.text = tags.join(
-                                            ', ',
-                                          ),
-                                    );
-                                  },
-                                ),
-                              )
-                              .toList(),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: colorScheme.outline),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Checkbox(
-                            value: isHijabFriendly,
-                            onChanged:
-                                (val) => setState(() => isHijabFriendly = val!),
-                            activeColor: colorScheme.primary,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildLabel("Season", theme, colorScheme),
+                  DropdownButtonFormField<String>(
+                    value: selectedSeason,
+                    items: seasonOptions.map((season) {
+                      return DropdownMenuItem<String>(
+                        value: season,
+                        child: Text(
+                          season,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Is Hijab Friendly',
-                          style: TextStyle(
-                            color: Colors.black,
-                          ), // Changed to black
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ...wardrobeByCategory.entries.map((entry) {
-                      final category = entry.key;
-                      final items = entry.value;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            category,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black, // Changed to black
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          SizedBox(
-                            height: 120,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                final item = items[index];
-                                final isSelected = selectedItems.contains(item);
-                                final imageUrl =
-                                    item['photo_path'].toString().startsWith(
-                                          "http",
-                                        )
-                                        ? item['photo_path']
-                                        : 'http://10.0.2.2:8000${item['photo_path']}';
-
-                                return GestureDetector(
-                                  onTap: () => _toggleSelection(item),
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                    ),
-                                    width: 100,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color:
-                                            isSelected
-                                                ? colorScheme.primary
-                                                : colorScheme.outline,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Image.network(
-                                      imageUrl,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
                       );
                     }).toList(),
-                    const SizedBox(height: 10),
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: _saveOutfit,
-                        icon: const Icon(Icons.save),
-                        label: const Text(
-                          'Save Outfit',
-                          style: TextStyle(
-                            color: ui.Color.fromARGB(255, 193, 193, 193),
-                          ), // Changed to black
+                    onChanged: (value) => setState(() => selectedSeason = value!),
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildLabel("Tags", theme, colorScheme),
+                  TextFormField(
+                    controller: _tagsController,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Type or tap a suggestion',
+                      labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface,
+                      ),
+                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant,
+                    ),
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: tagSuggestions
+                        .map(
+                          (s) => ActionChip(
+                            label: Text(
+                              s,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                            backgroundColor: colorScheme.secondaryContainer,
+                            onPressed: () {
+                              final currentText = _tagsController.text.trim();
+                              final tags = currentText.isEmpty
+                                  ? <String>{}
+                                  : currentText
+                                      .split(',')
+                                      .map((e) => e.trim())
+                                      .where((e) => e.isNotEmpty)
+                                      .toSet();
+                              tags.add(s);
+                              setState(
+                                () => _tagsController.text = tags.join(', '),
+                              );
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: colorScheme.outline),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
+                        child: Checkbox(
+                          value: isHijabFriendly,
+                          onChanged: (val) => setState(() => isHijabFriendly = val!),
+                          activeColor: colorScheme.primary,
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Is Hijab Friendly',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ...wardrobeByCategory.entries.map((entry) {
+                    final category = entry.key;
+                    final items = entry.value;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          category,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        SizedBox(
+                          height: 120,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              final isSelected = selectedItems.contains(item);
+                              final imageUrl = item['photo_path'].toString().startsWith("http")
+                                  ? item['photo_path']
+                                  : 'http://10.0.2.2:8000${item['photo_path']}';
+
+                              return GestureDetector(
+                                onTap: () => _toggleSelection(item),
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                                  width: 100,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? colorScheme.primary
+                                          : colorScheme.outline,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Image.network(
+                                    imageUrl,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    );
+                  }).toList(),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: _saveOutfit,
+                      icon: Icon(Icons.save, color: colorScheme.onPrimary),
+                      label: Text(
+                        'Save Outfit',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onPrimary,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
     );
   }
 
-  Widget _buildLabel(String label) => Padding(
-    padding: const EdgeInsets.only(top: 10, bottom: 4),
-    child: Text(
-      label,
-      style: const TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Colors.black, // Changed to black
-      ),
-    ),
-  );
+  Widget _buildLabel(String label, ThemeData theme, ColorScheme colorScheme) => Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 4),
+        child: Text(
+          label,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+      );
 }

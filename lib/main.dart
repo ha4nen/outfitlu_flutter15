@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Pages/mesc/loading_page.dart';
 import 'package:flutter_application_1/Pages/mesc/login_page.dart';
 import 'package:flutter_application_1/Pages/mesc/register_page.dart';
+import 'package:flutter_application_1/Pages/mesc/GetStartedPage.dart';
 import 'package:flutter_application_1/Pages/MPages/main_app_page.dart';
 import 'dart:io';
 
@@ -31,6 +32,7 @@ class _MyAppState extends State<MyApp> {
   final List<File> _items = []; // Initialize the shared items list
 
   @override
+<<<<<<< HEAD
 Widget build(BuildContext context) {
   return MaterialApp(
     title: 'Outfit App',
@@ -41,6 +43,40 @@ Widget build(BuildContext context) {
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: Color(0xFF5C2E10)), // Deep brown
         bodyMedium: TextStyle(color: Color(0xFF5C2E10)),
+=======
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Outfit App',
+      theme: ThemeData(
+        primaryColor: const Color(0xFF3C096C), // Dark Purple
+        hintColor: const Color(0xFFC77DFF), // Electric Purple
+        scaffoldBackgroundColor: const Color(0xFFFFFFFF), // White
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Color.fromARGB(255, 0, 0, 0)), // black
+          bodyMedium: TextStyle(color: Color.fromARGB(255, 0, 0, 0)), // black
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF3C096C), // Dark Purple
+          foregroundColor: Color(0xFFFFFFFF), // White
+        ),
+        buttonTheme: ButtonThemeData(
+          buttonColor: const Color(0xFFC77DFF), // Electric Purple
+          textTheme: ButtonTextTheme.primary,
+        ),
+        colorScheme: const ColorScheme(
+          brightness: Brightness.light,
+          primary: Color(0xFF3C096C), // Dark Purple
+          onPrimary: Color(0xFFFFFFFF), // White
+          secondary: Color(0xFFC77DFF), // Electric Purple
+          onSecondary: Color(0xFFFFFFFF), // White
+          error: Color.from(alpha: 1, red: 0.69, green: 0, blue: 0.125), // Error Red
+          onError: Color(0xFFFFFFFF), // White
+          background: Color(0xFFFFFFFF), // White
+          onBackground: Color.fromARGB(255, 0, 0, 0), // black nav buttons
+          surface: Color(0xFFF0F0F0), // Light Grey
+          onSurface: Color.fromARGB(255, 0, 0, 0), // White
+        ),
+>>>>>>> 42f874c6b5cd514e1670b88b119c8d00986e160a
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFFF7B28C), // Same as bottom navigation bar (secondary)
@@ -103,11 +139,7 @@ Widget build(BuildContext context) {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/':
-            (context) => LoadingPage(
-              imageFile: File('path/to/your/image'),
-              nextPageBuilder: () => const LoginPage(),
-            ), // Provide the required imageFile parameter
+        '/': (context) => const GetStartedPage(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
         '/main':

@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+// TODO: Update the path below to the correct location of your LoginPage class.
+import 'package:flutter_application_1/Pages/mesc/login_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -10,17 +12,33 @@ class RegisterPage extends StatefulWidget {
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderStateMixin {
+class _RegisterPageState extends State<RegisterPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  double cardHeightFraction = 0.63;
+  double cardHeightFraction = 0.60;
+  Route _createRouteToLogin() {
+    return PageRouteBuilder(
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder:
+          (context, animation, secondaryAnimation) => const LoginPage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final tween = Tween<Offset>(
+          begin: const Offset(1.0, 0.0), // Slide in from right
+          end: Offset.zero,
+        ).chain(CurveTween(curve: Curves.easeInOut));
+        return SlideTransition(position: animation.drive(tween), child: child);
+      },
+    );
+  }
 
   Future<void> registerUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -48,7 +66,9 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Something went wrong. Please try again.')),
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+        ),
       );
     } finally {
       setState(() => isLoading = false);
@@ -64,23 +84,36 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
     final upper = RegExp(r'[A-Z]');
     final number = RegExp(r'\d');
     final symbol = RegExp(r'[!@#\\$%^&*(),.?":{}|<>]');
-    return upper.hasMatch(password) && number.hasMatch(password) && symbol.hasMatch(password) && password.length >= 6;
+    return upper.hasMatch(password) &&
+        number.hasMatch(password) &&
+        symbol.hasMatch(password) &&
+        password.length >= 6;
   }
 
-  InputDecoration buildInputDecoration(String label, IconData icon, {bool isPassword = false, VoidCallback? toggle}) {
+  InputDecoration buildInputDecoration(
+    String label,
+    IconData icon, {
+    bool isPassword = false,
+    VoidCallback? toggle,
+  }) {
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon, color: Colors.grey),
       labelStyle: const TextStyle(color: Colors.grey),
-      suffixIcon: isPassword
-          ? IconButton(
-              icon: Icon(
-                toggle == null ? null : (_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                color: Colors.grey,
-              ),
-              onPressed: toggle,
-            )
-          : null,
+      suffixIcon:
+          isPassword
+              ? IconButton(
+                icon: Icon(
+                  toggle == null
+                      ? null
+                      : (_obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                  color: Colors.grey,
+                ),
+                onPressed: toggle,
+              )
+              : null,
       enabledBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: Colors.grey),
       ),
@@ -98,7 +131,9 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
       },
       onVerticalDragUpdate: (details) {
         setState(() {
-          cardHeightFraction = (cardHeightFraction - details.primaryDelta! / MediaQuery.of(context).size.height).clamp(0.3, 0.9);
+          cardHeightFraction = (cardHeightFraction -
+                  details.primaryDelta! / MediaQuery.of(context).size.height)
+              .clamp(0.3, 0.9);
         });
       },
       child: Scaffold(
@@ -106,7 +141,7 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
           children: [
             Positioned.fill(
               child: Image.asset(
-                'assets/models/background.png',
+                'assets/models/background.jpg',
                 fit: BoxFit.cover,
               ),
             ),
@@ -137,7 +172,9 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     reverse: true,
-                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -149,19 +186,31 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
                             color: Colors.black,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _usernameController,
-                          decoration: buildInputDecoration('Username', Icons.person),
-                          validator: (value) => value == null || value.isEmpty ? 'Enter your username' : null,
+                          decoration: buildInputDecoration(
+                            'Username',
+                            Icons.person,
+                          ),
+                          validator:
+                              (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Enter your username'
+                                      : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _emailController,
-                          decoration: buildInputDecoration('Email address', Icons.email),
+                          decoration: buildInputDecoration(
+                            'Email address',
+                            Icons.email,
+                          ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Enter your email';
-                            if (!isValidEmail(value)) return 'Enter a valid email';
+                            if (value == null || value.isEmpty)
+                              return 'Enter your email';
+                            if (!isValidEmail(value))
+                              return 'Enter a valid email';
                             return null;
                           },
                         ),
@@ -169,11 +218,19 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          decoration: buildInputDecoration('Password', Icons.lock, isPassword: true, toggle: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
-                          }),
+                          decoration: buildInputDecoration(
+                            'Password',
+                            Icons.lock,
+                            isPassword: true,
+                            toggle: () {
+                              setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              );
+                            },
+                          ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Enter your password';
+                            if (value == null || value.isEmpty)
+                              return 'Enter your password';
                             if (!isComplexPassword(value)) {
                               return 'Password must contain:\n- Uppercase\n- Number\n- Symbol\n- 6+ characters';
                             }
@@ -184,12 +241,21 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: _obscureConfirm,
-                          decoration: buildInputDecoration('Confirm Password', Icons.lock_outline, isPassword: true, toggle: () {
-                            setState(() => _obscureConfirm = !_obscureConfirm);
-                          }),
+                          decoration: buildInputDecoration(
+                            'Confirm Password',
+                            Icons.lock_outline,
+                            isPassword: true,
+                            toggle: () {
+                              setState(
+                                () => _obscureConfirm = !_obscureConfirm,
+                              );
+                            },
+                          ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Confirm your password';
-                            if (value != _passwordController.text) return 'Passwords do not match';
+                            if (value == null || value.isEmpty)
+                              return 'Confirm your password';
+                            if (value != _passwordController.text)
+                              return 'Passwords do not match';
                             return null;
                           },
                         ),
@@ -197,36 +263,46 @@ class _RegisterPageState extends State<RegisterPage> with SingleTickerProviderSt
                         isLoading
                             ? const CircularProgressIndicator()
                             : GestureDetector(
-                                onTap: registerUser,
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFDA5D1C), Color(0xFFC5426C)],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
+                              onTap: registerUser,
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFFFAD6C),
+                                      Color(0xFFF3703D),
+                                    ],
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
                                   ),
-                                  child: const Center(
-                                    child: Text(
-                                      'Create Account',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'Create Account',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/login'),
-                          child: const Text(
-                            'Already have an account? Sign in.',
-                            style: TextStyle(color: Colors.black54),
+                            ),
+                        const SizedBox(height: 10),
+                        Hero(
+                          tag: 'login-link',
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(_createRouteToLogin());
+                            },
+                            child: const Text(
+                              'Already have an account? Log in.',
+                              style: TextStyle(color: Colors.black54),
+                            ),
                           ),
                         ),
                       ],

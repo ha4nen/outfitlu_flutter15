@@ -17,7 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  double cardHeightFraction = 0.55;
+  double cardHeightFraction = 0.40;
 
   Future<void> loginUser(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
@@ -43,9 +43,9 @@ class _LoginPageState extends State<LoginPage> {
       await prefs.setString('auth_token', token);
       await prefs.setInt('user_id', userId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login successful!')));
 
       Navigator.pushReplacementNamed(context, '/main');
     } else {
@@ -77,7 +77,9 @@ class _LoginPageState extends State<LoginPage> {
       },
       onVerticalDragUpdate: (details) {
         setState(() {
-          cardHeightFraction = (cardHeightFraction - details.primaryDelta! / MediaQuery.of(context).size.height).clamp(0.3, 0.9);
+          cardHeightFraction = (cardHeightFraction -
+                  details.primaryDelta! / MediaQuery.of(context).size.height)
+              .clamp(0.3, 0.9);
         });
       },
       child: Scaffold(
@@ -85,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             Positioned.fill(
               child: Image.asset(
-                'assets/models/background.png',
+                'assets/models/background.jpg',
                 fit: BoxFit.cover,
               ),
             ),
@@ -116,7 +118,9 @@ class _LoginPageState extends State<LoginPage> {
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     reverse: true,
-                    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -131,60 +135,84 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 20),
                         TextFormField(
                           controller: emailController,
-                          decoration: buildInputDecoration('Email or Username', Icons.email),
-                          validator: (value) => value == null || value.isEmpty ? 'Enter your Email or Username' : null,
+                          decoration: buildInputDecoration(
+                            'Email or Username',
+                            Icons.email,
+                          ),
+                          validator:
+                              (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Enter your Email or Username'
+                                      : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: passwordController,
                           obscureText: _obscurePassword,
-                          decoration: buildInputDecoration('Password', Icons.lock).copyWith(
+                          decoration: buildInputDecoration(
+                            'Password',
+                            Icons.lock,
+                          ).copyWith(
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                                 color: Colors.grey,
                               ),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              onPressed:
+                                  () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                             ),
                           ),
-                          validator: (value) => value == null || value.isEmpty ? 'Enter your password' : null,
+                          validator:
+                              (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Enter your password'
+                                      : null,
                         ),
                         const SizedBox(height: 30),
                         _isLoading
                             ? const CircularProgressIndicator()
-                            : GestureDetector(
-                                onTap: () => loginUser(context),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFDA5D1C), Color(0xFFC5426C)],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
+                            : Hero(
+                              tag: 'get-started-button',
+                              child: Material(
+                                color: Colors.transparent,
+                                child: GestureDetector(
+                                  onTap: () => loginUser(context),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
                                     ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: const Center(
-                                    child: Text(
-                                      'Login',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFFFFAD6C),
+                                          Color(0xFFF3703D),
+                                        ],
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Center(
+                                      child: Text(
+                                        'Login',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
+                            ),
+
                         const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
-                          child: const Text(
-                            'Create New Account',
-                            style: TextStyle(color: Colors.black54),
-                          ),
-                        ),
                       ],
                     ),
                   ),

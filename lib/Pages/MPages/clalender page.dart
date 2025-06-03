@@ -7,6 +7,7 @@ import 'package:flutter_application_1/Pages/Outfits/outfit.dart';
 import 'package:http/http.dart' as http;
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_application_1/Pages/mesc/my_planner_ui.dart'; // Adjust path if needed
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -118,79 +119,72 @@ class _FeedPageState extends State<FeedPage> {
         (_selectedDay ?? _focusedDay).toIso8601String().split('T').first;
     final events = _plannedOutfits[selectedDateKey] ?? [];
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Plan Your Look')),
-      body: Column(
-        children: [
-          TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2100, 12, 31),
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            calendarFormat: _calendarFormat,
-            eventLoader: (day) {
-              final key = day.toIso8601String().split('T').first;
-              return _plannedOutfits.containsKey(key) ? ['Planned'] : [];
-            },
-            onDaySelected: _onDaySelected,
-            onPageChanged: (day) => setState(() => _focusedDay = day),
-            availableCalendarFormats: const {
-              CalendarFormat.month: '',
-              CalendarFormat.week: '',
-            },
-            calendarStyle: const CalendarStyle(outsideDaysVisible: false),
-            headerStyle: const HeaderStyle(
-              titleCentered: true,
-              formatButtonVisible: false,
-            ),
-            calendarBuilders: CalendarBuilders(
-              headerTitleBuilder: (context, date) {
-                return GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _focusedDay,
-                      firstDate: DateTime.utc(2020, 1, 1),
-                      lastDate: DateTime.utc(2100, 12, 31),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _focusedDay = picked;
-                        _selectedDay = picked;
-                      });
-                    }
-                  },
-                  child: Center(
-                    child: Text(
-                      '${_monthName(date.month)} ${date.year}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+    return  Scaffold(
+  body: MyPlannerUI(
+    focusedDay: _focusedDay,
+    selectedDay: _selectedDay,
+    calendarFormat: _calendarFormat,
+    onDaySelected: (selected, focused) {
+      setState(() {
+        _selectedDay = selected;
+        _focusedDay = focused;
+        _calendarFormat = CalendarFormat.week;
+      });
+    },
+    onPageChanged: (day) => setState(() => _focusedDay = day),
+    plannedOutfits: _plannedOutfits.map((key, value) => MapEntry(key, ['Planned'])),
+    onChooseOutfit: () async {
+      final selectedOutfit = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ChooseOutfitPage()),
+      );
+      if (selectedOutfit != null) {
+        await _assignOutfitToDate(selectedOutfit.id);
+        _fetchPlannedOutfits();
+      }
+    },
+    onCreateOutfit: () async {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MagicPage(
+            onThemeChange: () {},
+            fromCalendar: true,
+            selectedDate: _selectedDay,
           ),
-          if (_calendarFormat == CalendarFormat.week)
-            TextButton(
-              onPressed:
-                  () => setState(() => _calendarFormat = CalendarFormat.month),
-              child: const Text('Show Full Month'),
-            ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              child:
-                  events.isNotEmpty
-                      ? _buildOutfitCard(events.first)
-                      : _buildEmptyState(),
-            ),
+        ),
+      );
+      if (result == true) _fetchPlannedOutfits();
+    },
+    onSeeDetails: () {
+      final plan = _plannedOutfits[selectedDateKey]?.first;
+      if (plan != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OutfitDetailsPage(outfit: Outfit(
+              id: plan.outfitId,
+              description: plan.outfitDescription,
+              photoPath: plan.outfitImageUrl,
+              type: plan.outfitType,
+              season: plan.outfitSeason,
+              tags: plan.outfitTags,
+              isHijabFriendly: plan.isHijabFriendly,
+            )),
           ),
-        ],
-      ),
-    );
+        );
+      }
+    },
+    onBackToMonth: () {
+      setState(() {
+        _calendarFormat = CalendarFormat.month;
+        _selectedDay = null;
+      });
+    },
+    outfitImageUrl: _plannedOutfits[selectedDateKey]?.first.outfitImageUrl,
+  ),
+);
+
   }
 
   Widget _buildOutfitCard(OutfitPlan plan) => Padding(

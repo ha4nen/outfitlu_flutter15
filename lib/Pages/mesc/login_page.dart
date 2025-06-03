@@ -47,7 +47,9 @@ class _LoginPageState extends State<LoginPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Login successful!')));
 
-      Navigator.pushReplacementNamed(context, '/main');
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/main', (Route<dynamic> route) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(responseBody['error'] ?? 'Login failed')),

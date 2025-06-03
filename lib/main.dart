@@ -67,7 +67,7 @@ class _MyAppState extends State<MyApp> {
           onError: Color(0xFF5C2E10),
           background: Colors.white,
           onBackground: Color(0xFF5C2E10),
-          surface: Color(0xFFF7B28C), // Updated surface color
+          surface: Color.fromARGB(255, 255, 255, 255), // Updated surface color
           onSurface: Color(0xFF5C2E10),
         ),
       ),

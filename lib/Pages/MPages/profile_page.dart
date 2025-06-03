@@ -395,363 +395,424 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // --- Profile Section (Remains largely the same) ---
-                GestureDetector(
-                  // onTap: _pickProfileImage, // Add if you implement image picking
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    backgroundImage:
-                        profileImageUrl != null && profileImageUrl!.isNotEmpty
-                            ? NetworkImage(profileImageUrl!)
-                            : null,
-                    child:
-                        profileImageUrl == null || profileImageUrl!.isEmpty
-                            ? Icon(
-                              Icons.person,
-                              size: 50,
-                              color: Theme.of(context).iconTheme.color,
-                            )
-                            : null,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                Text(
-                  username,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-                if (bio.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      bio,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                // --- Overlapping Cards with Stack ---
+                Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => FollowersFollowingListPage(
-                                  userId: widget.userId ?? currentUserId!,
-                                  showFollowers: false,
-                                ),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        '$followingCount Following',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                    ),
-                    const Text('  |  '),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => FollowersFollowingListPage(
-                                  userId: widget.userId ?? currentUserId!,
-                                  showFollowers: true,
-                                ),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        '$followersCount Followers',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                if (!isMyProfile)
-                  ElevatedButton(
-                    onPressed: toggleFollow,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isFollowing
-                              ? Colors.grey
-                              : Theme.of(context).colorScheme.primary,
-                    ),
-                    child: Text(
-                      isFollowing ? 'Unfollow' : 'Follow',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 16),
-                if (widget.userId == null)
-                  ElevatedButton(
-                    onPressed: () async {
-                      final updated = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditProfilePage(),
-                        ),
-                      );
-                      if (updated == true) {
-                        await fetchProfileData(); // Refresh profile after editing
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                    ),
-                    child: Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-
-                Divider(color: Theme.of(context).dividerColor),
-
-                // --- Items Section Header (Navigate to modified AllItemsPage) ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap:
-                          (_hideItems && widget.userId != null)
-                              ? null
-                              : () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) =>
-                                            AllItemsPage(userId: widget.userId),
-                                  ),
-                                );
-                              },
-
+                    // Lower Card (grey)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 40), // Adjust overlap amount
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(24),
                         ),
-                        child: Text(
-                          'Items',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Add other actions if needed (e.g., Add Item button)
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // --- Items Section Body (Uses fetched data) ---
-                _buildItemsSection(), // Use helper method
-
-                const SizedBox(height: 16),
-
-                // --- Outfits Section Header (Remains the same for now) ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap:
-                          (_hideOutfits && widget.userId != null)
-                              ? null
-                              : () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => AllOutfitsPage(
-                                          userId: widget.userId,
-                                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // --- Items Section Header (Navigate to modified AllItemsPage) ---
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                GestureDetector(
+                                  onTap: (_hideItems && widget.userId != null)
+                                      ? null
+                                      : () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AllItemsPage(userId: widget.userId),
+                                            ),
+                                          );
+                                        },
+                                  child: ElevatedButton(
+                                    onPressed: (_hideItems && widget.userId != null)
+                                        ? null
+                                        : () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AllItemsPage(userId: widget.userId),
+                                              ),
+                                            );
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).primaryColor,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 12),
+                                      shape: const StadiumBorder(),
+                                      elevation: 4,
+                                      shadowColor: Colors.black.withOpacity(0.2),
+                                    ),
+                                    child: const Text(
+                                      'Items',
+                                      style:
+                                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                    ),
                                   ),
-                                );
-                              },
-                      // Disable for other users
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Outfits',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                                ),
+                                // Add other actions if needed (e.g., Add Item button)
+                              ],
+                            ),
+                            const SizedBox(height: 8),
 
-                // --- Outfits Section Body (Still uses placeholder/old logic) ---
-                // TODO: Update this section similarly to the Items section later
-                // --- Outfits Section Body ---
-                _loadingOutfits
-                    ? const Center(child: CircularProgressIndicator())
-                    : _hideOutfits && widget.userId != null
-                    ? Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text(
-                        'This user has hidden their outfits.',
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                    : _errorOutfits.isNotEmpty
-                    ? Text(
-                      _errorOutfits,
-                      style: const TextStyle(color: Colors.red),
-                    )
-                    : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: 120,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _recentOutfits.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index == _recentOutfits.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0,
-                                  ),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) => AllOutfitsPage(
+                            // --- Items Section Body (Uses fetched data) ---
+                            _buildItemsSection(), // Use helper method
+
+                            const SizedBox(height: 16),
+
+                            // --- Outfits Section Header (Remains the same for now) ---
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                GestureDetector(
+                                  onTap: (_hideOutfits && widget.userId != null)
+                                      ? null
+                                      : () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AllOutfitsPage(
                                                 userId: widget.userId,
                                               ),
-                                        ),
-                                      );
-                                    },
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Container(
-                                        width: 100,
-                                        height: 120,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.surface.withOpacity(0.9),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.arrow_forward,
-                                            size: 32,
-                                            color: Colors.black54,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              final outfit = _recentOutfits[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (_) =>
-                                              OutfitDetailsPage(outfit: outfit),
-                                    ),
-                                  );
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      width: 100,
-                                      color:
-                                          Theme.of(context).colorScheme.surface,
-                                      child:
-                                          outfit.photoPath != null
-                                              ? Image.network(
-                                                outfit.photoPath!,
-                                                fit: BoxFit.cover,
-                                                width: 100,
-                                                height: 120,
-                                                loadingBuilder: (
-                                                  context,
-                                                  child,
-                                                  progress,
-                                                ) {
-                                                  if (progress == null) {
-                                                    return child;
-                                                  }
-                                                  return const Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
-                                                  );
-                                                },
-                                                errorBuilder:
-                                                    (_, __, ___) =>
-                                                        const Center(
-                                                          child: Icon(
-                                                            Icons.broken_image,
-                                                          ),
-                                                        ),
-                                              )
-                                              : const Center(
-                                                child: Icon(
-                                                  Icons.image_not_supported,
+                                            ),
+                                          );
+                                        },
+                                  // Disable for other users
+                                  child: ElevatedButton(
+                                    onPressed: (_hideOutfits && widget.userId != null)
+                                        ? null
+                                        : () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => AllOutfitsPage(
+                                                  userId: widget.userId,
                                                 ),
                                               ),
+                                            );
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).primaryColor,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 12),
+                                      shape: const StadiumBorder(),
+                                      elevation: 4,
+                                      shadowColor: Colors.black.withOpacity(0.2),
+                                    ),
+                                    child: const Text(
+                                      'Outfits',
+                                      style:
+                                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                     ),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+
+                            // --- Outfits Section Body (Still uses placeholder/old logic) ---
+                            // TODO: Update this section similarly to the Items section later
+                            // --- Outfits Section Body ---
+                            _loadingOutfits
+                                ? const Center(child: CircularProgressIndicator())
+                                : _hideOutfits && widget.userId != null
+                                ? Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                                  child: Text(
+                                    'This user has hidden their outfits.',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.color,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                                : _errorOutfits.isNotEmpty
+                                ? Text(
+                                  _errorOutfits,
+                                  style: const TextStyle(color: Colors.red),
+                                )
+                                : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      height: 120,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: _recentOutfits.length + 1,
+                                        itemBuilder: (context, index) {
+                                          if (index == _recentOutfits.length) {
+                                            return Padding(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 4.0,
+                                              ),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) => AllOutfitsPage(
+                                                        userId: widget.userId,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  child: Container(
+                                                    width: 100,
+                                                    height: 120,
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.surface
+                                                        .withOpacity(0.9),
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons.arrow_forward,
+                                                        size: 32,
+                                                        color: Colors.black54,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }
+
+                                          final outfit = _recentOutfits[index];
+                                          return GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => OutfitDetailsPage(
+                                                      outfit: outfit),
+                                                ),
+                                              );
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 4.0,
+                                              ),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                child: Container(
+                                                  width: 100,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .surface,
+                                                  child: outfit.photoPath != null
+                                                      ? Image.network(
+                                                          outfit.photoPath!,
+                                                          fit: BoxFit.cover,
+                                                          width: 100,
+                                                          height: 120,
+                                                          loadingBuilder: (
+                                                            context,
+                                                            child,
+                                                            progress,
+                                                          ) {
+                                                            if (progress == null) {
+                                                              return child;
+                                                            }
+                                                            return const Center(
+                                                              child:
+                                                                  CircularProgressIndicator(),
+                                                            );
+                                                          },
+                                                          errorBuilder:
+                                                              (_, __, ___) =>
+                                                                  const Center(
+                                                            child: Icon(
+                                                              Icons.broken_image,
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : const Center(
+                                                          child: Icon(
+                                                            Icons.image_not_supported,
+                                                          ),
+                                                        ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
+                    // Upper Card (white) - on top
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.07),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                        margin: const EdgeInsets.only(bottom: 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // --- Profile Section (Remains largely the same) ---
+                            GestureDetector(
+                              // onTap: _pickProfileImage, // Add if you implement image picking
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Theme.of(context).colorScheme.surface,
+                                backgroundImage:
+                                    profileImageUrl != null && profileImageUrl!.isNotEmpty
+                                        ? NetworkImage(profileImageUrl!)
+                                        : null,
+                                child: profileImageUrl == null || profileImageUrl!.isEmpty
+                                    ? Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Theme.of(context).iconTheme.color,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(height: 16.0),
+                            Text(
+                              username,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                            if (bio.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  bio,
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FollowersFollowingListPage(
+                                          userId: widget.userId ?? currentUserId!,
+                                          showFollowers: false,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    '$followingCount Following',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    ),
+                                  ),
+                                ),
+                                const Text('  |  '),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => FollowersFollowingListPage(
+                                          userId: widget.userId ?? currentUserId!,
+                                          showFollowers: true,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    '$followersCount Followers',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (!isMyProfile)
+                              ElevatedButton(
+                                onPressed: toggleFollow,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isFollowing
+                                      ? Colors.grey
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                                child: Text(
+                                  isFollowing ? 'Unfollow' : 'Follow',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 16),
+                            // --- Edit Profile Button ---
+                            if (widget.userId == null)
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final updated = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditProfilePage(),
+                                    ),
+                                  );
+                                  if (updated == true) {
+                                    await fetchProfileData(); // Refresh profile after editing
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).primaryColor,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  shape: const StadiumBorder(),
+                                  elevation: 4,
+                                  shadowColor: Colors.black.withOpacity(0.2),
+                                ),
+                                child: const Text(
+                                  'Edit Profile',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

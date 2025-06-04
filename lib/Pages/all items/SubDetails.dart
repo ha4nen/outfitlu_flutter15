@@ -29,6 +29,7 @@ class _SubDetailsState extends State<SubDetails> {
   List<all_items.WardrobeItem> items = [];
   bool isLoading = true;
   String error = '';
+String sortBy = 'Newest';
 
   @override
   void initState() {
@@ -117,6 +118,8 @@ class _SubDetailsState extends State<SubDetails> {
   }
 
   String selectedTag = ''; // for filtering by tag
+final tags = ['All', 'Casual', 'Work', 'Formal', 'Comfy', 'Chic', 'Sport', 'Classy'];
+final sortOptions = ['Newest', 'Oldest'];
 
   @override
   Widget build(BuildContext context) {
@@ -135,40 +138,65 @@ class _SubDetailsState extends State<SubDetails> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: [
-                  for (final tag in ['All', 'Casual', 'Work', 'Formal', 'Comfy', 'Chic', 'Sport', 'Classy'])
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(
-                          () {
-                            final tagKey = tag == 'All' ? '' : tag;
-                            final count = items
-                                .where((item) => tagKey.isEmpty || (item.tags?.toLowerCase().contains(tagKey.toLowerCase()) ?? false))
-                                .length;
-                            return '$tag ($count)';
-                          }(),
-                          style: TextStyle(
-                            color: selectedTag == (tag == 'All' ? '' : tag) ? Colors.white : const Color(0xFF2F1B0C),
-                          ),
-                        ),
-                        selected: selectedTag == (tag == 'All' ? '' : tag),
-                        selectedColor: const Color(0xFFFF9800),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(color: Color(0xFFFFE0B2)),
-                        ),
-                        onSelected: (_) {
-                          final newTag = tag == 'All' ? '' : tag;
-                          setState(() {
-                            selectedTag = selectedTag == newTag ? '' : newTag;
-                          });
-                        },
-                      ),
-                    ),
-                ],
-              ),
+  children: [
+    for (final tag in tags)
+      Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          label: Text(
+            () {
+              final tagKey = tag == 'All' ? '' : tag;
+              final count = items
+                  .where((item) => tagKey.isEmpty || (item.tags?.toLowerCase().contains(tagKey.toLowerCase()) ?? false))
+                  .length;
+              return '$tag ($count)';
+            }(),
+            style: TextStyle(
+              color: selectedTag == (tag == 'All' ? '' : tag)
+                  ? Colors.white
+                  : const Color(0xFF2F1B0C),
+            ),
+          ),
+          selected: selectedTag == (tag == 'All' ? '' : tag),
+          selectedColor: const Color(0xFFFF9800),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFFFE0B2)),
+          ),
+          onSelected: (_) {
+            final newTag = tag == 'All' ? '' : tag;
+            setState(() {
+              selectedTag = selectedTag == newTag ? '' : newTag;
+            });
+          },
+        ),
+      ),
+    for (final sort in sortOptions)
+      Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          label: Text(
+            sort,
+            style: TextStyle(
+              color: sortBy == sort ? Colors.white : const Color(0xFF2F1B0C),
+            ),
+          ),
+          selected: sortBy == sort,
+          selectedColor: const Color(0xFFFF9800),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFFFE0B2)),
+          ),
+          onSelected: (_) {
+            setState(() => sortBy = sort);
+          },
+        ),
+      ),
+  ],
+),
+
             ),
           ),
           const SizedBox(height: 8),
@@ -196,7 +224,10 @@ class _SubDetailsState extends State<SubDetails> {
                         ),
                         itemCount: items.where((item) => selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false)).length,
                         itemBuilder: (context, index) {
-                          final filteredItems = items.where((item) => selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false)).toList();
+final filteredItems = items
+    .where((item) => selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false))
+    .toList()
+  ..sort((a, b) => sortBy == 'Newest' ? b.id.compareTo(a.id) : a.id.compareTo(b.id));
                           final item = filteredItems[index];
                           return GestureDetector(
                             onTap: () => Navigator.push(

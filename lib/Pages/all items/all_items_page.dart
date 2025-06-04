@@ -67,6 +67,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
   bool isLoading = true;
   String error = '';
   String selectedTag = '';
+String sortBy = 'Newest';
 
   @override
   void initState() {
@@ -103,8 +104,10 @@ class _AllItemsPageState extends State<AllItemsPage> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final filteredItems = data.map((json) => WardrobeItem.fromJson(json)).where((item) {
-          return selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false);
-        }).toList();
+  return selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false);
+}).toList()
+..sort((a, b) =>
+    sortBy == 'Newest' ? b.id.compareTo(a.id) : a.id.compareTo(b.id));
 
         final Map<String, List<WardrobeItem>> tempGrouped = {};
         for (var item in filteredItems) {
@@ -135,6 +138,8 @@ String _capitalize(String? value) {
   if (value == null || value.isEmpty) return '';
   return value[0].toUpperCase() + value.substring(1);
 }
+final tags = ['All', 'Casual', 'Work', 'Formal', 'Comfy', 'Chic', 'Sport', 'Classy'];
+final sortOptions = ['Newest', 'Oldest'];
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +159,7 @@ String _capitalize(String? value) {
               scrollDirection: Axis.horizontal,
               child:Row(
   children: [
-    for (final tag in ['All', 'Casual', 'Work', 'Formal', 'Comfy', 'Chic', 'Sport', 'Classy'])
+    for (final tag in tags)
       Padding(
         padding: const EdgeInsets.only(right: 8),
         child: ChoiceChip(
@@ -174,7 +179,7 @@ String _capitalize(String? value) {
             ),
           ),
           selected: selectedTag == (tag == 'All' ? '' : tag),
-          selectedColor: const Color(0xFFFF9800), // Orange when selected
+          selectedColor: const Color(0xFFFF9800),
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -183,14 +188,40 @@ String _capitalize(String? value) {
           onSelected: (_) {
             final newTag = tag == 'All' ? '' : tag;
             setState(() {
-              selectedTag = selectedTag == newTag ? '' : newTag; // Deselect if same tag clicked again
+              selectedTag = selectedTag == newTag ? '' : newTag;
             });
+            fetchGroupedItems();
+          },
+        ),
+      ),
+    for (final sort in sortOptions)
+      Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          label: Text(
+            sort,
+            style: TextStyle(
+              color: sortBy == sort
+                  ? Colors.white
+                  : const Color(0xFF2F1B0C),
+            ),
+          ),
+          selected: sortBy == sort,
+          selectedColor: const Color(0xFFFF9800),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFFFE0B2)),
+          ),
+          onSelected: (_) {
+            setState(() => sortBy = sort);
             fetchGroupedItems();
           },
         ),
       ),
   ],
 ),
+
 
             ),
           ),

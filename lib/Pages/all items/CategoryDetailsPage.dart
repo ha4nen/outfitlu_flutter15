@@ -39,6 +39,7 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
   bool isLoading = true;
   String error = '';
   String selectedTag = '';
+String sortBy = 'Newest';
 
   @override
   void initState() {
@@ -78,10 +79,12 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
         final List<dynamic> data = jsonDecode(response.body);
 
         final items = data
-            .map((json) => all_items.WardrobeItem.fromJson(json))
-            .where((item) => item.categoryId == widget.categoryId)
-            .where((item) => selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false))
-            .toList();
+    .map((json) => all_items.WardrobeItem.fromJson(json))
+    .where((item) => item.categoryId == widget.categoryId)
+    .where((item) => selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false))
+    .toList()
+    ..sort((a, b) => sortBy == 'Newest' ? b.id.compareTo(a.id) : a.id.compareTo(b.id));
+
 
         final Map<int, SubCategoryGroup> grouped = {};
         for (var item in items) {
@@ -114,6 +117,8 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
       });
     }
   }
+final tagOptions = ['All', 'Casual', 'Work', 'Formal', 'Comfy', 'Chic', 'Sport', 'Classy'];
+final sortOptions = ['Newest', 'Oldest'];
 
   Widget _buildSubCategorySection(SubCategoryGroup group) {
     final previewItems = group.items.take(4).toList();
@@ -294,44 +299,68 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: [
-                            for (final tag in ['All', 'Casual', 'Work', 'Formal', 'Comfy', 'Chic', 'Sport', 'Classy'])
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ChoiceChip(
-                                  label: Text(
-                                    () {
-                                      final tagKey = tag == 'All' ? '' : tag;
-                                      final count = subcategoryGroups.values
-                                          .expand((group) => group.items)
-                                          .where((item) => tagKey.isEmpty || (item.tags?.toLowerCase().contains(tagKey.toLowerCase()) ?? false))
-                                          .length;
-                                      return '$tag ($count)';
-                                    }(),
-                                    style: TextStyle(
-                                      color: selectedTag == (tag == 'All' ? '' : tag)
-                                          ? Colors.white
-                                          : const Color(0xFF2F1B0C),
-                                    ),
-                                  ),
-                                  selected: selectedTag == (tag == 'All' ? '' : tag),
-                                  selectedColor: const Color(0xFFFF9800),
-                                  backgroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    side: const BorderSide(color: Color(0xFFFFE0B2)),
-                                  ),
-                                  onSelected: (_) {
-                                    final newTag = tag == 'All' ? '' : tag;
-                                    setState(() {
-                                      selectedTag = selectedTag == newTag ? '' : newTag;
-                                    });
-                                    _fetchItemsByCategory();
-                                  },
-                                ),
-                              ),
-                          ],
-                        ),
+  children: [
+    for (final tag in tagOptions)
+      Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          label: Text(
+            () {
+              final tagKey = tag == 'All' ? '' : tag;
+              final count = subcategoryGroups.values
+                  .expand((group) => group.items)
+                  .where((item) => tagKey.isEmpty || (item.tags?.toLowerCase().contains(tagKey.toLowerCase()) ?? false))
+                  .length;
+              return '$tag ($count)';
+            }(),
+            style: TextStyle(
+              color: selectedTag == (tag == 'All' ? '' : tag)
+                  ? Colors.white
+                  : const Color(0xFF2F1B0C),
+            ),
+          ),
+          selected: selectedTag == (tag == 'All' ? '' : tag),
+          selectedColor: const Color(0xFFFF9800),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFFFE0B2)),
+          ),
+          onSelected: (_) {
+            final newTag = tag == 'All' ? '' : tag;
+            setState(() {
+              selectedTag = selectedTag == newTag ? '' : newTag;
+            });
+            _fetchItemsByCategory();
+          },
+        ),
+      ),
+    for (final sort in sortOptions)
+      Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          label: Text(
+            sort,
+            style: TextStyle(
+              color: sortBy == sort ? Colors.white : const Color(0xFF2F1B0C),
+            ),
+          ),
+          selected: sortBy == sort,
+          selectedColor: const Color(0xFFFF9800),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFFFE0B2)),
+          ),
+          onSelected: (_) {
+            setState(() => sortBy = sort);
+            _fetchItemsByCategory();
+          },
+        ),
+      ),
+  ],
+),
+
                       ),
                     ),
                     const SizedBox(height: 8),

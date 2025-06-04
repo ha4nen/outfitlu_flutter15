@@ -1,9 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'outfit.dart';
 import 'outfit_service.dart';
 
@@ -48,8 +46,7 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
     }
 
     if (_fetchedOutfit != null) {
-      _alreadyPosted =
-          prefs.getBool('outfit_posted_${_fetchedOutfit!.id}') ?? false;
+      _alreadyPosted = prefs.getBool('outfit_posted_${_fetchedOutfit!.id}') ?? false;
       if (!_alreadyPosted) {
         await _checkIfAlreadyPosted(_fetchedOutfit!.id);
       }
@@ -84,10 +81,10 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
 
     if (response.statusCode == 200) {
       final posts = jsonDecode(response.body);
-      final posted = posts.any((post) => post['outfit'] == outfitId);
+      final posted = (posts as List).any((post) => post['outfit'] == outfitId);
       if (posted) {
         setState(() => _alreadyPosted = true);
-        prefs.setBool('outfit_posted_$outfitId', true); // Cache posted state
+        prefs.setBool('outfit_posted_$outfitId', true);
       }
     }
   }
@@ -99,27 +96,26 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Post Outfit"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text("Add a caption (optional):"),
-                TextField(controller: captionController),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text("Post"),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text("Post Outfit"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Add a caption (optional):"),
+            TextField(controller: captionController),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Post"),
+          ),
+        ],
+      ),
     );
 
     if (confirmed != true) return;
@@ -135,45 +131,52 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
 
     if (streamedResponse.statusCode == 201) {
       setState(() => _alreadyPosted = true);
-      prefs.setBool('outfit_posted_$outfitId', true); // Save posted flag
+      prefs.setBool('outfit_posted_$outfitId', true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Outfit posted successfully')),
+        const SnackBar(content: Text('Outfit posted successfully')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Failed to post outfit: $responseBody')),
+        SnackBar(content: Text('Failed to post outfit: $responseBody')),
       );
     }
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('Delete Outfit'),
-            content: const Text('Are you sure you want to delete this outfit?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-    );
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      backgroundColor: Colors.white,
+      title: const Text('Delete Outfit', style: TextStyle(color: Color(0xFFD9583B))),
+      content: const Text('Are you sure you want to delete this outfit?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel', style: TextStyle(color: Color(0xFFFF9800))),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Delete', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ),
+  );
 
-    if (confirmed == true && _fetchedOutfit != null) {
-      await deleteOutfit(_fetchedOutfit!.id);
-      final prefs = await SharedPreferences.getInstance();
-      prefs.remove('outfit_posted_${_fetchedOutfit!.id}'); // Clean up
-      if (mounted) Navigator.pop(context);
+  if (confirmed == true && _fetchedOutfit != null) {
+    await deleteOutfit(_fetchedOutfit!.id);
+
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('outfit_posted_${_fetchedOutfit!.id}');
+
+    if (mounted) {
+      Navigator.pop(context, 'refresh'); // return to previous page
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Outfit deleted successfully')),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -185,122 +188,153 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
     final isOwner = _loggedInUserId == outfit.userId;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Outfit Details')),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Outfit Details"),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
+        ),
+      ),
+      backgroundColor: const Color(0xFFF9F9F9),
       body: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (outfit.photoPath != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        outfit.photoPath!,
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        loadingBuilder:
-                            (context, child, progress) =>
-                                progress == null
-                                    ? child
-                                    : const SizedBox(
-                                      height: 250,
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    ),
-                        errorBuilder:
-                            (_, __, ___) => const SizedBox(
-                              height: 250,
-                              child: Center(child: Icon(Icons.broken_image)),
-                            ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.orange.shade200, width: 1.5),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
-                  const SizedBox(height: 16),
-                  if ((outfit.description ?? '').isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        outfit.description!,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-                  _buildDetailRow('Type:', outfit.type ?? 'Unknown'),
-                  _buildDetailRow('Season:', outfit.season ?? 'Unknown'),
-                  _buildDetailRow(
-                    'Tags:',
-                    outfit.tags?.isNotEmpty == true ? outfit.tags! : 'None',
-                  ),
-                  _buildDetailRow(
-                    'Hijab Friendly:',
-                    outfit.isHijabFriendly ? 'Yes' : 'No',
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (isOwner)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _confirmDelete(context),
-                    icon: const Icon(Icons.delete),
-                    label: const Text('Delete Outfit'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                  if (!_alreadyPosted)
-                    ElevatedButton.icon(
-                      onPressed: () => _postOutfit(outfit.id),
-                      icon: const Icon(Icons.cloud_upload),
-                      label: const Text('Post Outfit'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          outfit.photoPath!,
+                          width: double.infinity,
+                          height: 300,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
                         ),
                       ),
                     ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _infoBox("Type", outfit.type ?? 'Unknown'),
+                      _infoBox("Season", outfit.season ?? 'Unknown'),
+                      _infoBox("Tags", outfit.tags ?? 'None'),
+                      _infoBox("Hijab Friendly", outfit.isHijabFriendly ? 'Yes' : 'No'),
+                    ],
+                  ),
+                  if (outfit.description != null && outfit.description!.isNotEmpty)
+  Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 24),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange.shade100),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Description',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              outfit.description!,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
+      const SizedBox(height: 24),
+
+                  if (isOwner)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => _confirmDelete(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            textStyle: const TextStyle(fontSize: 14),
+                          ),
+                          child: const Text('Delete Outfit'),
+                        ),
+                        if (!_alreadyPosted)
+                          ElevatedButton(
+                            onPressed: () => _postOutfit(outfit.id),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF9800),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              textStyle: const TextStyle(fontSize: 14),
+                            ),
+                            child: const Text('Post Outfit'),
+                          ),
+                      ],
+                    ),
                 ],
               ),
             ),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '$label ',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            TextSpan(
-              text: value,
-              style: const TextStyle(color: Colors.black87),
-            ),
-          ],
-        ),
+  Widget _infoBox(String label, String value) {
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            textAlign: TextAlign.left,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }

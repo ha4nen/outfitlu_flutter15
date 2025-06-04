@@ -36,6 +36,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Outfit App',
       theme: ThemeData(
+<<<<<<< HEAD
         primaryColor: const Color(0xFFF7B28C), // Warm soft orange
         hintColor: const Color(0xFFD9583B), // Coral red (Accent)
         scaffoldBackgroundColor: const Color.fromARGB(255, 248, 248, 248), // Light background
@@ -70,6 +71,77 @@ class _MyAppState extends State<MyApp> {
           surface: Color.fromARGB(255, 255, 255, 255), // Updated surface color
           onSurface: Color(0xFF5C2E10),
         ),
+=======
+primaryColor: Color(0xFFFAFAFA),
+scaffoldBackgroundColor: Color(0xFFFAFAFA),
+textTheme: TextTheme(
+  bodyLarge: TextStyle(color: Color(0xFF333333)),
+  bodyMedium: TextStyle(color: Color(0xFF333333)),
+),
+appBarTheme: const AppBarTheme(
+  centerTitle: true, // ✅ Center the title
+  backgroundColor: Colors.white,
+  foregroundColor: Color(0xFFFF9800),
+  elevation: 0,
+  titleTextStyle: TextStyle(
+    fontSize: 22, // ⬆️ Slightly larger
+    fontWeight: FontWeight.bold,
+    color: Color(0xFFFF9800),
+  ),
+),
+
+
+bottomNavigationBarTheme: BottomNavigationBarThemeData(
+  backgroundColor: Colors.white,
+  selectedItemColor: Color(0xFFFF9800),
+  unselectedItemColor: Color(0xFFBDBDBD),
+),
+buttonTheme: ButtonThemeData(
+  buttonColor: Color(0xFFD32F2F), // delete button red
+),
+colorScheme: ColorScheme(
+  brightness: Brightness.light,
+  primary: Color(0xFFFF9800),
+  onPrimary: Colors.white,
+  secondary: Color(0xFFFFE0B2),
+  onSecondary: Color(0xFF333333),
+  error: Color(0xFFD32F2F),
+  onError: Colors.white,
+  background: Color(0xFFFAFAFA),
+  onBackground: Color(0xFF333333),
+  surface: Color(0xFFFFFFFF),
+  onSurface: Color(0xFF333333),
+),
+
+        dialogTheme: DialogThemeData(
+              backgroundColor: Colors.white,
+              titleTextStyle: TextStyle(
+                color: Color(0xFFD9583B), // Coral red or use Colors.black
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              contentTextStyle: TextStyle(
+                color: Colors.black, // Body text in black
+                fontSize: 16,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+snackBarTheme: SnackBarThemeData(
+  backgroundColor: Colors.black,
+  contentTextStyle: TextStyle(
+    color: Colors.white,
+    fontSize: 14,
+  ),
+  behavior: SnackBarBehavior.floating,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(8),
+  ),
+),
+
+   
+>>>>>>> 05ebe6e299a785888cdac01882b7bcfe14169ff6
       ),
       darkTheme: ThemeData.dark().copyWith(
         primaryColor: const Color(0xFFF7B28C),
@@ -87,6 +159,33 @@ class _MyAppState extends State<MyApp> {
           surface: Color(0xFFFDE3C4), // Match light theme surface tone for consistency
           onSurface: Color(0xFFFFFFFF),
         ),
+dialogTheme: DialogThemeData(
+  backgroundColor: Colors.white,
+  titleTextStyle: TextStyle(
+    color: Color(0xFFD9583B),
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+  ),
+  contentTextStyle: TextStyle(
+    color: Colors.black,
+    fontSize: 16,
+  ),
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(20),
+  ),
+),
+snackBarTheme: SnackBarThemeData(
+  backgroundColor: Colors.black,
+  contentTextStyle: TextStyle(
+    color: Colors.white,
+    fontSize: 14,
+  ),
+  behavior: SnackBarBehavior.floating,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(8),
+  ),
+),
+
         textTheme: const TextTheme(
           bodyLarge: TextStyle(color: Colors.white),
           bodyMedium: TextStyle(color: Colors.white),

@@ -1,3 +1,4 @@
+// Updated AllOutfitsPage UI to match MyItemsPage style
 import 'package:flutter/material.dart';
 import 'outfit.dart';
 import 'outfit_service.dart';
@@ -20,11 +21,14 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
   bool showHijabOnly = false;
 
   final List<String> tagOptions = [
+    'All',
     'Casual',
     'Work',
-    'Sport',
+    'Formal',
     'Comfy',
-    'Classic',
+    'Chic',
+    'Sport',
+    'Classy',
   ];
 
   @override
@@ -34,6 +38,7 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
   }
 
   Future<void> _loadOutfits() async {
+    setState(() => isLoading = true);
     try {
       final allOutfits =
           widget.userId != null
@@ -42,20 +47,19 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
 
       final filtered =
           allOutfits.where((outfit) {
-            final matchesTag =
-                selectedTag.isEmpty ||
-                (outfit.tags?.toLowerCase().contains(
-                      selectedTag.toLowerCase(),
-                    ) ??
-                    false);
-            final matchesHijab = !showHijabOnly || outfit.isHijabFriendly;
-            return matchesTag && matchesHijab;
-          }).toList();
-
-      final grouped = groupOutfitsBySeason(filtered);
+              final matchesTag =
+                  selectedTag.isEmpty ||
+                  (outfit.tags != null &&
+                      outfit.tags!.toLowerCase().contains(
+                        selectedTag.toLowerCase(),
+                      ));
+              final matchesHijab = !showHijabOnly || outfit.isHijabFriendly;
+              return matchesTag && matchesHijab;
+            }).toList()
+            ..sort((a, b) => b.id.compareTo(a.id));
 
       setState(() {
-        outfitsBySeason = grouped;
+        outfitsBySeason = groupOutfitsBySeason(filtered);
         isLoading = false;
       });
     } catch (e) {
@@ -66,276 +70,295 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
     }
   }
 
+  int _tagCount(String tag) {
+    if (tag == 'All') return outfitsBySeason.values.expand((o) => o).length;
+    if (tag == 'Hijab')
+      return outfitsBySeason.values
+          .expand((o) => o)
+          .where((o) => o.isHijabFriendly)
+          .length;
+    return outfitsBySeason.values
+        .expand((o) => o)
+        .where(
+          (o) =>
+              o.tags != null &&
+              o.tags!.toLowerCase().contains(tag.toLowerCase()),
+        )
+        .length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Outfits'),
-        backgroundColor: theme.appBarTheme.backgroundColor,
-        foregroundColor: theme.appBarTheme.foregroundColor,
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
-            onSelected: (value) {
-              if (value == 'Hijab') {
-                setState(() {
-                  showHijabOnly = !showHijabOnly;
-                });
-                _loadOutfits();
-              } else if (value == 'Reset') {
-                setState(() {
-                  selectedTag = '';
-                  showHijabOnly = false;
-                });
-                _loadOutfits();
-              } else {
-                setState(() {
-                  selectedTag = value;
-                });
-                _loadOutfits();
-              }
-            },
-            itemBuilder:
-                (context) => [
-                  ...tagOptions.map(
-                    (tag) => PopupMenuItem(
-                      value: tag,
-                      child: Text(
-                        tag,
-                        style: const TextStyle(color: Colors.black),
+        title: const Text("My Outfits"),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
+        ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final tag in tagOptions)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(
+                          '$tag (${_tagCount(tag)})',
+                          style: TextStyle(
+                            color:
+                                selectedTag == (tag == 'All' ? '' : tag)
+                                    ? Colors.white
+                                    : const Color(0xFF2F1B0C),
+                          ),
+                        ),
+
+                        selected: selectedTag == (tag == 'All' ? '' : tag),
+                        selectedColor: const Color(0xFFFF9800),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: const BorderSide(color: Color(0xFFFFE0B2)),
+                        ),
+                        onSelected: (isSelected) {
+                          setState(() {
+                            final newTag = tag == 'All' ? '' : tag;
+                            selectedTag =
+                                selectedTag == newTag
+                                    ? ''
+                                    : newTag; // toggle off
+                          });
+                          _loadOutfits();
+                        },
                       ),
                     ),
-                  ),
-                  PopupMenuItem(
-                    value: 'Hijab',
-                    child: Text(
-                      'Hijab Friendly Only',
-                      style: const TextStyle(color: Colors.black),
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                    value: 'Reset',
-                    child: Text(
-                      'Remove Filters',
-                      style: TextStyle(color: Colors.black),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: const Text('Hijab Friendly'),
+                      selected: showHijabOnly,
+                      selectedColor: const Color(0xFFFF9800),
+                      backgroundColor: Colors.white,
+                      onSelected: (value) {
+                        setState(() => showHijabOnly = value);
+                        _loadOutfits();
+                      },
                     ),
                   ),
                 ],
+              ),
+            ),
           ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadOutfits,
-        child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : error.isNotEmpty
-                ? Center(
-                  child: Text(error, style: const TextStyle(color: Colors.red)),
-                )
-                : SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (selectedTag.isNotEmpty || showHijabOnly)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12.0),
-                          child: Wrap(
-                            spacing: 8.0,
-                            runSpacing: 4.0,
-                            children: [
-                              if (selectedTag.isNotEmpty)
-                                Chip(
-                                  label: Text('Tag: $selectedTag'),
-                                  onDeleted: () {
-                                    setState(() => selectedTag = '');
-                                    _loadOutfits();
-                                  },
-                                ),
-                              if (showHijabOnly)
-                                Chip(
-                                  label: const Text('Hijab Friendly'),
-                                  onDeleted: () {
-                                    setState(() => showHijabOnly = false);
-                                    _loadOutfits();
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                      ...outfitsBySeason.entries.map((entry) {
-                        final season = entry.key;
-                        final outfits = entry.value;
-                        final sorted = List<Outfit>.from(outfits)
-                          ..sort((a, b) => b.id.compareTo(a.id));
-                        final previewOutfits = sorted.take(4).toList();
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => OutfitCategoryPage(
-                                          categoryName: season,
-                                          outfits: outfits,
-                                        ),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                season,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.secondary,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
+          const SizedBox(height: 8),
+          Expanded(
+            child:
+                isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : error.isNotEmpty
+                    ? Center(
+                      child: Text(
+                        error,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    )
+                    : outfitsBySeason.isEmpty
+                    ? const Center(
+                      child: Text(
+                        'No outfits available.',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    )
+                    : RefreshIndicator(
+                      onRefresh: _loadOutfits,
+                      child: ListView(
+                        padding: const EdgeInsets.all(16.0),
+                        children:
+                            outfitsBySeason.entries.map((entry) {
+                              final season = entry.key;
+                              final outfits = entry.value;
+                              final previewOutfits = outfits.take(4).toList();
 
-                            const SizedBox(height: 8),
-                            previewOutfits.isEmpty
-                                ? Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 24.0,
-                                  ),
-                                  child: Text(
-                                    'No outfits for this season',
-                                    style: TextStyle(
-                                      color: theme.textTheme.bodyMedium?.color,
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  GestureDetector(
+                                    onTap:
+                                        () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => OutfitCategoryPage(
+                                                  categoryName: season,
+                                                  outfits: outfits,
+                                                ),
+                                          ),
+                                        ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 8.0,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          RichText(
+                                            text: TextSpan(
+                                              text: season,
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF2F1B0C),
+                                              ),
+                                              children: [
+                                                TextSpan(
+                                                  text: '  ${outfits.length}',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          const Spacer(),
+                                          const Icon(
+                                            Icons.arrow_forward_ios,
+                                            size: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                )
-                                : SizedBox(
-                                  height: 130,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount:
-                                        outfits.isNotEmpty
-                                            ? previewOutfits.length + 1
-                                            : 0,
-                                    itemBuilder: (context, index) {
-                                      if (index < previewOutfits.length) {
-                                        final outfit = previewOutfits[index];
-                                        return GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) => OutfitDetailsPage(
-                                                      outfit: outfit,
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    height: 140,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: previewOutfits.length + 1,
+                                      itemBuilder: (context, index) {
+                                        if (index < previewOutfits.length) {
+                                          final outfit = previewOutfits[index];
+                                          return GestureDetector(
+                                            onTap: () async {
+                                              final result =
+                                                  await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (_) =>
+                                                              OutfitDetailsPage(
+                                                                outfit: outfit,
+                                                              ),
                                                     ),
-                                              ),
-                                            );
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6.0,
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
+                                                  );
+                                              if (result == 'refresh')
+                                                _loadOutfits();
+                                            },
+
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6.0,
+                                                  ),
                                               child: Container(
                                                 width: 100,
-                                                color:
-                                                    theme.colorScheme.surface,
-                                                child:
-                                                    outfit.photoPath != null
-                                                        ? Image.network(
-                                                          outfit.photoPath!,
-                                                          fit: BoxFit.cover,
-                                                          width: 100,
-                                                          height: 130,
-                                                          loadingBuilder: (
-                                                            context,
-                                                            child,
-                                                            progress,
-                                                          ) {
-                                                            if (progress ==
-                                                                null) {
-                                                              return child;
-                                                            }
-                                                            return const Center(
-                                                              child:
-                                                                  CircularProgressIndicator(),
-                                                            );
-                                                          },
-                                                          errorBuilder:
-                                                              (
-                                                                _,
-                                                                __,
-                                                                ___,
-                                                              ) => const Center(
-                                                                child: Icon(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color:
+                                                        Colors.orange.shade100,
+                                                  ),
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child:
+                                                      outfit.photoPath != null
+                                                          ? Image.network(
+                                                            outfit.photoPath!,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder:
+                                                                (
+                                                                  _,
+                                                                  __,
+                                                                  ___,
+                                                                ) => const Icon(
                                                                   Icons
                                                                       .broken_image,
                                                                 ),
-                                                              ),
-                                                        )
-                                                        : const Center(
-                                                          child: Icon(
-                                                            Icons
-                                                                .image_not_supported,
+                                                          )
+                                                          : const Center(
+                                                            child: Icon(
+                                                              Icons
+                                                                  .image_not_supported,
+                                                            ),
                                                           ),
-                                                        ),
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      } else {
-                                        return GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) => OutfitCategoryPage(
-                                                      categoryName: season,
-                                                      outfits: outfits,
-                                                    ),
+                                          );
+                                        } else {
+                                          return GestureDetector(
+                                            onTap:
+                                                () => Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (_) =>
+                                                            OutfitCategoryPage(
+                                                              categoryName:
+                                                                  season,
+                                                              outfits: outfits,
+                                                            ),
+                                                  ),
+                                                ),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 6.0,
+                                                  ),
+                                              child: Container(
+                                                width: 100,
+                                                height: 130,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey.shade200,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.arrow_forward,
+                                                    size: 30,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
                                               ),
-                                            );
-                                          },
-                                          child: Container(
-                                            width: 100,
-                                            height: 130,
-                                            margin: const EdgeInsets.symmetric(
-                                              horizontal: 6.0,
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.shade200,
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
-                                            ),
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.arrow_forward,
-                                                size: 30,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    },
+                                          );
+                                        }
+                                      },
+                                    ),
                                   ),
-                                ),
-                            const SizedBox(height: 24),
-                          ],
-                        );
-                      }),
-                    ],
-                  ),
-                ),
+                                  const SizedBox(height: 24),
+                                ],
+                              );
+                            }).toList(),
+                      ),
+                    ),
+          ),
+        ],
       ),
     );
   }

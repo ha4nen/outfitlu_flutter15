@@ -715,10 +715,10 @@ class _MagicPageState extends State<MagicPage> {
         if (label != null)
           Text(
             label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: textColor,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
         const SizedBox(height: 4),
@@ -726,22 +726,37 @@ class _MagicPageState extends State<MagicPage> {
           isExpanded: true,
           value: value,
           onChanged: (val) => onChanged(val!),
-          items:
-              options
-                  .map(
-                    (e) => DropdownMenuItem<String>(
-                      value: e,
-                      child: Text(
-                        e,
-                        style: TextStyle(fontSize: 13, color: textColor),
-                      ),
-                    ),
-                  )
-                  .toList(),
-          decoration: const InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            border: OutlineInputBorder(),
+          items: options
+              .map(
+                (e) => DropdownMenuItem<String>(
+                  value: e,
+                  child: Text(
+                    e,
+                    style: const TextStyle(fontSize: 14, color: Colors.black),
+                  ),
+                ),
+              )
+              .toList(),
+          decoration: InputDecoration(
+            labelText: value.isEmpty ? hint : "",
+            labelStyle: const TextStyle(color: Colors.black87),
+            filled: true,
+            fillColor: Colors.grey.shade100,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide(color: Colors.orange.shade200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide(color: Colors.orange.shade200),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              borderSide: BorderSide(color: Color(0xFFFF9800), width: 2),
+            ),
           ),
+          dropdownColor: Colors.white,
         ),
       ],
     );
@@ -838,6 +853,15 @@ class _MagicPageState extends State<MagicPage> {
               child: ElevatedButton(
                 onPressed: _loading ? null : generateOutfit,
                 child: const Text('✨ Generate Outfit'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9800),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  textStyle: const TextStyle(fontSize: 14),
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -924,10 +948,9 @@ class _MagicPageState extends State<MagicPage> {
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (_) => OutfitCreationPage(
-                            selectedDate: widget.selectedDate,
-                          ),
+                      builder: (_) => OutfitCreationPage(
+                        selectedDate: widget.selectedDate,
+                      ),
                     ),
                   );
 
@@ -939,6 +962,15 @@ class _MagicPageState extends State<MagicPage> {
                     Navigator.pop(context, true); // Tell planner to refresh
                   }
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9800),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  textStyle: const TextStyle(fontSize: 14),
+                ),
               ),
             ),
           ],

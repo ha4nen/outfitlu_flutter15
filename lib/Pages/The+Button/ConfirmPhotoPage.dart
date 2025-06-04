@@ -63,6 +63,7 @@ class ConfirmPhotoPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Confirm Your Item"),
         backgroundColor: theme.colorScheme.primary,
+        iconTheme: const IconThemeData(color: Colors.white), // <-- Make back arrow white
       ),
       body: Column(
         children: [

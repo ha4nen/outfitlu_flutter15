@@ -36,42 +36,6 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Outfit App',
       theme: ThemeData(
-<<<<<<< HEAD
-        primaryColor: const Color(0xFFF7B28C), // Warm soft orange
-        hintColor: const Color(0xFFD9583B), // Coral red (Accent)
-        scaffoldBackgroundColor: const Color.fromARGB(255, 248, 248, 248), // Light background
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Color(0xFF5C2E10)), // Deep brown
-          bodyMedium: TextStyle(color: Color(0xFF5C2E10)),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF7B28C), // Same as bottom navigation bar (secondary)
-          foregroundColor: Color(0xFF5C2E10), // Deep brown
-          elevation: 0,
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFFF7B28C), // Pale beige-pink (secondary)
-          selectedItemColor: Color(0xFFD9583B), // Coral red (accent)
-          unselectedItemColor: Color(0xFF5C2E10), // Deep brown
-        ),
-        buttonTheme: ButtonThemeData(
-          buttonColor: const Color(0xFFD9583B), // Coral red
-          textTheme: ButtonTextTheme.primary,
-        ),
-        colorScheme: const ColorScheme(
-          brightness: Brightness.light,
-          primary: Color(0xFFF7B28C),
-          onPrimary: Color(0xFF5C2E10),
-          secondary: Color(0xFFFAE0C3),
-          onSecondary: Color(0xFF5C2E10),
-          error: Color(0xFFD9583B),
-          onError: Color(0xFF5C2E10),
-          background: Colors.white,
-          onBackground: Color(0xFF5C2E10),
-          surface: Color.fromARGB(255, 255, 255, 255), // Updated surface color
-          onSurface: Color(0xFF5C2E10),
-        ),
-=======
 primaryColor: Color(0xFFFAFAFA),
 scaffoldBackgroundColor: Color(0xFFFAFAFA),
 textTheme: TextTheme(
@@ -141,7 +105,6 @@ snackBarTheme: SnackBarThemeData(
 ),
 
    
->>>>>>> 05ebe6e299a785888cdac01882b7bcfe14169ff6
       ),
       darkTheme: ThemeData.dark().copyWith(
         primaryColor: const Color(0xFFF7B28C),

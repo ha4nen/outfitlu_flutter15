@@ -106,6 +106,8 @@ class _ProfilePageState extends State<ProfilePage> {
   String? profileImageUrl;
 
   List<Outfit> _recentOutfits = [];
+  List<Outfit> _allOutfits = [];
+
   bool _loadingOutfits = true;
   String _errorOutfits = '';
 
@@ -119,7 +121,7 @@ class _ProfilePageState extends State<ProfilePage> {
   int followingCount = 0;
   bool isFollowing = false;
   bool isMyProfile = true;
-
+  int totalLikes = 0;
   int? currentUserId;
   @override
   void initState() {
@@ -200,6 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
           followersCount = data['followers_count'] ?? 0;
           followingCount = data['following_count'] ?? 0;
           isFollowing = data['is_following'] ?? false;
+          totalLikes = data['total_likes'] ?? 0;
           isMyProfile =
               (widget.userId == null) || (widget.userId == currentUserId);
           final pic = data['profile_picture'];
@@ -329,6 +332,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ..sort((a, b) => b.id.compareTo(a.id));
 
         setState(() {
+          _allOutfits = sorted;
           _recentOutfits = sorted.take(4).toList();
           _loadingOutfits = false;
         });
@@ -347,411 +351,503 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // REMOVED: _loadProfileImage (unless it was actually implemented)
+  Widget _buildStatBlock(String value, String label) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Color(0xFF2F1B0C),
+          ),
+        ),
+        Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        actions:
-            widget.userId == null
-                ? [
-                  IconButton(
-                    icon: Icon(
-                      Icons.settings,
-                      color:
-                          Theme.of(context).brightness == Brightness.light
-                              ? Colors.white
-                              : Theme.of(context).iconTheme.color,
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => SettingsPage(
-                                onThemeChange: widget.onThemeChange,
-                              ),
-                        ),
-                      );
-                    },
-                  ),
-                ]
-                : [],
-      ),
+      appBar: null,
+      extendBodyBehindAppBar: true,
       body: RefreshIndicator(
-        // Optional: Add pull-to-refresh
         onRefresh: () async {
           await fetchProfileData();
           await _fetchWardrobeItems();
         },
         child: SingleChildScrollView(
-          physics:
-              const AlwaysScrollableScrollPhysics(), // Ensure scroll works with RefreshIndicator
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(
+              bottom: 32,
+            ), // Add bottom padding for scroll
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // --- Profile Section (Remains largely the same) ---
-                GestureDetector(
-                  // onTap: _pickProfileImage, // Add if you implement image picking
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    backgroundImage:
-                        profileImageUrl != null && profileImageUrl!.isNotEmpty
-                            ? NetworkImage(profileImageUrl!)
-                            : null,
-                    child:
-                        profileImageUrl == null || profileImageUrl!.isEmpty
-                            ? Icon(
-                              Icons.person,
-                              size: 50,
-                              color: Theme.of(context).iconTheme.color,
-                            )
-                            : null,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                Text(
-                  username,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-                if (bio.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      bio,
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => FollowersFollowingListPage(
-                                  userId: widget.userId ?? currentUserId!,
-                                  showFollowers: false,
-                                ),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        '$followingCount Following',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
+                SafeArea(
+                  top: false,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF9800),
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(24),
                       ),
                     ),
-                    const Text('  |  '),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => FollowersFollowingListPage(
-                                  userId: widget.userId ?? currentUserId!,
-                                  showFollowers: true,
-                                ),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        '$followersCount Followers',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                if (!isMyProfile)
-                  ElevatedButton(
-                    onPressed: toggleFollow,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isFollowing
-                              ? Colors.grey
-                              : Theme.of(context).colorScheme.primary,
-                    ),
-                    child: Text(
-                      isFollowing ? 'Unfollow' : 'Follow',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 16),
-                if (widget.userId == null)
-                  ElevatedButton(
-                    onPressed: () async {
-                      final updated = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditProfilePage(),
-                        ),
-                      );
-                      if (updated == true) {
-                        await fetchProfileData(); // Refresh profile after editing
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                    ),
-                    child: Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-
-                Divider(color: Theme.of(context).dividerColor),
-
-                // --- Items Section Header (Navigate to modified AllItemsPage) ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap:
-                          (_hideItems && widget.userId != null)
-                              ? null
-                              : () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) =>
-                                            AllItemsPage(userId: widget.userId),
-                                  ),
-                                );
-                              },
-
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Items',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Add other actions if needed (e.g., Add Item button)
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // --- Items Section Body (Uses fetched data) ---
-                _buildItemsSection(), // Use helper method
-
-                const SizedBox(height: 16),
-
-                // --- Outfits Section Header (Remains the same for now) ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap:
-                          (_hideOutfits && widget.userId != null)
-                              ? null
-                              : () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => AllOutfitsPage(
-                                          userId: widget.userId,
-                                        ),
-                                  ),
-                                );
-                              },
-                      // Disable for other users
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Outfits',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // --- Outfits Section Body (Still uses placeholder/old logic) ---
-                // TODO: Update this section similarly to the Items section later
-                // --- Outfits Section Body ---
-                _loadingOutfits
-                    ? const Center(child: CircularProgressIndicator())
-                    : _hideOutfits && widget.userId != null
-                    ? Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text(
-                        'This user has hidden their outfits.',
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                    : _errorOutfits.isNotEmpty
-                    ? Text(
-                      _errorOutfits,
-                      style: const TextStyle(color: Colors.red),
-                    )
-                    : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.only(top: 35, bottom: 20),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.topCenter,
                       children: [
-                        SizedBox(
-                          height: 120,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _recentOutfits.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index == _recentOutfits.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0,
-                                  ),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) => AllOutfitsPage(
-                                                userId: widget.userId,
-                                              ),
-                                        ),
-                                      );
-                                    },
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Container(
-                                        width: 100,
-                                        height: 120,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.surface.withOpacity(0.9),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.arrow_forward,
-                                            size: 32,
-                                            color: Colors.black54,
-                                          ),
-                                        ),
+                        if (widget.userId != null)
+                          Positioned(
+                            top: 16,
+                            left: 16,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                              ),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+                        Positioned(
+                          top: 16,
+                          right: 16,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.settings,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => SettingsPage(
+                                        onThemeChange: widget.onThemeChange,
                                       ),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              final outfit = _recentOutfits[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (_) =>
-                                              OutfitDetailsPage(outfit: outfit),
-                                    ),
-                                  );
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4.0,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      width: 100,
-                                      color:
-                                          Theme.of(context).colorScheme.surface,
-                                      child:
-                                          outfit.photoPath != null
-                                              ? Image.network(
-                                                outfit.photoPath!,
-                                                fit: BoxFit.cover,
-                                                width: 100,
-                                                height: 120,
-                                                loadingBuilder: (
-                                                  context,
-                                                  child,
-                                                  progress,
-                                                ) {
-                                                  if (progress == null) {
-                                                    return child;
-                                                  }
-                                                  return const Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
-                                                  );
-                                                },
-                                                errorBuilder:
-                                                    (_, __, ___) =>
-                                                        const Center(
-                                                          child: Icon(
-                                                            Icons.broken_image,
-                                                          ),
-                                                        ),
-                                              )
-                                              : const Center(
-                                                child: Icon(
-                                                  Icons.image_not_supported,
-                                                ),
-                                              ),
-                                    ),
-                                  ),
                                 ),
                               );
                             },
                           ),
                         ),
+                        Column(
+                          children: [
+                            const SizedBox(
+                              height: 50,
+                            ), // was 16, now 32 for more space before profile picture
+                            CircleAvatar(
+                              radius: 45,
+                              backgroundColor: Colors.white,
+                              backgroundImage:
+                                  profileImageUrl != null
+                                      ? NetworkImage(profileImageUrl!)
+                                      : null,
+                              child:
+                                  profileImageUrl == null
+                                      ? const Icon(
+                                        Icons.person,
+                                        size: 45,
+                                        color: Colors.grey,
+                                      )
+                                      : null,
+                            ),
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(
+                                top: 16,
+                                left: 16,
+                                right: 16,
+                              ), // <-- margin for white card
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 20,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    username,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2F1B0C),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    bio.isNotEmpty ? bio : ' ',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        FollowersFollowingListPage(
+                                                          userId:
+                                                              widget.userId ??
+                                                              currentUserId!,
+                                                          showFollowers: false,
+                                                        ),
+                                              ),
+                                            );
+                                          },
+                                          child: _buildStatBlock(
+                                            '$followingCount',
+                                            'Following',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) =>
+                                                        FollowersFollowingListPage(
+                                                          userId:
+                                                              widget.userId ??
+                                                              currentUserId!,
+                                                          showFollowers: true,
+                                                        ),
+                                              ),
+                                            );
+                                          },
+                                          child: _buildStatBlock(
+                                            '$followersCount',
+                                            'Followers',
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: _buildStatBlock(
+                                          '$totalLikes',
+                                          'Likes',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  isMyProfile
+                                      ? ElevatedButton(
+                                        onPressed: () async {
+                                          final updated = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      EditProfilePage(),
+                                            ),
+                                          );
+                                          if (updated == true) {
+                                            await fetchProfileData();
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFFF9800,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 10,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Edit Profile',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      )
+                                      : ElevatedButton(
+                                        onPressed: toggleFollow,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFFF9800,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 10,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          isFollowing ? 'Unfollow' : 'Follow',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
+                  ),
+                ),
+
+// --- Items Section ---
+Container(
+  margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8), // No space at the top
+  padding: const EdgeInsets.symmetric(vertical: 12),
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.05),
+        blurRadius: 8,
+      ),
+    ],
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: GestureDetector(
+          onTap: (_hideItems && widget.userId != null)
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllItemsPage(userId: widget.userId),
+                    ),
+                  );
+                },
+          child: Row(
+            children: [
+              const Text(
+                'Items ',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2F1B0C),
+                ),
+              ),
+              Text(
+                '(${_wardrobeItems.length})',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      _buildItemsSection(),
+    ],
+  ),
+),
+
+// --- Outfits Section ---
+Container(
+  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  padding: const EdgeInsets.symmetric(vertical: 16), // Increased vertical padding
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.05),
+        blurRadius: 8,
+      ),
+    ],
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: GestureDetector(
+          onTap: (_hideOutfits && widget.userId != null)
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllOutfitsPage(userId: widget.userId),
+                    ),
+                  );
+                },
+          child: Row(
+            children: [
+              const Text(
+                'Outfits ',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2F1B0C),
+                ),
+              ),
+              Text(
+                '(${_recentOutfits.length})',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      if (_loadingOutfits)
+        const Center(child: CircularProgressIndicator())
+      else if (_hideOutfits && widget.userId != null)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24.0),
+          child: Text(
+            'This user has hidden their outfits.',
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontStyle: FontStyle.italic,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        )
+      else if (_errorOutfits.isNotEmpty)
+        Text(
+          _errorOutfits,
+          style: const TextStyle(color: Colors.red),
+        )
+      else
+        SizedBox(
+          height: 150, // Increased height for bigger images
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _recentOutfits.length + 1,
+            itemBuilder: (context, index) {
+              if (index == _recentOutfits.length) {
+                // The "see all" arrow at the end
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AllOutfitsPage(userId: widget.userId),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 110, // Match item card width
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                        border: Border.all(
+                          color: Colors.orange.shade200,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.arrow_forward,
+                          size: 32,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              final outfit = _recentOutfits[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OutfitDetailsPage(outfit: outfit),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Container(
+                    width: 110, // Match item card width
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.orange.shade200,
+                        width: 1.5,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: outfit.photoPath != null
+                          ? Image.network(
+                              outfit.photoPath!,
+                              fit: BoxFit.cover,
+                              width: 110,
+                              height: 150,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              },
+                              errorBuilder: (_, __, ___) => const Center(
+                                child: Icon(Icons.broken_image),
+                              ),
+                            )
+                          : const Center(
+                              child: Icon(
+                                Icons.photo_library_outlined,
+                                color: Colors.grey,
+                                size: 30,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+    ],
+  ),
+),
+const SizedBox(height: 8),
+
+        
+                const SizedBox(height: 32), // Extra bottom padding for scroll
               ],
             ),
           ),
@@ -818,20 +914,24 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   );
                 },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 100,
-                    height: 150,
+                child: Container(
+                  width: 100,
+                  height: 150,
+                  decoration: BoxDecoration(
                     color: Theme.of(
                       context,
                     ).colorScheme.surface.withOpacity(0.9),
-                    child: const Center(
-                      child: Icon(
-                        Icons.arrow_forward,
-                        size: 32,
-                        color: Colors.black54,
-                      ),
+                    border: Border.all(
+                      color: Colors.orange.shade200,
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.arrow_forward,
+                      size: 32,
+                      color: Colors.black54,
                     ),
                   ),
                 ),
@@ -864,11 +964,15 @@ class _ProfilePageState extends State<ProfilePage> {
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: Container(
-                  width: 110,
+              child: Container(
+                width: 110,
+                decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,
+                  border: Border.all(color: Colors.orange.shade200, width: 1.5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
                   child:
                       item.photoPath != null
                           ? Image.network(
@@ -888,7 +992,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                           )
                           : const Center(
-                            child: Icon(Icons.image_not_supported),
+                            child: Icon(
+                              Icons.photo_library_outlined,
+                              color: Colors.grey,
+                              size: 30,
+                            ),
                           ),
                 ),
               ),

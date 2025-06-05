@@ -28,6 +28,8 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
   String selectedSeason = 'All-Season';
   bool isHijabFriendly = false;
   bool isLoading = true;
+  String? selectedTag;
+  final List<String> selectedOccasions = [];
 
   final List<String> seasonOptions = [
     'Winter',
@@ -36,12 +38,14 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
     'Autumn',
     'All-Season',
   ];
-  final List<String> tagSuggestions = [
+  final List<String> occasionOptions = [
     'Casual',
     'Work',
-    'Sport',
+    'Formal',
     'Comfy',
-    'Classic',
+    'Chic',
+    'Sport',
+    'Classy',
   ];
 
   @override
@@ -181,8 +185,13 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
     request.fields['type'] = 'User-created';
     request.fields['description'] = _descriptionController.text.trim();
     request.fields['season'] = selectedSeason;
-    request.fields['tags'] = _tagsController.text.trim();
-    request.fields['is_hijab_friendly'] = isHijabFriendly.toString();
+// Combine tags from the text field and selected occasions
+final tagsList = [
+  ...selectedOccasions,
+  ..._tagsController.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty),
+];
+request.fields['tags'] = tagsList.join(','); // or use space if your backend expects space-separated    
+request.fields['is_hijab_friendly'] = isHijabFriendly.toString();
 
     for (var i = 0; i < selectedItems.length; i++) {
       request.fields['selected_items_ids[$i]'] =
@@ -219,7 +228,7 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
             (_) => AlertDialog(
               title: const Text('Outfit Saved!'),
               content: Text(
-                'Outfit with ${selectedItems.length} item(s) saved.',
+                'Outfit with ${selectedItems.length} items saved.',
               ),
               actions: [
                 TextButton(
@@ -336,228 +345,175 @@ class _OutfitCreationPageState extends State<OutfitCreationPage> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Create Outfit',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: colorScheme.onPrimary,
-          ),
+       appBar: AppBar(
+        title: const Text("Create Outfit"),
+        backgroundColor: Colors.white,
+        foregroundColor:Color(0xFFFF9800),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
         ),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel("Description", theme, colorScheme),
-                    TextField(
-                      controller: _descriptionController,
-                      maxLines: 3,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'Enter outfit description',
-                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface,
-                        ),
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: colorScheme.surfaceVariant,
-                      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel("Description", theme, colorScheme),
+                  TextField(
+                    controller: _descriptionController,
+                    maxLines: 3,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
+                    decoration: InputDecoration(
+                      hintText: 'Enter outfit description',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant,
                     ),
-                    const SizedBox(height: 10),
-                    _buildLabel("Season", theme, colorScheme),
-                    DropdownButtonFormField<String>(
-                      value: selectedSeason,
-                      items:
-                          seasonOptions.map((season) {
-                            return DropdownMenuItem<String>(
-                              value: season,
-                              child: Text(
-                                season,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                      onChanged:
-                          (value) => setState(() => selectedSeason = value!),
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: colorScheme.surfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildLabel("Tags", theme, colorScheme),
-                    TextFormField(
-                      controller: _tagsController,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'Type or tap a suggestion',
-                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface,
-                        ),
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: colorScheme.surfaceVariant,
-                      ),
-                    ),
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          tagSuggestions
-                              .map(
-                                (s) => ActionChip(
-                                  label: Text(
-                                    s,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: colorScheme.onSecondaryContainer,
-                                    ),
-                                  ),
-                                  backgroundColor:
-                                      colorScheme.secondaryContainer,
-                                  onPressed: () {
-                                    final currentText =
-                                        _tagsController.text.trim();
-                                    final tags =
-                                        currentText.isEmpty
-                                            ? <String>{}
-                                            : currentText
-                                                .split(',')
-                                                .map((e) => e.trim())
-                                                .where((e) => e.isNotEmpty)
-                                                .toSet();
-                                    tags.add(s);
-                                    setState(
-                                      () =>
-                                          _tagsController.text = tags.join(
-                                            ', ',
-                                          ),
-                                    );
-                                  },
-                                ),
-                              )
-                              .toList(),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: colorScheme.outline),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Checkbox(
-                            value: isHijabFriendly,
-                            onChanged:
-                                (val) => setState(() => isHijabFriendly = val!),
-                            activeColor: colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Is Hijab Friendly',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ...wardrobeByCategory.entries.map((entry) {
-                      final category = entry.key;
-                      final items = entry.value;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            category,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          SizedBox(
-                            height: 120,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                final item = items[index];
-                                final isSelected = selectedItems.contains(item);
-                                final imageUrl =
-                                    item['photo_path'].toString().startsWith(
-                                          "http",
-                                        )
-                                        ? item['photo_path']
-                                        : 'http://10.0.2.2:8000${item['photo_path']}';
+                  ),
+                  const SizedBox(height: 12),
 
-                                return GestureDetector(
-                                  onTap: () => _toggleSelection(item),
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                    ),
-                                    width: 100,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color:
-                                            isSelected
-                                                ? colorScheme.primary
-                                                : colorScheme.outline,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Image.network(
-                                      imageUrl,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
+                  _buildLabel("Season", theme, colorScheme),
+                  DropdownButtonFormField<String>(
+                    value: selectedSeason,
+                    items: seasonOptions
+                        .map((season) => DropdownMenuItem<String>(
+                              value: season,
+                              child: Text(season, style: theme.textTheme.bodyMedium),
+                            ))
+                        .toList(),
+                    onChanged: (value) => setState(() => selectedSeason = value!),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: colorScheme.surfaceVariant,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+                  _buildLabel("Occasion", theme, colorScheme),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: occasionOptions.map((occasion) {
+                      final isSelected = selectedOccasions.contains(occasion);
+                      return FilterChip(
+                        label: Text(occasion),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              selectedOccasions.add(occasion);
+                            } else {
+                              selectedOccasions.remove(occasion);
+                            }
+                          });
+                        },
+                        selectedColor: colorScheme.primary,
+                        backgroundColor: colorScheme.surfaceVariant,
+                        labelStyle: TextStyle(
+                          color: isSelected ? Colors.white : colorScheme.onSurface,
+                        ),
                       );
                     }).toList(),
-                    const SizedBox(height: 10),
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: _saveOutfit,
-                        icon: Icon(Icons.save, color: colorScheme.onPrimary),
-                        label: Text(
-                          'Save Outfit',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onPrimary,
+                  ),
+
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: isHijabFriendly,
+                        onChanged: (val) => setState(() => isHijabFriendly = val!),
+                        activeColor: colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Is Hijab Friendly', style: theme.textTheme.bodyMedium),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+                  ...wardrobeByCategory.entries.map((entry) {
+                    final category = entry.key;
+                    final items = entry.value;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(category, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 6),
+                        SizedBox(
+                          height: 120,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: items.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (_, index) {
+                              final item = items[index];
+                              final isSelected = selectedItems.contains(item);
+                              final imageUrl = item['photo_path'].toString().startsWith("http")
+                                  ? item['photo_path']
+                                  : 'http://10.0.2.2:8000${item['photo_path']}';
+
+                              return GestureDetector(
+                                onTap: () => _toggleSelection(item),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: isSelected ? const Color(0xFFFF9800) : Colors.grey.shade300,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  width: 100,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.network(imageUrl, fit: BoxFit.cover),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
+                        const SizedBox(height: 12),
+                      ],
+                    );
+                  }).toList(),
+
+                  const SizedBox(height: 16),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _saveOutfit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF9800),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
+                        elevation: 4,
+                        shadowColor: Colors.black.withOpacity(0.2),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.save),
+                          SizedBox(width: 8),
+                          Text('Save Outfit'),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
     );
   }
 

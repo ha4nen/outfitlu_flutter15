@@ -385,9 +385,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ), // Add bottom padding for scroll
             child: Column(
               children: [
-                SafeArea(
-                  top: false,
-                  child: Container(
+                Container(
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       color: Color(0xFFFF9800),
@@ -395,14 +393,17 @@ class _ProfilePageState extends State<ProfilePage> {
                         bottom: Radius.circular(24),
                       ),
                     ),
-                    padding: const EdgeInsets.only(top: 35, bottom: 20),
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top ,
+                      bottom: 20,
+                    ),
                     child: Stack(
                       clipBehavior: Clip.none,
                       alignment: Alignment.topCenter,
                       children: [
                         if (widget.userId != null)
                           Positioned(
-                            top: 16,
+                            top: 4,
                             left: 16,
                             child: IconButton(
                               icon: const Icon(
@@ -412,8 +413,10 @@ class _ProfilePageState extends State<ProfilePage> {
                               onPressed: () => Navigator.pop(context),
                             ),
                           ),
+                            if (widget.userId == null)
+
                         Positioned(
-                          top: 16,
+                          top: 4,
                           right: 16,
                           child: IconButton(
                             icon: const Icon(
@@ -435,7 +438,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Column(
                           children: [
                             const SizedBox(
-                              height: 50,
+                              height: 40,
                             ), // was 16, now 32 for more space before profile picture
                             CircleAvatar(
                               radius: 45,
@@ -617,237 +620,290 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                   ),
-                ),
+                
 
-// --- Items Section ---
-Container(
-  margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8), // No space at the top
-  padding: const EdgeInsets.symmetric(vertical: 12),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(20),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-      ),
-    ],
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: GestureDetector(
-          onTap: (_hideItems && widget.userId != null)
-              ? null
-              : () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AllItemsPage(userId: widget.userId),
-                    ),
-                  );
-                },
-          child: Row(
-            children: [
-              const Text(
-                'Items ',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2F1B0C),
-                ),
-              ),
-              Text(
-                '(${_wardrobeItems.length})',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      _buildItemsSection(),
-    ],
-  ),
-),
-
-// --- Outfits Section ---
-Container(
-  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  padding: const EdgeInsets.symmetric(vertical: 16), // Increased vertical padding
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(20),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 8,
-      ),
-    ],
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: GestureDetector(
-          onTap: (_hideOutfits && widget.userId != null)
-              ? null
-              : () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AllOutfitsPage(userId: widget.userId),
-                    ),
-                  );
-                },
-          child: Row(
-            children: [
-              const Text(
-                'Outfits ',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2F1B0C),
-                ),
-              ),
-              Text(
-                '(${_recentOutfits.length})',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      if (_loadingOutfits)
-        const Center(child: CircularProgressIndicator())
-      else if (_hideOutfits && widget.userId != null)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0),
-          child: Text(
-            'This user has hidden their outfits.',
-            style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-              fontStyle: FontStyle.italic,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        )
-      else if (_errorOutfits.isNotEmpty)
-        Text(
-          _errorOutfits,
-          style: const TextStyle(color: Colors.red),
-        )
-      else
-        SizedBox(
-          height: 150, // Increased height for bigger images
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _recentOutfits.length + 1,
-            itemBuilder: (context, index) {
-              if (index == _recentOutfits.length) {
-                // The "see all" arrow at the end
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => AllOutfitsPage(userId: widget.userId),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 110, // Match item card width
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-                        border: Border.all(
-                          color: Colors.orange.shade200,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 15),
+                // --- Items Section ---
+                Container(
+                  margin: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    bottom: 8,
+                  ), // No space at the top
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.arrow_forward,
-                          size: 32,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-                );
-              }
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                        child: GestureDetector(
+                          onTap:
+                              (_hideItems && widget.userId != null)
+                                  ? null
+                                  : () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => AllItemsPage(
+                                              userId: widget.userId,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                          child: Row(
+                            children: [
+                              const Text(
+                                'Items ',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2F1B0C),
+                                ),
+                              ),
+                              Text(
+                                ' ${_wardrobeItems.length}',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                               const Spacer(),
+                                            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
 
-              final outfit = _recentOutfits[index];
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OutfitDetailsPage(outfit: outfit),
-                    ),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Container(
-                    width: 110, // Match item card width
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.orange.shade200,
-                        width: 1.5,
+                            ],
+                          ),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: outfit.photoPath != null
-                          ? Image.network(
-                              outfit.photoPath!,
-                              fit: BoxFit.cover,
-                              width: 110,
-                              height: 150,
-                              loadingBuilder: (context, child, progress) {
-                                if (progress == null) return child;
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              },
-                              errorBuilder: (_, __, ___) => const Center(
-                                child: Icon(Icons.broken_image),
+                      _buildItemsSection(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+
+                // --- Outfits Section ---
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                  ), // Increased vertical padding
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                        child: GestureDetector(
+                          onTap:
+                              (_hideOutfits && widget.userId != null)
+                                  ? null
+                                  : () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => AllOutfitsPage(
+                                              userId: widget.userId,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                          child: Row(
+                            children: [
+                              const Text(
+                                'Outfits ',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2F1B0C),
+                                ),
                               ),
-                            )
-                          : const Center(
-                              child: Icon(
-                                Icons.photo_library_outlined,
-                                color: Colors.grey,
-                                size: 30,
+                              Text(
+                                ' ${_allOutfits.length}',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
                               ),
+                               const Spacer(),
+                               const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (_loadingOutfits)
+                        const Center(child: CircularProgressIndicator())
+                      else if (_hideOutfits && widget.userId != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24.0),
+                          child: Text(
+                            'This user has hidden their outfits.',
+                            style: TextStyle(
+                              color:
+                                  Theme.of(context).textTheme.bodyMedium?.color,
+                              fontStyle: FontStyle.italic,
                             ),
-                    ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      else if (_errorOutfits.isNotEmpty)
+                        Text(
+                          _errorOutfits,
+                          style: const TextStyle(color: Colors.red),
+                        )
+                      else
+                        SizedBox(
+                          height: 150, // Increased height for bigger images
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _recentOutfits.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == _recentOutfits.length) {
+                                // The "see all" arrow at the end
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => AllOutfitsPage(
+                                                userId: widget.userId,
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 110, // Match item card width
+                                      height: 150,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.surface.withOpacity(0.9),
+                                        border: Border.all(
+                                          color: Colors.orange.shade200,
+                                          width: 1.5,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.arrow_forward,
+                                          size: 32,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final outfit = _recentOutfits[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) =>
+                                              OutfitDetailsPage(outfit: outfit),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4.0,
+                                  ),
+                                  child: Container(
+                                    width: 110, // Match item card width
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.orange.shade200,
+                                        width: 1.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child:
+                                          outfit.photoPath != null
+                                              ? Image.network(
+                                                outfit.photoPath!,
+                                                fit: BoxFit.cover,
+                                                width: 110,
+                                                height: 150,
+                                                loadingBuilder: (
+                                                  context,
+                                                  child,
+                                                  progress,
+                                                ) {
+                                                  if (progress == null)
+                                                    return child;
+                                                  return const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  );
+                                                },
+                                                errorBuilder:
+                                                    (_, __, ___) =>
+                                                        const Center(
+                                                          child: Icon(
+                                                            Icons.broken_image,
+                                                          ),
+                                                        ),
+                                              )
+                                              : const Center(
+                                                child: Icon(
+                                                  Icons.photo_library_outlined,
+                                                  color: Colors.grey,
+                                                  size: 30,
+                                                ),
+                                              ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
-        ),
-    ],
-  ),
-),
-const SizedBox(height: 8),
 
-        
-                const SizedBox(height: 32), // Extra bottom padding for scroll
+                const SizedBox(height: 90), // Extra bottom padding for scroll
               ],
             ),
           ),

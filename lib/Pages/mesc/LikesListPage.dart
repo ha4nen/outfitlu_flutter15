@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_application_1/Pages/Mpages/Profile_Page.dart'; // Update the path as needed
+import 'package:flutter_application_1/Pages/Mpages/Profile_Page.dart';
 
 class LikesListPage extends StatefulWidget {
   final int postId;
@@ -49,8 +49,6 @@ class _LikesListPageState extends State<LikesListPage> {
         setState(() {
           _error = 'Failed to load likes';
           _loading = false;
-          print('Response: ${response.statusCode}');
-          print('Body: ${response.body}');
         });
       }
     } catch (e) {
@@ -69,6 +67,10 @@ class _LikesListPageState extends State<LikesListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Liked by'),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
+        ),
         backgroundColor: theme.appBarTheme.backgroundColor,
         foregroundColor: theme.appBarTheme.foregroundColor,
       ),
@@ -81,29 +83,33 @@ class _LikesListPageState extends State<LikesListPage> {
                     style: TextStyle(color: colorScheme.error),
                   ),
                 )
-              : ListView.builder(
+              : ListView.separated(
                   itemCount: likedUsers.length,
+                  separatorBuilder: (_, __) => Divider(color: Colors.grey.shade200),
                   itemBuilder: (context, index) {
                     final user = likedUsers[index];
+                    final username = user['username'] ?? 'User';
+                    final profilePic = user['profile_picture'];
+
                     return ListTile(
-                      leading: user['profile_picture'] != null
-                          ? CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                user['profile_picture'],
-                              ),
-                              backgroundColor: colorScheme.secondary,
-                            )
-                          : CircleAvatar(
-                              child: Icon(Icons.person, color: colorScheme.onSecondary),
-                              backgroundColor: colorScheme.secondary,
-                            ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      leading: CircleAvatar(
+                        radius: 26,
+                        backgroundImage: (profilePic != null && profilePic.toString().isNotEmpty)
+                            ? NetworkImage(profilePic)
+                            : null,
+                        backgroundColor: Colors.grey.shade300,
+                        child: profilePic == null
+                            ? const Icon(Icons.person, color: Colors.white)
+                            : null,
+                      ),
                       title: Text(
-                        user['username'] ?? 'User',
-                        style: theme.textTheme.bodyLarge,
+                        username,
+                        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
                       ),
                       subtitle: Text(
                         'Tap to view profile',
-                        style: theme.textTheme.bodyMedium,
+                        style: theme.textTheme.bodySmall,
                       ),
                       onTap: () {
                         Navigator.push(
@@ -116,7 +122,6 @@ class _LikesListPageState extends State<LikesListPage> {
                           ),
                         );
                       },
-                      tileColor: colorScheme.surface,
                     );
                   },
                 ),

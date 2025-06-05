@@ -56,17 +56,34 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showDialog(BuildContext context, String title, String content) {
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: Text(title),
-            content: SingleChildScrollView(child: Text(content)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(child: Text(content)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2F1B0C),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -76,169 +93,150 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: theme.appBarTheme.backgroundColor,
-        foregroundColor: theme.appBarTheme.foregroundColor,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          // Theme Toggle
-          ListTile(
-            leading: Icon(Icons.brightness_6, color: theme.iconTheme.color),
-            title: Text(
-              'Toggle Theme',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
-            ),
-            subtitle: Text(
-              'Switch between light and dark mode',
-              style: TextStyle(color: theme.textTheme.bodyMedium?.color),
-            ),
-            onTap: widget.onThemeChange,
-          ),
-          const Divider(),
+  title: const Text("Settings"),
+  bottom: PreferredSize(
+    preferredSize: const Size.fromHeight(1),
+    child: Container(
+      color: const Color(0xFFFF9800), // thin orange line
+      height: 1,
+    ),
+  ),
+),
 
-          // Show/Hide Items Option
-          SwitchListTile(
-            secondary: Icon(Icons.lock_outline, color: theme.iconTheme.color),
-            title: Text(
-              'Hide My Items',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+      body: Container(
+        color: Colors.grey.shade100,
+        child: ListView(
+          padding: const EdgeInsets.only(top: 12, bottom: 24),
+          children: [
+            _buildSectionHeader('Preferences'),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.brightness_6),
+                    title: const Text('Toggle Theme'),
+                    subtitle: const Text('Switch between light and dark mode'),
+                    onTap: widget.onThemeChange,
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.lock_outline),
+                    title: const Text('Hide My Items'),
+                    subtitle: const Text(
+                        'Control visibility of your wardrobe from others'),
+                    value: hideItems,
+                    onChanged: _toggleHideItems,
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.visibility_off),
+                    title: const Text('Hide My Outfits'),
+                    subtitle: const Text(
+                        'Control visibility of your outfits from others'),
+                    value: hideOutfits,
+                    onChanged: _toggleHideOutfits,
+                  ),
+                ],
+              ),
             ),
-            subtitle: Text(
-              'Control visibility of your wardrobe from others',
-              style: TextStyle(color: theme.textTheme.bodyMedium?.color),
-            ),
-            value: hideItems,
-            onChanged: _toggleHideItems,
-          ),
-          const Divider(),
-          SwitchListTile(
-            secondary: Icon(Icons.visibility_off, color: theme.iconTheme.color),
-            title: Text(
-              'Hide My Outfits',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
-            ),
-            subtitle: Text(
-              'Control visibility of your outfits from others',
-              style: TextStyle(color: theme.textTheme.bodyMedium?.color),
-            ),
-            value: hideOutfits,
-            onChanged: _toggleHideOutfits,
-          ),
-          const Divider(),
 
-          // Help & Support Section
-          ListTile(
-            leading: Icon(Icons.help_outline, color: theme.iconTheme.color),
-            title: Text(
-              'FAQ / Help Center',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+            _buildSectionHeader('Support'),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.help_outline),
+                    title: const Text('FAQ / Help Center'),
+                    onTap: () => _showDialog(
+                      context,
+                      'FAQ / Help Center',
+                      'Q: How do I add an outfit?\nA: Tap the + button and select items.\n\nQ: Can I edit outfits?\nA: Not yet, but feature is coming soon.\n\nQ: How do I delete an item?\nA: Go to the item details and tap Delete.\n\nQ: What does "Hide My Items" do?\nA: It prevents your wardrobe items from being seen by others.\n\nQ: Can I share outfits?\nA: Yes, you can post them to the public feed.',
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.support_agent),
+                    title: const Text('Contact Support'),
+                    onTap: () => _showDialog(
+                      context,
+                      'Contact Support',
+                      'Need help?\n\nEmail: outfitly_support@gmail.com\nPhone: +90 501 343 6614',
+                    ),
+                  ),
+                ],
+              ),
             ),
-            onTap:
-                () => _showDialog(
-                  context,
-                  'FAQ / Help Center',
-                  'Q: How do I add an outfit?\nA: Tap the + button and select items.\n\n'
-                      'Q: Can I edit outfits?\nA: Not yet, but feature is coming soon.\n\n'
-                      'Q: How do I delete an item?\nA: Go to the item details and tap Delete.\n\n'
-                      'Q: How do I view other profiles?\nA: Tap usernames from posts or searches.\n\n'
-                      'Q: What does "Hide My Items" do?\nA: It prevents your wardrobe items from being seen by others.\n\n'
-                      'Q: How do I change the app theme?\nA: Use the Toggle Theme option in Settings.\n\n'
-                      'Q: Can I share outfits?\nA: Yes, you can post them to the public feed.\n\n'
-                      'Q: How do I report an issue?\nA: Use the Contact Support option in Settings.\n\n',
-                ),
-          ),
-          ListTile(
-            leading: Icon(Icons.support_agent, color: theme.iconTheme.color),
-            title: Text(
-              'Contact Support',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
-            ),
-            onTap:
-                () => _showDialog(
-                  context,
-                  'Contact Support',
-                  'Need help?\n\nEmail: outfitly_support@gmail.com\nPhone: +90 501 343 6614',
-                ),
-          ),
-          const Divider(),
 
-          // About Section
-          ListTile(
-            leading: Icon(Icons.info_outline, color: theme.iconTheme.color),
-            title: Text(
-              'App Version',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+            _buildSectionHeader('About'),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.info_outline),
+                    title: const Text('App Version'),
+                    subtitle: const Text('v1.0.0'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.person),
+                    title: const Text('Developer Info'),
+                    subtitle: const Text('Built by Outfitly Team'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.policy),
+                    title: const Text('Privacy Policy'),
+                    onTap: () => _showDialog(
+                      context,
+                      'Privacy Policy',
+                      'Outfitly values your privacy. We never share your personal information without your consent.',
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.description_outlined),
+                    title: const Text('Terms of Service'),
+                    onTap: () => _showDialog(
+                      context,
+                      'Terms of Service',
+                      'By using Outfitly, you agree to our terms. Do not post offensive or illegal content.',
+                    ),
+                  ),
+                ],
+              ),
             ),
-            subtitle: Text(
-              'v1.0.0',
-              style: TextStyle(color: theme.textTheme.bodyMedium?.color),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.person, color: theme.iconTheme.color),
-            title: Text(
-              'Developer Info',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
-            ),
-            subtitle: Text(
-              'Built by Outfitly Team',
-              style: TextStyle(color: theme.textTheme.bodyMedium?.color),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.policy, color: theme.iconTheme.color),
-            title: Text(
-              'Privacy Policy',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
-            ),
-            onTap:
-                () => _showDialog(
-                  context,
-                  'Privacy Policy',
-                  'Outfitly values your privacy. We never share your personal information without your consent.\n\n'
-                      'We collect only necessary data for app functionality and never sell your data.',
-                ),
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.description_outlined,
-              color: theme.iconTheme.color,
-            ),
-            title: Text(
-              'Terms of Service',
-              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
-            ),
-            onTap:
-                () => _showDialog(
-                  context,
-                  'Terms of Service',
-                  'By using Outfitly, you agree to our terms:\n\n'
-                      '- You are responsible for the content you upload.\n'
-                      '- Do not post offensive or illegal content.\n'
-                      '- Respect other users and their privacy.\n'
-                      '- We reserve the right to suspend accounts violating our policies.',
-                ),
-          ),
-          const Divider(),
 
-          // Sign Out
-          ListTile(
-            leading: Icon(Icons.logout, color: theme.colorScheme.error),
-            title: Text(
-              'Sign Out',
-              style: TextStyle(color: theme.colorScheme.error),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.logout),
+                label: const Text('Sign Out'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                },
+              ),
             ),
-            onTap: () {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                (route) => false,
-              );
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

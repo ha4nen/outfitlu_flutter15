@@ -61,14 +61,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         bio = data['bio'] as String? ?? '';
         location = data['location'] as String? ?? '';
         gender = _genders.contains(data['gender']) ? data['gender'] : null;
-        modesty =
-            _modestyOptions.contains(data['modesty_preference'])
-                ? data['modesty_preference']
-                : null;
-        // TODO: load existing profile picture URL if you want to show it
+        modesty = _modestyOptions.contains(data['modesty_preference'])
+            ? data['modesty_preference']
+            : null;
       });
-    } else {
-      // handle error...
     }
   }
 
@@ -79,24 +75,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (pickedFile != null) {
       final mimeType = lookupMimeType(pickedFile.path);
       if (mimeType == null ||
-          !(mimeType.startsWith('image/jpeg') ||
-              mimeType.startsWith('image/png'))) {
+          !(mimeType.startsWith('image/jpeg') || mimeType.startsWith('image/png'))) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Only JPEG and PNG formats are supported.'),
-          ),
+          const SnackBar(content: Text('Only JPEG and PNG formats are supported.')),
         );
         return;
       }
 
-      // Resize the image
       final imageBytes = await pickedFile.readAsBytes();
       final decodedImage = img.decodeImage(imageBytes);
       if (decodedImage != null) {
-        final resizedImage = img.copyResize(
-          decodedImage,
-          width: 500,
-        ); // Resize to 500px width
+        final resizedImage = img.copyResize(decodedImage, width: 500);
         final resizedImageFile = File(pickedFile.path)
           ..writeAsBytesSync(img.encodeJpg(resizedImage));
         setState(() => _image = resizedImageFile);
@@ -108,44 +97,33 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (!_formKey.currentState!.validate()) return;
 
     final uri = Uri.parse('http://10.0.2.2:8000/api/profile/update/');
-    final request =
-        http.MultipartRequest('PUT', uri)
-          ..headers['Authorization'] = 'Token $_authToken'
-          ..fields['bio'] = bio!
-          ..fields['location'] = location!
-          ..fields['gender'] = gender!
-          ..fields['modesty_preference'] = modesty!;
+    final request = http.MultipartRequest('PUT', uri)
+      ..headers['Authorization'] = 'Token $_authToken'
+      ..fields['bio'] = bio!
+      ..fields['location'] = location!
+      ..fields['gender'] = gender!
+      ..fields['modesty_preference'] = modesty!;
 
     if (_image != null) {
       final mimeType = lookupMimeType(_image!.path)?.split('/');
       if (mimeType != null && mimeType.length == 2) {
         try {
-          request.files.add(
-            await http.MultipartFile.fromPath(
-              'profile_picture',
-              _image!.path,
-              contentType: MediaType(mimeType[0], mimeType[1]),
-            ),
-          );
+          request.files.add(await http.MultipartFile.fromPath(
+            'profile_picture',
+            _image!.path,
+            contentType: MediaType(mimeType[0], mimeType[1]),
+          ));
         } catch (e) {
-          print('Error adding file to request: $e');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to add image to request.')),
           );
           return;
         }
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invalid image format.')));
-        return;
       }
     }
 
     try {
       final response = await request.send();
-      final responseData = await response.stream.bytesToString();
-
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -157,11 +135,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         throw Exception('Failed to update profile: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An error occurred: $e')),
+        );
       }
     }
   }
@@ -178,7 +155,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Edit Profile'),
-          backgroundColor: primaryColor,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(color: const Color(0xFFFF9800), height: 1),
+          ),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -187,7 +167,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
-        backgroundColor: primaryColor,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFFF9800), height: 1),
+        ),
       ),
       body: Container(
         color: backgroundColor,
@@ -201,128 +184,69 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundImage: _image != null ? FileImage(_image!) : null,
-                  backgroundColor: primaryColor.withOpacity(0.2),
-                  child:
-                      _image == null
-                          ? Icon(
-                            Icons.add_a_photo,
-                            size: 30,
-                            color: onPrimaryColor,
-                          )
-                          : null,
+                  backgroundColor: const Color(0xFFFF9800).withOpacity(0.1),
+                  child: _image == null
+                      ? Icon(Icons.add_a_photo, size: 30, color: primaryColor)
+                      : null,
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Bio
               TextFormField(
                 initialValue: bio,
                 decoration: InputDecoration(
                   labelText: 'Bio',
                   labelStyle: TextStyle(color: onBackgroundColor),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
                 ),
                 style: TextStyle(color: onBackgroundColor),
                 onChanged: (v) => bio = v,
-                validator:
-                    (v) => v == null || v.isEmpty ? 'Please enter a bio' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Please enter a bio' : null,
               ),
               const SizedBox(height: 12),
-
-              // Location
               TextFormField(
                 initialValue: location,
                 decoration: InputDecoration(
                   labelText: 'Location',
                   labelStyle: TextStyle(color: onBackgroundColor),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
                 ),
                 style: TextStyle(color: onBackgroundColor),
                 onChanged: (v) => location = v,
-                validator:
-                    (v) =>
-                        v == null || v.isEmpty
-                            ? 'Please enter a location'
-                            : null,
+                validator: (v) => v == null || v.isEmpty ? 'Please enter a location' : null,
               ),
               const SizedBox(height: 12),
-
-              // Gender Dropdown
               DropdownButtonFormField<String>(
                 value: gender,
-                hint: Text(
-                  'Select Gender',
-                  style: TextStyle(color: onBackgroundColor),
-                ),
-                items:
-                    _genders
-                        .map(
-                          (g) => DropdownMenuItem(
-                            value: g,
-                            child: Text(
-                              g.capitalize(),
-                              style: TextStyle(color: onBackgroundColor),
-                            ),
-                          ),
-                        )
-                        .toList(),
+                hint: Text('Select Gender', style: TextStyle(color: onBackgroundColor)),
+                items: _genders.map((g) => DropdownMenuItem(
+                  value: g,
+                  child: Text(g.capitalize(), style: TextStyle(color: onBackgroundColor)),
+                )).toList(),
                 onChanged: (v) => setState(() => gender = v),
                 validator: (v) => v == null ? 'Please select gender' : null,
                 decoration: InputDecoration(
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Modesty Preference Dropdown
               DropdownButtonFormField<String>(
                 value: modesty,
-                hint: Text(
-                  'Select Modesty Preference',
-                  style: TextStyle(color: onBackgroundColor),
-                ),
-                items:
-                    _modestyOptions
-                        .map(
-                          (m) => DropdownMenuItem(
-                            value: m,
-                            child: Text(
-                              m,
-                              style: TextStyle(color: onBackgroundColor),
-                            ),
-                          ),
-                        )
-                        .toList(),
+                hint: Text('Select Modesty Preference', style: TextStyle(color: onBackgroundColor)),
+                items: _modestyOptions.map((m) => DropdownMenuItem(
+                  value: m,
+                  child: Text(m, style: TextStyle(color: onBackgroundColor)),
+                )).toList(),
                 onChanged: (v) => setState(() => modesty = v),
-                validator:
-                    (v) =>
-                        v == null ? 'Please select modesty preference' : null,
+                validator: (v) => v == null ? 'Please select modesty preference' : null,
                 decoration: InputDecoration(
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: primaryColor)),
                 ),
               ),
-              const SizedBox(height: 20),
-
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -331,6 +255,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         foregroundColor: onPrimaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: const Text('Save'),
                     ),
@@ -342,6 +267,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: primaryColor),
                         foregroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -356,8 +282,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 }
 
-/// Simple extension to capitalize the first letter
 extension on String {
-  String capitalize() =>
-      substring(0, 1).toUpperCase() + substring(1).toLowerCase();
+  String capitalize() => substring(0, 1).toUpperCase() + substring(1).toLowerCase();
 }

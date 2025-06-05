@@ -386,35 +386,34 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               children: [
                 Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFF9800),
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(24),
-                      ),
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF9800),
+                    borderRadius: BorderRadius.vertical(
+                      bottom: Radius.circular(24),
                     ),
-                    padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).padding.top ,
-                      bottom: 20,
-                    ),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.topCenter,
-                      children: [
-                        if (widget.userId != null)
-                          Positioned(
-                            top: 4,
-                            left: 16,
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                              ),
-                              onPressed: () => Navigator.pop(context),
+                  ),
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top,
+                    bottom: 20,
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.topCenter,
+                    children: [
+                      if (widget.userId != null)
+                        Positioned(
+                          top: 4,
+                          left: 16,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
                             ),
+                            onPressed: () => Navigator.pop(context),
                           ),
-                            if (widget.userId == null)
-
+                        ),
+                      if (widget.userId == null)
                         Positioned(
                           top: 4,
                           right: 16,
@@ -435,192 +434,190 @@ class _ProfilePageState extends State<ProfilePage> {
                             },
                           ),
                         ),
-                        Column(
-                          children: [
-                            const SizedBox(
-                              height: 40,
-                            ), // was 16, now 32 for more space before profile picture
-                            CircleAvatar(
-                              radius: 45,
-                              backgroundColor: Colors.white,
-                              backgroundImage:
-                                  profileImageUrl != null
-                                      ? NetworkImage(profileImageUrl!)
-                                      : null,
-                              child:
-                                  profileImageUrl == null
-                                      ? const Icon(
-                                        Icons.person,
-                                        size: 45,
-                                        color: Colors.grey,
-                                      )
-                                      : null,
+                      Column(
+                        children: [
+                          const SizedBox(
+                            height: 40,
+                          ), // was 16, now 32 for more space before profile picture
+                          CircleAvatar(
+                            radius: 45,
+                            backgroundColor: Colors.white,
+                            backgroundImage:
+                                profileImageUrl != null
+                                    ? NetworkImage(profileImageUrl!)
+                                    : null,
+                            child:
+                                profileImageUrl == null
+                                    ? const Icon(
+                                      Icons.person,
+                                      size: 45,
+                                      color: Colors.grey,
+                                    )
+                                    : null,
+                          ),
+                          Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(
+                              top: 16,
+                              left: 16,
+                              right: 16,
+                            ), // <-- margin for white card
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 20,
                             ),
-                            Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.only(
-                                top: 16,
-                                left: 16,
-                                right: 16,
-                              ), // <-- margin for white card
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 8,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  username,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2F1B0C),
                                   ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    username,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2F1B0C),
-                                    ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  bio.isNotEmpty ? bio : ' ',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade700,
+                                    fontSize: 14,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    bio.isNotEmpty ? bio : ' ',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                    children: [
-                                      Expanded(
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) =>
-                                                        FollowersFollowingListPage(
-                                                          userId:
-                                                              widget.userId ??
-                                                              currentUserId!,
-                                                          showFollowers: false,
-                                                        ),
-                                              ),
-                                            );
-                                          },
-                                          child: _buildStatBlock(
-                                            '$followingCount',
-                                            'Following',
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (_) =>
-                                                        FollowersFollowingListPage(
-                                                          userId:
-                                                              widget.userId ??
-                                                              currentUserId!,
-                                                          showFollowers: true,
-                                                        ),
-                                              ),
-                                            );
-                                          },
-                                          child: _buildStatBlock(
-                                            '$followersCount',
-                                            'Followers',
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _buildStatBlock(
-                                          '$totalLikes',
-                                          'Likes',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  isMyProfile
-                                      ? ElevatedButton(
-                                        onPressed: () async {
-                                          final updated = await Navigator.push(
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder:
-                                                  (context) =>
-                                                      EditProfilePage(),
+                                                  (_) =>
+                                                      FollowersFollowingListPage(
+                                                        userId:
+                                                            widget.userId ??
+                                                            currentUserId!,
+                                                        showFollowers: false,
+                                                      ),
                                             ),
                                           );
-                                          if (updated == true) {
-                                            await fetchProfileData();
-                                          }
                                         },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFFFF9800,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 24,
-                                            vertical: 10,
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'Edit Profile',
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      )
-                                      : ElevatedButton(
-                                        onPressed: toggleFollow,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(
-                                            0xFFFF9800,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 24,
-                                            vertical: 10,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          isFollowing ? 'Unfollow' : 'Follow',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                          ),
+                                        child: _buildStatBlock(
+                                          '$followingCount',
+                                          'Following',
                                         ),
                                       ),
-                                ],
-                              ),
+                                    ),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) =>
+                                                      FollowersFollowingListPage(
+                                                        userId:
+                                                            widget.userId ??
+                                                            currentUserId!,
+                                                        showFollowers: true,
+                                                      ),
+                                            ),
+                                          );
+                                        },
+                                        child: _buildStatBlock(
+                                          '$followersCount',
+                                          'Followers',
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _buildStatBlock(
+                                        '$totalLikes',
+                                        'Likes',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                isMyProfile
+                                    ? ElevatedButton(
+                                      onPressed: () async {
+                                        final updated = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => EditProfilePage(),
+                                          ),
+                                        );
+                                        if (updated == true) {
+                                          await fetchProfileData();
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFFF9800,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Edit Profile',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    )
+                                    : ElevatedButton(
+                                      onPressed: toggleFollow,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFFF9800,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 24,
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        isFollowing ? 'Unfollow' : 'Follow',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                
+                ),
 
                 const SizedBox(height: 15),
                 // --- Items Section ---
@@ -682,9 +679,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   fontSize: 14,
                                 ),
                               ),
-                               const Spacer(),
-                                            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-
+                              const Spacer(),
+                              const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
                             ],
                           ),
                         ),
@@ -754,9 +754,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                   fontSize: 14,
                                 ),
                               ),
-                               const Spacer(),
-                               const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-
+                              const Spacer(),
+                              const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
                             ],
                           ),
                         ),

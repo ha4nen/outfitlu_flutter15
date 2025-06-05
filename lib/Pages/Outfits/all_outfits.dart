@@ -19,7 +19,7 @@ class _AllOutfitsPageState extends State<AllOutfitsPage> {
   String error = '';
   String selectedTag = '';
   bool showHijabOnly = false;
-String sortBy = 'Newest'; // default sorting
+  String sortBy = 'Newest'; // default sorting
 
   final List<String> tagOptions = [
     'All',
@@ -57,8 +57,12 @@ String sortBy = 'Newest'; // default sorting
               final matchesHijab = !showHijabOnly || outfit.isHijabFriendly;
               return matchesTag && matchesHijab;
             }).toList()
-..sort((a, b) =>
-    sortBy == 'Newest' ? b.id.compareTo(a.id) : a.id.compareTo(b.id));
+            ..sort(
+              (a, b) =>
+                  sortBy == 'Newest'
+                      ? b.id.compareTo(a.id)
+                      : a.id.compareTo(b.id),
+            );
 
       setState(() {
         outfitsBySeason = groupOutfitsBySeason(filtered);
@@ -107,91 +111,90 @@ String sortBy = 'Newest'; // default sorting
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child:
-Row(
-  children: [
-    for (final tag in tagOptions)
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(
-          label: Text(
-            '$tag (${_tagCount(tag)})',
-            style: TextStyle(
-              color: selectedTag == (tag == 'All' ? '' : tag)
-                  ? Colors.white
-                  : const Color(0xFF2F1B0C),
-            ),
-          ),
-          selected: selectedTag == (tag == 'All' ? '' : tag),
-          selectedColor: const Color(0xFFFF9800),
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFFFFE0B2)),
-          ),
-          onSelected: (isSelected) {
-            setState(() {
-              final newTag = tag == 'All' ? '' : tag;
-              selectedTag = selectedTag == newTag ? '' : newTag;
-            });
-            _loadOutfits();
-          },
-        ),
-      ),
-    Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: const Text('Hijab Friendly'),
-        selected: showHijabOnly,
-        selectedColor: const Color(0xFFFF9800),
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFFFFE0B2)),
-        ),
-        onSelected: (value) {
-          setState(() => showHijabOnly = value);
-          _loadOutfits();
-        },
-      ),
-    ),
-    Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: const Text('Newest'),
-        selected: sortBy == 'Newest',
-        selectedColor: const Color(0xFFFF9800),
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFFFFE0B2)),
-        ),
-        onSelected: (_) {
-          setState(() => sortBy = 'Newest');
-          _loadOutfits();
-        },
-      ),
-    ),
-    Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: const Text('Oldest'),
-        selected: sortBy == 'Oldest',
-        selectedColor: const Color(0xFFFF9800),
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFFFFE0B2)),
-        ),
-        onSelected: (_) {
-          setState(() => sortBy = 'Oldest');
-          _loadOutfits();
-        },
-      ),
-    ),
-  ],
-),
-
+              child: Row(
+                children: [
+                  for (final tag in tagOptions)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(
+                          '$tag (${_tagCount(tag)})',
+                          style: TextStyle(
+                            color:
+                                selectedTag == (tag == 'All' ? '' : tag)
+                                    ? Colors.white
+                                    : const Color(0xFF2F1B0C),
+                          ),
+                        ),
+                        selected: selectedTag == (tag == 'All' ? '' : tag),
+                        selectedColor: const Color(0xFFFF9800),
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: const BorderSide(color: Color(0xFFFFE0B2)),
+                        ),
+                        onSelected: (isSelected) {
+                          setState(() {
+                            final newTag = tag == 'All' ? '' : tag;
+                            selectedTag = selectedTag == newTag ? '' : newTag;
+                          });
+                          _loadOutfits();
+                        },
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: const Text('Hijab Friendly'),
+                      selected: showHijabOnly,
+                      selectedColor: const Color(0xFFFF9800),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(color: Color(0xFFFFE0B2)),
+                      ),
+                      onSelected: (value) {
+                        setState(() => showHijabOnly = value);
+                        _loadOutfits();
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: const Text('Newest'),
+                      selected: sortBy == 'Newest',
+                      selectedColor: const Color(0xFFFF9800),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(color: Color(0xFFFFE0B2)),
+                      ),
+                      onSelected: (_) {
+                        setState(() => sortBy = 'Newest');
+                        _loadOutfits();
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: const Text('Oldest'),
+                      selected: sortBy == 'Oldest',
+                      selectedColor: const Color(0xFFFF9800),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(color: Color(0xFFFFE0B2)),
+                      ),
+                      onSelected: (_) {
+                        setState(() => sortBy = 'Oldest');
+                        _loadOutfits();
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),

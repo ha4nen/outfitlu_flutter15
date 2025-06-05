@@ -46,7 +46,8 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
     }
 
     if (_fetchedOutfit != null) {
-      _alreadyPosted = prefs.getBool('outfit_posted_${_fetchedOutfit!.id}') ?? false;
+      _alreadyPosted =
+          prefs.getBool('outfit_posted_${_fetchedOutfit!.id}') ?? false;
       if (!_alreadyPosted) {
         await _checkIfAlreadyPosted(_fetchedOutfit!.id);
       }
@@ -96,26 +97,27 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Post Outfit"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Add a caption (optional):"),
-            TextField(controller: captionController),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Post Outfit"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Add a caption (optional):"),
+                TextField(controller: captionController),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Post"),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Post"),
-          ),
-        ],
-      ),
     );
 
     if (confirmed != true) return;
@@ -143,40 +145,49 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (_) => AlertDialog(
-      backgroundColor: Colors.white,
-      title: const Text('Delete Outfit', style: TextStyle(color: Color(0xFFD9583B))),
-      content: const Text('Are you sure you want to delete this outfit?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel', style: TextStyle(color: Color(0xFFFF9800))),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Delete', style: TextStyle(color: Colors.red)),
-        ),
-      ],
-    ),
-  );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            backgroundColor: Colors.white,
+            title: const Text(
+              'Delete Outfit',
+              style: TextStyle(color: Color(0xFFD9583B)),
+            ),
+            content: const Text('Are you sure you want to delete this outfit?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Color(0xFFFF9800)),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+    );
 
-  if (confirmed == true && _fetchedOutfit != null) {
-    await deleteOutfit(_fetchedOutfit!.id);
+    if (confirmed == true && _fetchedOutfit != null) {
+      await deleteOutfit(_fetchedOutfit!.id);
 
-    final prefs = await SharedPreferences.getInstance();
-    prefs.remove('outfit_posted_${_fetchedOutfit!.id}');
+      final prefs = await SharedPreferences.getInstance();
+      prefs.remove('outfit_posted_${_fetchedOutfit!.id}');
 
-    if (mounted) {
-      Navigator.pop(context, 'refresh'); // return to previous page
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Outfit deleted successfully')),
-      );
+      if (mounted) {
+        Navigator.pop(context, 'refresh'); // return to previous page
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Outfit deleted successfully')),
+        );
+      }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +220,10 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        border: Border.all(color: Colors.orange.shade200, width: 1.5),
+                        border: Border.all(
+                          color: Colors.orange.shade200,
+                          width: 1.5,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: ClipRRect(
@@ -219,7 +233,9 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                           width: double.infinity,
                           height: 300,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                          errorBuilder:
+                              (_, __, ___) =>
+                                  const Center(child: Icon(Icons.broken_image)),
                         ),
                       ),
                     ),
@@ -232,47 +248,51 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                       _infoBox("Type", outfit.type ?? 'Unknown'),
                       _infoBox("Season", outfit.season ?? 'Unknown'),
                       _infoBox("Tags", outfit.tags ?? 'None'),
-                      _infoBox("Hijab Friendly", outfit.isHijabFriendly ? 'Yes' : 'No'),
+                      _infoBox(
+                        "Hijab Friendly",
+                        outfit.isHijabFriendly ? 'Yes' : 'No',
+                      ),
                     ],
                   ),
-                  if (outfit.description != null && outfit.description!.isNotEmpty)
-  Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const SizedBox(height: 24),
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.shade100),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Description',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              outfit.description!,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
-  ),
-      const SizedBox(height: 24),
+                  if (outfit.description != null &&
+                      outfit.description!.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 24),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.orange.shade100),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Description',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                outfit.description!,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 24),
 
                   if (isOwner)
                     Row(
@@ -283,8 +303,13 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red.shade700,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             textStyle: const TextStyle(fontSize: 14),
                           ),
                           child: const Text('Delete Outfit'),
@@ -295,8 +320,13 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFF9800),
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               textStyle: const TextStyle(fontSize: 14),
                             ),
                             child: const Text('Post Outfit'),
@@ -306,7 +336,7 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -324,10 +354,7 @@ class _OutfitDetailsPageState extends State<OutfitDetailsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 4),
           Text(
             value,

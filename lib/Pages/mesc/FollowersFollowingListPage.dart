@@ -15,10 +15,12 @@ class FollowersFollowingListPage extends StatefulWidget {
   });
 
   @override
-  State<FollowersFollowingListPage> createState() => _FollowersFollowingListPageState();
+  State<FollowersFollowingListPage> createState() =>
+      _FollowersFollowingListPageState();
 }
 
-class _FollowersFollowingListPageState extends State<FollowersFollowingListPage> {
+class _FollowersFollowingListPageState
+    extends State<FollowersFollowingListPage> {
   List<Map<String, dynamic>> users = [];
   bool isLoading = true;
   String? token;
@@ -38,7 +40,9 @@ class _FollowersFollowingListPageState extends State<FollowersFollowingListPage>
     if (token == null || currentUserId == null) return;
 
     final type = widget.showFollowers ? 'followers' : 'following';
-    final url = Uri.parse('http://10.0.2.2:8000/api/feed/$type/${widget.userId}/');
+    final url = Uri.parse(
+      'http://10.0.2.2:8000/api/feed/$type/${widget.userId}/',
+    );
 
     final response = await http.get(
       url,
@@ -89,62 +93,78 @@ class _FollowersFollowingListPageState extends State<FollowersFollowingListPage>
         backgroundColor: theme.appBarTheme.backgroundColor,
         foregroundColor: theme.appBarTheme.foregroundColor,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : users.isEmpty
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : users.isEmpty
               ? const Center(child: Text('No users found'))
               : ListView.separated(
-                  itemCount: users.length,
-                  separatorBuilder: (_, __) => Divider(color: Colors.grey.shade200),
-                  itemBuilder: (_, index) {
-                    final user = users[index]['user'];
-                    final username = user['username'] ?? 'User';
-                    final userId = user['id'];
-                    final profilePic = user['profile_picture'];
-                    final isFollowing = users[index]['is_following'] == true;
-                    final isCurrentUser = userId == currentUserId;
+                itemCount: users.length,
+                separatorBuilder:
+                    (_, __) => Divider(color: Colors.grey.shade200),
+                itemBuilder: (_, index) {
+                  final user = users[index]['user'];
+                  final username = user['username'] ?? 'User';
+                  final userId = user['id'];
+                  final profilePic = user['profile_picture'];
+                  final isFollowing = users[index]['is_following'] == true;
+                  final isCurrentUser = userId == currentUserId;
 
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      leading: CircleAvatar(
-                        radius: 26,
-                        backgroundImage: (profilePic != null && profilePic.toString().isNotEmpty)
-                            ? NetworkImage(profilePic)
-                            : null,
-                        backgroundColor: Colors.grey.shade300,
-                        child: profilePic == null
-                            ? const Icon(Icons.person, color: Colors.white)
-                            : null,
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    leading: CircleAvatar(
+                      radius: 26,
+                      backgroundImage:
+                          (profilePic != null &&
+                                  profilePic.toString().isNotEmpty)
+                              ? NetworkImage(profilePic)
+                              : null,
+                      backgroundColor: Colors.grey.shade300,
+                      child:
+                          profilePic == null
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
+                    ),
+                    title: Text(
+                      username,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
-                      title: Text(
-                        username,
-                        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(
-                        'Tap to view profile',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProfilePage(
-                              onThemeChange: () {},
-                              userId: userId,
-                            ),
-                          ),
-                        );
-                      },
-                      trailing: isCurrentUser
-                          ? null
-                          : ElevatedButton(
+                    ),
+                    subtitle: Text(
+                      'Tap to view profile',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ProfilePage(
+                                onThemeChange: () {},
+                                userId: userId,
+                              ),
+                        ),
+                      );
+                    },
+                    trailing:
+                        isCurrentUser
+                            ? null
+                            : ElevatedButton(
                               onPressed: () => _toggleFollow(userId, index),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isFollowing
-                                    ? Colors.grey
-                                    : theme.colorScheme.primary,
- padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                 shape: RoundedRectangleBorder(
+                                backgroundColor:
+                                    isFollowing
+                                        ? Colors.grey
+                                        : theme.colorScheme.primary,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
@@ -153,9 +173,9 @@ class _FollowersFollowingListPageState extends State<FollowersFollowingListPage>
                                 style: const TextStyle(color: Colors.white),
                               ),
                             ),
-                    );
-                  },
-                ),
+                  );
+                },
+              ),
       backgroundColor: colorScheme.background,
     );
   }

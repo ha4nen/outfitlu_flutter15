@@ -132,12 +132,12 @@ class _MainAppPageState extends State<MainAppPage>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   boxShadow: [
-  BoxShadow(
-    color: Colors.black.withOpacity(0.2),
-    blurRadius: 6,
-    offset: Offset(0, 3),
-  ),
-],
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: FloatingActionButton(
                   shape: const CircleBorder(),
@@ -149,11 +149,7 @@ class _MainAppPageState extends State<MainAppPage>
                   },
                   backgroundColor: Colors.orange,
                   elevation: 8,
-                  child: const Icon(
-                    Icons.add,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 28),
                 ),
               ),
             ),
@@ -193,19 +189,28 @@ class _MainAppPageState extends State<MainAppPage>
     return GestureDetector(
       onTapDown: (details) => _navigateToPage(index, details.globalPosition),
       child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: isSelected ? 1.0 : 0.95, end: isSelected ? 1.3 : 1.0),
+        tween: Tween(
+          begin: isSelected ? 1.0 : 0.95,
+          end: isSelected ? 1.3 : 1.0,
+        ),
         duration: const Duration(milliseconds: 500),
         curve: Curves.elasticOut,
-        builder: (context, scale, child) => Transform.scale(
-          scale: scale,
-          child: child,
-        ),
+        builder:
+            (context, scale, child) =>
+                Transform.scale(scale: scale, child: child),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color, size: 24),
-            Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

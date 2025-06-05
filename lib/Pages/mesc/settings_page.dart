@@ -56,16 +56,17 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showDialog(BuildContext context, String title, String content) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: SingleChildScrollView(child: Text(content)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+      builder:
+          (_) => AlertDialog(
+            title: Text(title),
+            content: SingleChildScrollView(child: Text(content)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -93,15 +94,15 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-  title: const Text("Settings"),
-  bottom: PreferredSize(
-    preferredSize: const Size.fromHeight(1),
-    child: Container(
-      color: const Color(0xFFFF9800), // thin orange line
-      height: 1,
-    ),
-  ),
-),
+        title: const Text("Settings"),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: const Color(0xFFFF9800), // thin orange line
+            height: 1,
+          ),
+        ),
+      ),
 
       body: Container(
         color: Colors.grey.shade100,
@@ -126,7 +127,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     secondary: const Icon(Icons.lock_outline),
                     title: const Text('Hide My Items'),
                     subtitle: const Text(
-                        'Control visibility of your wardrobe from others'),
+                      'Control visibility of your wardrobe from others',
+                    ),
                     value: hideItems,
                     onChanged: _toggleHideItems,
                   ),
@@ -134,7 +136,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     secondary: const Icon(Icons.visibility_off),
                     title: const Text('Hide My Outfits'),
                     subtitle: const Text(
-                        'Control visibility of your outfits from others'),
+                      'Control visibility of your outfits from others',
+                    ),
                     value: hideOutfits,
                     onChanged: _toggleHideOutfits,
                   ),
@@ -153,20 +156,22 @@ class _SettingsPageState extends State<SettingsPage> {
                   ListTile(
                     leading: const Icon(Icons.help_outline),
                     title: const Text('FAQ / Help Center'),
-                    onTap: () => _showDialog(
-                      context,
-                      'FAQ / Help Center',
-                      'Q: How do I add an outfit?\nA: Tap the + button and select items.\n\nQ: Can I edit outfits?\nA: Not yet, but feature is coming soon.\n\nQ: How do I delete an item?\nA: Go to the item details and tap Delete.\n\nQ: What does "Hide My Items" do?\nA: It prevents your wardrobe items from being seen by others.\n\nQ: Can I share outfits?\nA: Yes, you can post them to the public feed.',
-                    ),
+                    onTap:
+                        () => _showDialog(
+                          context,
+                          'FAQ / Help Center',
+                          'Q: How do I add an outfit?\nA: Tap the + button and select items.\n\nQ: Can I edit outfits?\nA: Not yet, but feature is coming soon.\n\nQ: How do I delete an item?\nA: Go to the item details and tap Delete.\n\nQ: What does "Hide My Items" do?\nA: It prevents your wardrobe items from being seen by others.\n\nQ: Can I share outfits?\nA: Yes, you can post them to the public feed.',
+                        ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.support_agent),
                     title: const Text('Contact Support'),
-                    onTap: () => _showDialog(
-                      context,
-                      'Contact Support',
-                      'Need help?\n\nEmail: outfitly_support@gmail.com\nPhone: +90 501 343 6614',
-                    ),
+                    onTap:
+                        () => _showDialog(
+                          context,
+                          'Contact Support',
+                          'Need help?\n\nEmail: outfitly_support@gmail.com\nPhone: +90 501 343 6614',
+                        ),
                   ),
                 ],
               ),
@@ -193,20 +198,22 @@ class _SettingsPageState extends State<SettingsPage> {
                   ListTile(
                     leading: const Icon(Icons.policy),
                     title: const Text('Privacy Policy'),
-                    onTap: () => _showDialog(
-                      context,
-                      'Privacy Policy',
-                      'Outfitly values your privacy. We never share your personal information without your consent.',
-                    ),
+                    onTap:
+                        () => _showDialog(
+                          context,
+                          'Privacy Policy',
+                          'Outfitly values your privacy. We never share your personal information without your consent.',
+                        ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.description_outlined),
                     title: const Text('Terms of Service'),
-                    onTap: () => _showDialog(
-                      context,
-                      'Terms of Service',
-                      'By using Outfitly, you agree to our terms. Do not post offensive or illegal content.',
-                    ),
+                    onTap:
+                        () => _showDialog(
+                          context,
+                          'Terms of Service',
+                          'By using Outfitly, you agree to our terms. Do not post offensive or illegal content.',
+                        ),
                   ),
                 ],
               ),

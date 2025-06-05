@@ -74,57 +74,65 @@ class _LikesListPageState extends State<LikesListPage> {
         backgroundColor: theme.appBarTheme.backgroundColor,
         foregroundColor: theme.appBarTheme.foregroundColor,
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
+      body:
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error.isNotEmpty
               ? Center(
-                  child: Text(
-                    _error,
-                    style: TextStyle(color: colorScheme.error),
-                  ),
-                )
+                child: Text(_error, style: TextStyle(color: colorScheme.error)),
+              )
               : ListView.separated(
-                  itemCount: likedUsers.length,
-                  separatorBuilder: (_, __) => Divider(color: Colors.grey.shade200),
-                  itemBuilder: (context, index) {
-                    final user = likedUsers[index];
-                    final username = user['username'] ?? 'User';
-                    final profilePic = user['profile_picture'];
+                itemCount: likedUsers.length,
+                separatorBuilder:
+                    (_, __) => Divider(color: Colors.grey.shade200),
+                itemBuilder: (context, index) {
+                  final user = likedUsers[index];
+                  final username = user['username'] ?? 'User';
+                  final profilePic = user['profile_picture'];
 
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      leading: CircleAvatar(
-                        radius: 26,
-                        backgroundImage: (profilePic != null && profilePic.toString().isNotEmpty)
-                            ? NetworkImage(profilePic)
-                            : null,
-                        backgroundColor: Colors.grey.shade300,
-                        child: profilePic == null
-                            ? const Icon(Icons.person, color: Colors.white)
-                            : null,
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    leading: CircleAvatar(
+                      radius: 26,
+                      backgroundImage:
+                          (profilePic != null &&
+                                  profilePic.toString().isNotEmpty)
+                              ? NetworkImage(profilePic)
+                              : null,
+                      backgroundColor: Colors.grey.shade300,
+                      child:
+                          profilePic == null
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
+                    ),
+                    title: Text(
+                      username,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
-                      title: Text(
-                        username,
-                        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(
-                        'Tap to view profile',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProfilePage(
-                              onThemeChange: () {},
-                              userId: user['id'],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+                    ),
+                    subtitle: Text(
+                      'Tap to view profile',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ProfilePage(
+                                onThemeChange: () {},
+                                userId: user['id'],
+                              ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
       backgroundColor: colorScheme.background,
     );
   }

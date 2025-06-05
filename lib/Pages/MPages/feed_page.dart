@@ -250,7 +250,64 @@ class _WardrobePageState extends State<WardrobePage> {
       ),
     );
   }
-
+Widget _buildFilterBar() {
+  final filters = ['All', 'Mine', 'Friends', 'Discover'];
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 8,
+        ),
+      ],
+    ),
+    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: filters.map((filter) {
+        final isSelected = selectedFilter == filter;
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedFilter = filter;
+                  _applyFilter();
+                });
+                Navigator.pop(context); // Close the bottom sheet
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFFFF9800) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFFFF9800)
+                        : Colors.grey.shade300,
+                    width: 1.5,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Center(
+                  child: Text(
+                    filter,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    ),
+  );
+}
   Future<void> _deletePost(int postId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -307,15 +364,12 @@ class _WardrobePageState extends State<WardrobePage> {
         title:
             !_showSearchBar
                 ? const Text(
-                  'Feed',
+                  'O U T F I T L Y',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 )
                 : Container(
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).brightness == Brightness.light
-                            ? const Color.fromARGB(255, 168, 167, 167)
-                            : const Color.fromARGB(255, 110, 109, 109),
+color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -333,41 +387,49 @@ class _WardrobePageState extends State<WardrobePage> {
                         ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                       border: InputBorder.none,
-                      icon: const Icon(Icons.search),
+                      icon: const Icon(Icons.search), iconColor: Colors.orange
                     ),
                     onChanged: _searchUsers,
                   ),
                 ),
+bottom: const PreferredSize(
+    preferredSize: Size.fromHeight(1),
+    child:  // Orange thin line
+        Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
+  ),
+       backgroundColor: theme.appBarTheme.backgroundColor,
+  foregroundColor: theme.appBarTheme.foregroundColor,
 
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-        actions: [
-          IconButton(
-            icon: Icon(_showSearchBar ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                _showSearchBar = !_showSearchBar;
-                _searchController.clear();
-                searchResults.clear();
-              });
-            },
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
-            onSelected: (value) {
-              selectedFilter = value;
-              _applyFilter();
-            },
-            itemBuilder:
-                (context) =>
-                    ['All', 'Mine', 'Friends', 'Discover']
-                        .map(
-                          (filter) =>
-                              PopupMenuItem(value: filter, child: Text(filter)),
-                        )
-                        .toList(),
-          ),
-        ],
+      actions: [
+  IconButton(
+    icon: Icon(_showSearchBar ? Icons.close : Icons.search),
+    onPressed: () {
+      setState(() {
+        _showSearchBar = !_showSearchBar;
+        _searchController.clear();
+        searchResults.clear();
+      });
+    },
+  ),
+  IconButton(
+    icon: const Icon(Icons.filter_list, color: Color(0xFFFF9800)),
+    onPressed: () {
+     showModalBottomSheet(
+  context: context,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  ),
+  builder: (context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: .0), // Reduce vertical padding
+    child: SizedBox(
+      height: 70, // Set a fixed height for the filter bar
+      child: _buildFilterBar(),
+    ),
+  ),
+);
+    },
+  ),
+],
       ),
       body:
           _isLoading
@@ -377,116 +439,130 @@ class _WardrobePageState extends State<WardrobePage> {
                 child: Text(_error, style: TextStyle(color: colorScheme.error)),
               )
               : _showSearchBar
-              ? ListView(
-                children: [
-                  if (recentSearches.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Text(
-                        'Recent Searches',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    ...recentSearches.map(
-                      (username) => ListTile(
-                        leading: Icon(
-                          Icons.history,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                        title: Text(
-                          username,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              recentSearches.remove(username);
-                            });
-                            _saveRecentSearches();
-                          },
-                        ),
-                        onTap: () {
-                          _searchController.text = username;
-                          _searchUsers(username);
-                        },
-                      ),
-                    ),
-
-                    const Divider(),
-                  ],
-                  if (searchResults.isNotEmpty)
-                    ...searchResults.map(
-                      (user) => ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage:
-                              (user['profile_picture'] != null &&
-                                      user['profile_picture']
-                                          .toString()
-                                          .isNotEmpty)
-                                  ? NetworkImage(user['profile_picture']!)
-                                  : null,
-                          backgroundColor: Colors.grey.shade200,
-                          child:
-                              (user['profile_picture'] == null ||
-                                      user['profile_picture']
-                                          .toString()
-                                          .isEmpty)
-                                  ? const Icon(
-                                    Icons.person,
-                                    color: Colors.white,
-                                  )
-                                  : null,
-                        ),
-
-                        title: Text(
-                          user['username'] ?? 'User',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        subtitle: Text(
-                          'Tap to view profile',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-
-                        onTap: () {
-                          _addToRecentSearches(user['username']);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => ProfilePage(
-                                    onThemeChange: () {},
-                                    userId:
-                                        (user['id'] != -1) ? user['id'] : null,
-                                  ),
+              ? Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+  borderRadius: BorderRadius.circular(20),
+  color: Colors.white,
+  border: Border.all(
+    color: const Color(0xFFFF9800), // Orange border
+    width: 1,
+  ),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.05),
+      blurRadius: 8,
+    ),
+  ],
+),
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        if (recentSearches.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              'Recent Searches',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                          ...recentSearches.map(
+                            (username) => ListTile(
+                              leading: Icon(
+                                Icons.history,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              title: Text(
+                                username,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  Icons.close,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    recentSearches.remove(username);
+                                  });
+                                  _saveRecentSearches();
+                                },
+                              ),
+                              onTap: () {
+                                _searchController.text = username;
+                                _searchUsers(username);
+                              },
+                            ),
+                          ),
+                          const Divider(),
+                        ],
+                        if (searchResults.isNotEmpty)
+                          ...searchResults.map(
+                            (user) => ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage:
+                                    (user['profile_picture'] != null &&
+                                            user['profile_picture']
+                                                .toString()
+                                                .isNotEmpty)
+                                        ? NetworkImage(user['profile_picture']!)
+                                        : null,
+                                backgroundColor: Colors.grey.shade200,
+                                child:
+                                    (user['profile_picture'] == null ||
+                                            user['profile_picture']
+                                                .toString()
+                                                .isEmpty)
+                                        ? const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                        )
+                                        : null,
+                              ),
+                              title: Text(
+                                user['username'] ?? 'User',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Tap to view profile',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.6),
+                                ),
+                              ),
+                              onTap: () {
+                                _addToRecentSearches(user['username']);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ProfilePage(
+                                      onThemeChange: () {},
+                                      userId: (user['id'] != -1) ? user['id'] : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        if (searchResults.isEmpty && _searchController.text.isNotEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Text('No users found.'),
+                          ),
+                      ],
                     ),
-                  if (searchResults.isEmpty &&
-                      _searchController.text.isNotEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text('No users found.'),
-                    ),
-                ],
-              )
+                  ),
+                )
               : filteredPosts.isEmpty
               ? const Center(child: Text('No posts found.'))
               : ListView.builder(
@@ -502,16 +578,22 @@ class _WardrobePageState extends State<WardrobePage> {
     final isOwnPost = userId != null && post['userId'] == userId;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0),
+      
       child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+         height: 400, 
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0),
-          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+          border: Border.all(
+        color: const Color(0xFFFF9800), // Orange border
+        width: 0.5,
+      ),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow,
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
             ),
           ],
         ),
@@ -524,7 +606,7 @@ class _WardrobePageState extends State<WardrobePage> {
                   leading: GestureDetector(
                     onTap: () => _goToUserProfile(post['userId']),
                     child: CircleAvatar(
-                      radius: 22,
+                      radius: 24,
                       backgroundImage:
                           (post['profilePictureUrl'] != null &&
                                   post['profilePictureUrl']
@@ -532,14 +614,13 @@ class _WardrobePageState extends State<WardrobePage> {
                                       .isNotEmpty)
                               ? NetworkImage(post['profilePictureUrl'])
                               : null,
-                      backgroundColor: colorScheme.primaryContainer,
-                      child:
-                          post['profilePictureUrl'] == null
-                              ? Icon(
-                                Icons.person,
-                                color: colorScheme.onPrimaryContainer,
-                              )
-                              : null,
+                      backgroundColor: Colors.grey.shade300,
+                      child: post['profilePictureUrl'] == null
+                          ? const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                          )
+                          : null,
                     ),
                   ),
                   title: GestureDetector(
@@ -548,66 +629,61 @@ class _WardrobePageState extends State<WardrobePage> {
                       post['username'] ?? 'Unknown User',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: Color(0xFF2F1B0C),
                       ),
                     ),
                   ),
                 ),
-                if (isOwnPost)
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deletePost(post['id']),
-                    ),
-                  ),
+               if (isOwnPost)
+  Positioned(
+    top: 4,
+    right: 4,
+    child: IconButton(
+      icon: const Icon(Icons.more_vert, color: Colors.black87),
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (ctx) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text('Delete Post', style: TextStyle(color: Colors.red)),
+                  onTap: () async {
+                    Navigator.pop(ctx); // Close the bottom sheet
+                    await _deletePost(post['id']);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  ),
               ],
             ),
             if (post['imageUrl'] != null)
-              GestureDetector(
-                onDoubleTap: () async {
-                  setState(() {
-                    isAnimating = true;
-                  });
-                  await _toggleLike(post['id'], index);
-                  Future.delayed(const Duration(milliseconds: 600), () {
-                    setState(() {
-                      isAnimating = false;
-                    });
-                  });
-                },
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: Image.network(
-                          post['imageUrl'],
-                          fit: BoxFit.contain,
-                          alignment: Alignment.center,
-                        ),
-                      ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    color: Colors.grey[100],
+                    height: 245, // Smaller but visible
+                    width: double.infinity,
+                    child: Image.network(
+                      post['imageUrl'],
+                      fit: BoxFit.contain, // Show the whole image
+                      alignment: Alignment.center,
                     ),
-                    AnimatedOpacity(
-                      opacity: isAnimating ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 300),
-                      child: AnimatedScale(
-                        scale: isAnimating ? 1.5 : 0.8,
-                        duration: const Duration(milliseconds: 300),
-                        child: const Icon(
-                          Icons.favorite,
-                          color: Colors.white,
-                          size: 80,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -640,9 +716,9 @@ class _WardrobePageState extends State<WardrobePage> {
                     },
                     child: Text(
                       '${post['likeCount']} likes',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Color.fromARGB(255, 0, 0, 0),
                       ),
                     ),
                   ),

@@ -241,7 +241,7 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
                 validator: (val) => (val == null || val.trim().isEmpty) ? 'Enter a size' : null,
               ),
               _buildWithSuggestions("size", sizeSuggestions),
-              _buildLabel("Tags"), // No (Optional) shown
+              _buildLabel("Occasion"), // No (Optional) shown
               _buildWithSuggestions("tags", tagSuggestions, isMulti: true),
               const SizedBox(height: 25),
               Center(

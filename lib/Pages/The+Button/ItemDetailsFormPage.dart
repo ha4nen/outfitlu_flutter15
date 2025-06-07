@@ -42,6 +42,11 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
     'Black',
     'White',
     'Green',
+    'Yellow',
+    'Beige',
+    'Gray',
+    'Brown',
+    'Orange',
   ];
   final List<String> sizeSuggestions = ['S', 'M', 'L', 'XL'];
   final List<String> materialSuggestions = [
@@ -49,6 +54,11 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
     'Polyester',
     'Wool',
     'Silk',
+    'Linen',
+    'Denim',
+    'Canvas',
+    'Suede',
+    'Leather',
   ];
   final List<String> tagSuggestions = [
     'Casual',
@@ -56,19 +66,44 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
     'Formal',
     'Comfy',
     'Chic',
+    'Sport',
+    'Classy',
   ];
 
+  // Remove controllers for fields that no longer need typing
+  // Add controller for size field
   final Map<String, TextEditingController> _controllers = {
-    'color': TextEditingController(),
     'size': TextEditingController(),
-    'material': TextEditingController(),
-    'tags': TextEditingController(),
+  };
+
+  // Add state to track selected chips for each field
+  Map<String, dynamic> selectedChoices = {
+    'color': null,
+    'size': null,
+    'material': null,
+    'tags': <String>{},
+  };
+
+  // Add this map to associate color names with Flutter Colors
+  final Map<String, Color> colorNameMap = {
+    'Red': Colors.red,
+    'Blue': Colors.blue,
+    'Black': Colors.black,
+    'White': Colors.white,
+    'Green': Colors.green,
+    'Yellow': Colors.yellow,
+    'Beige': Color(0xFFF5F5DC),
+    'Gray': Colors.grey,
+    'Brown': Colors.brown,
+    'Orange': Colors.orange,
   };
 
   @override
   void initState() {
     super.initState();
     _loadToken();
+    // Initialize selectedChoices with default values if needed
+    selectedChoices['tags'] = <String>{};
   }
 
   @override
@@ -109,11 +144,11 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
       request.fields.addAll({
         'category_id': itemData['category']?['id']?.toString() ?? '',
         'subcategory_id': itemData['subcategory']?['id']?.toString() ?? '',
-        'color': _controllers['color']!.text,
+        'color': itemData['color'],
         'size': _controllers['size']!.text,
-        'material': _controllers['material']!.text,
+        'material': itemData['material'],
         'season': itemData['season'],
-        'tags': _controllers['tags']!.text,
+        'tags': itemData['tags'],
       });
 
       request.files.add(
@@ -164,7 +199,16 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Item Details")),
+      appBar: AppBar(
+        title: const Text("Item Details"),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: const Color(0xFFFF9800), // thin line
+            height: 1,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -174,21 +218,30 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
             children: [
               Center(child: Image.file(widget.imageFile, height: 200)),
               const SizedBox(height: 20),
-              _buildLabel("Category"),
+              _buildLabel("Category", required: true),
               _buildDropdown("Select category", _buildCategoryDropdown()),
               const SizedBox(height: 10),
-              _buildLabel("Subcategory"),
+              _buildLabel("Subcategory", required: true),
               _buildDropdown("Select subcategory", _buildSubCategoryDropdown()),
               const SizedBox(height: 10),
-              _buildLabel("Color"),
+              _buildLabel("Color", required: true),
               _buildWithSuggestions("color", colorSuggestions),
-              _buildLabel("Size"),
-              _buildWithSuggestions("size", sizeSuggestions),
-              _buildLabel("Material"),
+              _buildLabel("Material", required: true),
               _buildWithSuggestions("material", materialSuggestions),
-              _buildLabel("Season"),
+              _buildLabel("Season", required: true),
               _buildDropdown("Select season", _buildSeasonDropdown()),
-              _buildLabel("Tags"),
+              // Optional fields start here
+              _buildLabel("Size", required: true),
+              TextFormField(
+                controller: _controllers['size'],
+                decoration: _dropdownDecoration(
+                  _controllers['size']!.text.isEmpty ? "Enter size" : "",
+                ),
+                onChanged: (val) => setState(() => itemData['size'] = val),
+                validator: (val) => (val == null || val.trim().isEmpty) ? 'Enter a size' : null,
+              ),
+              _buildWithSuggestions("size", sizeSuggestions),
+              _buildLabel("Tags"), // No (Optional) shown
               _buildWithSuggestions("tags", tagSuggestions, isMulti: true),
               const SizedBox(height: 25),
               Center(
@@ -196,6 +249,15 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
                   icon: const Icon(Icons.save),
                   label: const Text("Save Item"),
                   onPressed: _saveItem,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF9800),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(fontSize: 14),
+                  ),
                 ),
               ),
             ],
@@ -205,9 +267,27 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
     );
   }
 
-  Widget _buildLabel(String label) => Padding(
+  // Update _buildLabel to show (Optional) for non-required fields
+  Widget _buildLabel(String label, {bool required = false}) => Padding(
     padding: const EdgeInsets.only(top: 10, bottom: 4),
-    child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18, // Make headline bigger
+          ),
+        ),
+        if (required)
+          const Text(
+            ' *',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 18),
+          )
+        // Remove (Optional) for non-required fields, including tags
+      ],
+    ),
   );
 
   Widget _buildDropdown(String hint, Widget child) => Theme(
@@ -215,19 +295,43 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
     child: child,
   );
 
+  // Use this decoration for all dropdowns
+  InputDecoration _dropdownDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.black87),
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(color: Colors.orange.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(color: Colors.orange.shade200),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+        borderSide: BorderSide(color: Color(0xFFFF9800), width: 2),
+      ),
+    );
+  }
+
   Widget _buildCategoryDropdown() =>
       DropdownButtonFormField<Map<String, dynamic>>(
-        decoration: _inputDecoration("Select category"),
-        items:
-            widget.categoryList.map((category) {
-              return DropdownMenuItem<Map<String, dynamic>>(
-                value: category,
-                child: Text(
-                  category['name'],
-                  style: const TextStyle(color: Colors.black),
-                ),
-              );
-            }).toList(),
+        decoration: _dropdownDecoration(
+          itemData['category'] == null ? "Select category" : "",
+        ),
+        items: widget.categoryList.map((category) {
+          return DropdownMenuItem<Map<String, dynamic>>(
+            value: category,
+            child: Text(
+              category['name'],
+              style: const TextStyle(color: Colors.black),
+            ),
+          );
+        }).toList(),
         onChanged: (value) {
           if (value != null) {
             final relatedSubCategories = widget.categories[value['name']] ?? [];
@@ -244,84 +348,188 @@ class _ItemDetailsFormPageState extends State<ItemDetailsFormPage> {
 
   Widget _buildSubCategoryDropdown() =>
       DropdownButtonFormField<Map<String, dynamic>>(
-        decoration: _inputDecoration("Select subcategory"),
-        items:
-            subCategories.map((subcategory) {
-              return DropdownMenuItem<Map<String, dynamic>>(
-                value: subcategory,
-                child: Text(
-                  subcategory['name'],
-                  style: const TextStyle(color: Colors.black),
-                ),
-              );
-            }).toList(),
+        decoration: _dropdownDecoration(
+          itemData['subcategory'] == null ? "Select subcategory" : "",
+        ),
+        items: subCategories.map((subcategory) {
+          return DropdownMenuItem<Map<String, dynamic>>(
+            value: subcategory,
+            child: Text(
+              subcategory['name'],
+              style: const TextStyle(color: Colors.black),
+            ),
+          );
+        }).toList(),
         onChanged: (value) => setState(() => itemData['subcategory'] = value),
         value: itemData['subcategory'],
         validator: (value) => value == null ? 'Select a subcategory' : null,
       );
 
   Widget _buildSeasonDropdown() => DropdownButtonFormField<String>(
-    decoration: _inputDecoration("Select season"),
-    items:
-        ['Winter', 'Spring', 'Summer', 'Autumn', 'All-Season'].map((season) {
-          return DropdownMenuItem<String>(
-            value: season,
-            child: Text(season, style: const TextStyle(color: Colors.black)),
-          );
-        }).toList(),
+    decoration: _dropdownDecoration(
+      ['Winter', 'Spring', 'Summer', 'Autumn'].contains(itemData['season'])
+        ? ""
+        : "Select season"
+    ),
+    items: ['Winter', 'Spring', 'Summer', 'Autumn'].map((season) {
+      return DropdownMenuItem<String>(
+        value: season,
+        child: Text(season, style: const TextStyle(color: Colors.black)),
+      );
+    }).toList(),
     onChanged: (value) => setState(() => itemData['season'] = value!),
-    value: itemData['season'],
+    value: ['Winter', 'Spring', 'Summer', 'Autumn'].contains(itemData['season'])
+        ? itemData['season']
+        : null,
+    validator: (value) => value == null ? 'Select a season' : null,
   );
 
   Widget _buildWithSuggestions(
     String key,
     List<String> suggestions, {
     bool isMulti = false,
-  }) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      TextFormField(
-        controller: _controllers[key],
-        decoration: _inputDecoration("Type or tap a suggestion"),
-        onChanged: (value) => itemData[key] = value,
-        validator:
-            (value) => (value == null || value.isEmpty) ? 'Required' : null,
-      ),
-      Wrap(
-        spacing: 8,
-        children:
-            suggestions
-                .map(
-                  (s) => ActionChip(
-                    label: Text(s, style: const TextStyle(color: Colors.black)),
-                    backgroundColor: Colors.grey.shade200,
-                    onPressed: () {
-                      setState(() {
-                        if (isMulti) {
-                          final currentText = _controllers[key]!.text.trim();
-                          final tags =
-                              currentText.isEmpty
-                                  ? <String>{}
-                                  : currentText
-                                      .split(',')
-                                      .map((e) => e.trim())
-                                      .where((e) => e.isNotEmpty)
-                                      .toSet();
-                          tags.add(s);
-                          _controllers[key]!.text = tags.join(', ');
-                          itemData[key] = _controllers[key]!.text;
-                        } else {
-                          _controllers[key]!.text = s;
-                          itemData[key] = s;
-                        }
-                      });
-                    },
+  }) {
+    const Color orange = Color(0xFFFF9800);
+    const Color orangeLight = Color(0xFFFFE0B2);
+    const Color darkBrown = Color(0xFF2F1B0C);
+
+    // For color and material, make selection mandatory
+    if (key == "color" || key == "material") {
+      return FormField<String>(
+        validator: (_) =>
+            selectedChoices[key] == null ? 'Select a $key' : null,
+        builder: (state) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              children: suggestions.map((s) {
+                final isSelected = selectedChoices[key] == s;
+                return ChoiceChip(
+                  label: Text(
+                    s,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : darkBrown,
+                    ),
                   ),
-                )
-                .toList(),
-      ),
-    ],
-  );
+                  selected: isSelected,
+                  selectedColor: orange,
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                      color: isSelected ? orange : orangeLight,
+                    ),
+                  ),
+                  onSelected: (selected) {
+                    setState(() {
+                      selectedChoices[key] = selected ? s : null;
+                      itemData[key] = selected ? s : '';
+                    });
+                    state.validate();
+                  },
+                );
+              }).toList(),
+            ),
+            if (state.hasError)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, left: 4),
+                child: Text(
+                  state.errorText ?? '',
+                  style: TextStyle(color: Colors.red[700], fontSize: 12),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // For size, fill the field if a suggestion is selected
+    if (key == "size") {
+      return Wrap(
+        spacing: 8,
+        children: suggestions.map((s) {
+          final isSelected = _controllers['size']!.text == s;
+          return ChoiceChip(
+            label: Text(
+              s,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : darkBrown,
+              ),
+            ),
+            selected: isSelected,
+            selectedColor: orange,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: isSelected ? orange : orangeLight,
+              ),
+            ),
+            onSelected: (selected) {
+              setState(() {
+                if (selected) {
+                  _controllers['size']!.text = s;
+                  itemData['size'] = s;
+                } else {
+                  _controllers['size']!.clear();
+                  itemData['size'] = '';
+                }
+              });
+            },
+          );
+        }).toList(),
+      );
+    }
+
+    // For tags and other fields
+    return Wrap(
+      spacing: 8,
+      children: suggestions.map((s) {
+        final isSelected = isMulti
+            ? (selectedChoices[key] as Set<String>).contains(s)
+            : selectedChoices[key] == s;
+
+        return ChoiceChip(
+          label: Text(
+            s,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : darkBrown,
+            ),
+          ),
+          selected: isSelected,
+          selectedColor: orange,
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: isSelected ? orange : orangeLight,
+            ),
+          ),
+          onSelected: (selected) {
+            setState(() {
+              if (isMulti) {
+                final tags = Set<String>.from(selectedChoices[key] as Set<String>);
+                if (selected) {
+                  tags.add(s);
+                } else {
+                  tags.remove(s);
+                }
+                selectedChoices[key] = tags;
+                itemData[key] = tags.join(', ');
+              } else {
+                selectedChoices[key] = selected ? s : null;
+                itemData[key] = selected ? s : '';
+              }
+            });
+          },
+        );
+      }).toList(),
+    );
+  }
 
   InputDecoration _inputDecoration(String label) => InputDecoration(
     labelText: label,

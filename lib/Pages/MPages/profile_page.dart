@@ -881,7 +881,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   );
                                                 },
                                                 errorBuilder:
-                                                    (, _, _) =>
+                                                    (context, error, stackTrace) =>
                                                         const Center(
                                                           child: Icon(
                                                             Icons.broken_image,
@@ -953,15 +953,18 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
 
-    final displayedItems = _wardrobeItems.take(4).toList();
+final displayedItems = _wardrobeItems
+    .toList()
+    ..sort((a, b) => b.id.compareTo(a.id)); // Sort newest first
+final newestItems = displayedItems.take(4).toList();
 
     return SizedBox(
       height: 150,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: displayedItems.length + 1,
+        itemCount: newestItems.length + 1,
         itemBuilder: (context, index) {
-          if (index == displayedItems.length) {
+          if (index == newestItems.length) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: GestureDetector(
@@ -998,7 +1001,7 @@ class _ProfilePageState extends State<ProfilePage> {
             );
           }
 
-          final item = displayedItems[index];
+          final item = newestItems[index];
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -1046,7 +1049,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               );
                             },
                             errorBuilder:
-                                (, _, _) => const Center(
+                                (context, error, stackTrace) => const Center(
                                   child: Icon(Icons.broken_image),
                                 ),
                           )

@@ -881,7 +881,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   );
                                                 },
                                                 errorBuilder:
-                                                    (, _, _) =>
+                                                    (context, error, stackTrace) =>
                                                         const Center(
                                                           child: Icon(
                                                             Icons.broken_image,
@@ -1046,7 +1046,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               );
                             },
                             errorBuilder:
-                                (, _, _) => const Center(
+                                (context, error, stackTrace) => const Center(
                                   child: Icon(Icons.broken_image),
                                 ),
                           )

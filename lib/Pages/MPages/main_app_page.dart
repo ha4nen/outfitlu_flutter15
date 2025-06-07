@@ -39,7 +39,7 @@ class _MainAppPageState extends State<MainAppPage>
     _pages = [
       WardrobePage(key: const ValueKey('FeedPage')),
       MagicPage(
-        key: const ValueKey('MagicPage'),
+        key: const ValueKey('AIPage'),
         onThemeChange: widget.onThemeChange,
         fromCalendar: false,
       ),
@@ -172,7 +172,7 @@ class _MainAppPageState extends State<MainAppPage>
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildAnimatedIcon(Icons.feed_rounded, 'Feed', 0),
-            _buildAnimatedIcon(Icons.auto_awesome, 'Magic', 1),
+            _buildAnimatedIcon(Icons.auto_awesome, 'AI', 1),
             const SizedBox(width: 40),
             _buildAnimatedIcon(Icons.calendar_today, 'Calendar', 2),
             _buildAnimatedIcon(Icons.person, 'Profile', 3),

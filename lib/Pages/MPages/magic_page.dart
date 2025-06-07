@@ -785,7 +785,7 @@ class _MagicPageState extends State<MagicPage> {
               padding: const EdgeInsets.only(
                 left: 20,
                 right: 20,
-                top: 32, // You can reduce this to 16 if you want even less top space
+                top: 60, // You can reduce this to 16 if you want even less top space
                 bottom: 28,
               ),
               child: Column(

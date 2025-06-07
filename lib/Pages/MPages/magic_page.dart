@@ -34,10 +34,10 @@ class _MagicPageState extends State<MagicPage> {
   String? generationError;
   bool _alreadySaved = false;
   double selectedTemp = 22.0;
-  String selectedSeason = 'Spring';
+  String selectedSeason = 'None';
   String selectedModesty = 'None';
-  String selectedOccasion = 'Casual';
-  String selectedGender = 'Female';
+  String selectedOccasion = 'None';
+  String selectedGender = 'None';
 
   @override
   void initState() {
@@ -768,176 +768,174 @@ class _MagicPageState extends State<MagicPage> {
     final dropdownTextColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('🧠 Magic Outfit AI')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Adjust the temperature to help AI match clothing to weather:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            Slider(
-              value: selectedTemp,
-              min: 5,
-              max: 35,
-              divisions: 30,
-              label: '${selectedTemp.round()}°C',
-              onChanged: (val) => setState(() => selectedTemp = val),
-            ),
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDropdown(
-                    "Season",
-                    selectedSeason,
-                    ['Winter', 'Spring', 'Summer', 'Autumn'],
-                    (val) => setState(() => selectedSeason = val),
-                    label: "Season",
-                    textColor: dropdownTextColor,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildDropdown(
-                    "Modesty",
-                    selectedModesty,
-                    ['None', 'Hijab-Friendly'],
-                    (val) => setState(() => selectedModesty = val),
-                    label: "Modesty",
-                    textColor: dropdownTextColor,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDropdown(
-                    "Occasion",
-                    selectedOccasion,
-                    [
-                      'Casual',
-                      'Work',
-                      'Formal',
-                      'Comfy',
-                      'Chic',
-                      'Sport',
-                      'Classy',
-                    ],
-                    (val) => setState(() => selectedOccasion = val),
-                    label: "Occasion",
-                    textColor: dropdownTextColor,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildDropdown(
-                    "Gender",
-                    selectedGender,
-                    ['Female', 'Male'],
-                    (val) => setState(() => selectedGender = val),
-                    label: "Gender",
-                    textColor: dropdownTextColor,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _loading ? null : generateOutfit,
-                child: const Text('✨ Generate Outfit'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF9800),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  textStyle: const TextStyle(fontSize: 14),
+            // --- ORANGE TOP SECTION ---
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFF9800),
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(28), // slightly more rounded
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            if (!_loading &&
-                generationError != null &&
-                recommendedItems.isEmpty)
-              Center(
-                child: Text(
-                  generationError!,
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 32, // You can reduce this to 16 if you want even less top space
+                bottom: 28,
               ),
-
-            if (_loading) const Center(child: CircularProgressIndicator()),
-
-            if (!_loading && recommendedItems.isNotEmpty)
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: recommendedItems.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemBuilder: (context, index) {
-                  final item = recommendedItems[index];
-                  return Card(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: Image.network(
-                            'http://10.0.2.2:8000${item['photo_path']}',
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (_, __, ___) =>
-                                    const Icon(Icons.image_not_supported),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: Text(
-                            item['subcategory']['name'] ?? '',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      'Set the weather and preferences below to let Outfitly AI craft your perfect look.',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  );
-                },
-              ),
-            if (!_loading && recommendedItems.isNotEmpty)
-              Center(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.save_alt),
-                  label: const Text("Save to Wardrobe"),
-                  onPressed: _promptDescriptionAndSave,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
-                ),
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white, width: 2),
+                      borderRadius: BorderRadius.circular(16),
+                      color: Colors.transparent,
+                    ),
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 3,
+                        activeTrackColor: Colors.white,
+                        inactiveTrackColor: Colors.white.withOpacity(0.2),
+                        trackShape: const RoundedRectSliderTrackShape(),
+                        thumbShape: _SmallOutlineThumbShape(),
+                        overlayColor: const Color(0x33FFFFFF),
+                        thumbColor: Colors.transparent,
+                        disabledThumbColor: Colors.transparent,
+                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+                        activeTickMarkColor: Colors.transparent,
+                        inactiveTickMarkColor: Colors.transparent,
+                        valueIndicatorColor: Colors.white,
+                        valueIndicatorTextStyle: const TextStyle(
+                          color: Colors.black, // <-- Degree text is now black
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      child: Slider(
+                        value: selectedTemp,
+                        min: 5,
+                        max: 35,
+                        divisions: 30,
+                        label: '${selectedTemp.round()}°C',
+                        onChanged: (val) => setState(() => selectedTemp = val),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: ExpandableStyleSelector(
+                            label: "Season",
+                            selectedOption: selectedSeason,
+                            options: ['Winter', 'Spring', 'Summer', 'Autumn'],
+                            onChanged: (val) => setState(() => selectedSeason = val),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: ExpandableStyleSelector(
+                            label: "Modesty",
+                            selectedOption: selectedModesty,
+                            options: ['None', 'Hijab-Friendly'],
+                            onChanged: (val) => setState(() => selectedModesty = val),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: ExpandableStyleSelector(
+                            label: "Occasion",
+                            selectedOption: selectedOccasion,
+                            options: [
+                              'Casual',
+                              'Work',
+                              'Formal',
+                              'Comfy',
+                              'Chic',
+                              'Sport',
+                              'Classy',
+                            ],
+                            onChanged: (val) => setState(() => selectedOccasion = val),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: ExpandableStyleSelector(
+                            label: "Gender",
+                            selectedOption: selectedGender,
+                            options: ['Female', 'Male'],
+                            onChanged: (val) => setState(() => selectedGender = val),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : generateOutfit,
+                      child: const Text('Generate Outfit'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFFFF9800),
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        elevation: 2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
+            ),
+            // --- END ORANGE TOP SECTION ---
 
-            const Divider(height: 30),
-            const Text(
-              'You can generate your outfit using AI or create one manually:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            const Divider(height: 36, color: Color(0xFFFF9800)), // <-- Degree color changed to orange
+
+            // BOTTOM OF PAGE
+            Center(
+              child: const Text(
+                'Prefer a personal touch? You can also design your own outfit manually below.',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 17,
+                  color: Colors.black87,
+                  letterSpacing: 0.2,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 8),
             Center(
@@ -978,4 +976,350 @@ class _MagicPageState extends State<MagicPage> {
       ),
     );
   }
+}
+
+class _SmallOutlineThumbShape extends SliderComponentShape {
+  static const double _thumbRadius = 6.0;
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) {
+    final Paint fillPaint = Paint()
+      ..color = sliderTheme.activeTrackColor!
+      ..style = PaintingStyle.fill;
+
+    final Paint outlinePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    context.canvas.drawCircle(center, _thumbRadius, fillPaint);
+    context.canvas.drawCircle(center, _thumbRadius + 2, outlinePaint);
+  }
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
+    return const Size(16, 16);
+  }
+}
+
+// Add this widget above _MagicPageState (or in a separate file if you prefer):
+
+class ExpandableStyleSelector extends StatelessWidget {
+  final String label;
+  final String selectedOption;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
+
+  const ExpandableStyleSelector({
+    super.key,
+    required this.label,
+    required this.selectedOption,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Always show "None" as the default if nothing is selected
+    final displayOption = (selectedOption.isEmpty || selectedOption == "None")
+        ? "None"
+        : selectedOption;
+    return _ExpandableMenu(
+      label: label,
+      selectedOption: displayOption,
+      options: options.contains("None") ? options : ["None", ...options],
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _ExpandableMenu extends StatefulWidget {
+  final String label;
+  final String selectedOption;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
+
+  const _ExpandableMenu({
+    required this.label,
+    required this.selectedOption,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  State<_ExpandableMenu> createState() => _ExpandableMenuState();
+}
+
+class _ExpandableMenuState extends State<_ExpandableMenu> with TickerProviderStateMixin {
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+  bool isExpanded = false;
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+  }
+
+  void _showOverlay() {
+    _overlayEntry = _buildOverlayEntry();
+    Overlay.of(context, debugRequiredFor: widget).insert(_overlayEntry!);
+    setState(() => isExpanded = true);
+    _controller.forward(from: 0);
+  }
+
+  void _hideOverlay() {
+    _controller.reverse().then((_) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+      if (mounted) setState(() => isExpanded = false);
+    });
+  }
+
+  OverlayEntry _buildOverlayEntry() {
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    return OverlayEntry(
+      builder: (context) => GestureDetector(
+        onTap: _hideOverlay,
+        behavior: HitTestBehavior.translucent,
+        child: Stack(
+          children: [
+            Positioned(
+              left: offset.dx,
+              top: offset.dy,
+              width: size.width,
+              child: CompositedTransformFollower(
+                link: _layerLink,
+                showWhenUnlinked: false,
+                offset: Offset(0, size.height + 8),
+                child: Material(
+                  color: Colors.transparent,
+                  child: FadeTransition(
+                    opacity: _fade,
+                    child: ScaleTransition(
+                      alignment: Alignment.topCenter,
+                      scale: _scale,
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 0),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 344, // 4*80 + 3*8
+                            ),
+                            child: Wrap(
+                              alignment: WrapAlignment.start, // <-- force left alignment
+                              crossAxisAlignment: WrapCrossAlignment.start,
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: widget.options
+                                  .where((opt) => opt != widget.selectedOption)
+                                  .map((opt) => SizedBox(
+                                        width: 80,
+                                        height: 80,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _userHasSelected = true;
+                                            });
+                                            widget.onChanged(opt);
+                                            _hideOverlay();
+                                          },
+                                          child: _buildOptionBox(opt),
+                                        ),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _hideOverlay();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 6),
+            child: Center(
+              child: Text(
+                widget.label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.white, // <-- Make label text white
+                ),
+              ),
+            ),
+          ),
+          // White cutout behind the selector (like a "hole" in the orange background)
+          Container(
+            decoration: BoxDecoration(
+              // REMOVE: color: Colors.white, // pure white for the cutout
+              borderRadius: BorderRadius.circular(22),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: GestureDetector(
+              onTap: () {
+                if (!isExpanded) {
+                  _showOverlay();
+                } else {
+                  _hideOverlay();
+                }
+              },
+              child: _buildOptionBox(widget.selectedOption, isMain: true, showArrow: true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionBox(String label, {bool isMain = false, bool showArrow = false}) {
+    final Color orange = const Color(0xFFFF9800);
+    final Color white = Colors.white; // Use white instead of grey
+
+    bool userHasSelected = _userHasSelected ?? false;
+    final bool isSelected = widget.selectedOption == label;
+    final bool isNone = label == "None";
+
+    if (isMain) {
+      // Determine initial value based on selection
+      final double initialValue = isNone ? 0.0 : 1.0;
+      final double targetValue = (userHasSelected && isSelected)
+          ? (isNone ? 0.0 : 1.0)
+          : (isNone ? 0.0 : 1.0);
+
+      return AspectRatio(
+        aspectRatio: 1,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween<double>(
+            begin: initialValue,
+            end: targetValue,
+          ),
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOutCubic,
+          builder: (context, value, child) {
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final height = constraints.maxHeight;
+                return Stack(
+                  children: [
+                    // White background always
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.white, width: 2), // <-- Thin white border
+                      ),
+                    ),
+                    // Orange fill animates in/out
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: height * value,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: orange,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: Colors.white, width: 2), // <-- Thin white border
+                        ),
+                      ),
+                    ),
+                    // Content
+                    Center(
+                      child: Text(
+                        label,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                          color: value > 0.5 ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
+      );
+    }
+
+    // Dropdown option: "None" is white, others are orange
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        decoration: BoxDecoration(
+          color: isNone ? white : orange,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white, width: 2),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 15, // slightly smaller font
+              color: isNone ? Colors.black87 : Colors.white,
+            ),
+            maxLines: 2, // allow wrapping for long words
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Add this field to your _ExpandableMenuState class:
+  bool? _userHasSelected;
 }

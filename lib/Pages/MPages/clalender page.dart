@@ -120,53 +120,72 @@ class _FeedPageState extends State<FeedPage> {
     final events = _plannedOutfits[selectedDateKey] ?? [];
 
     return Scaffold(
-      body: MyPlannerUI(
-        focusedDay: _focusedDay,
-        selectedDay: _selectedDay,
-        calendarFormat: _calendarFormat,
-        onDaySelected: (selected, focused) {
-          setState(() {
-            _selectedDay = selected;
-            _focusedDay = focused;
-            _calendarFormat = CalendarFormat.week;
-          });
-        },
-        onPageChanged: (day) => setState(() => _focusedDay = day),
-        plannedOutfits: _plannedOutfits.map(
-          (key, value) => MapEntry(key, ['Planned']),
-        ),
-        onChooseOutfit: () async {
-          final selectedOutfit = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ChooseOutfitPage()),
-          );
-          if (selectedOutfit != null) {
-            await _assignOutfitToDate(selectedOutfit.id);
-            _fetchPlannedOutfits();
-          }
-        },
-        onCreateOutfit: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (_) => MagicPage(
+      body: Stack(
+        children: [
+          // Base: solid white background (matches calendar)
+          Container(color: Colors.white),
+          // Gradient overlay for blending
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,      // Start fully transparent (top)
+                  Colors.transparent,      // Stay transparent for calendar area
+                  Color(0xFFF6F6F6),      // Start blending
+                  Color(0xFFF0F0F0),      // End color (bottom)
+                ],
+                stops: [0.0, 0.35, 0.6, 1.0], // Adjust stops for where blend starts
+              ),
+            ),
+          ),
+          // Your main content
+          MyPlannerUI(
+            focusedDay: _focusedDay,
+            selectedDay: _selectedDay,
+            calendarFormat: _calendarFormat,
+            onDaySelected: (selected, focused) {
+              setState(() {
+                _selectedDay = selected;
+                _focusedDay = focused;
+                _calendarFormat = CalendarFormat.week;
+              });
+            },
+            onPageChanged: (day) => setState(() => _focusedDay = day),
+            plannedOutfits: _plannedOutfits.map(
+              (key, value) => MapEntry(key, ['Planned']),
+            ),
+            onChooseOutfit: () async {
+              final selectedOutfit = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ChooseOutfitPage()),
+              );
+              if (selectedOutfit != null) {
+                await _assignOutfitToDate(selectedOutfit.id);
+                _fetchPlannedOutfits();
+              }
+            },
+            onCreateOutfit: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MagicPage(
                     onThemeChange: () {},
                     fromCalendar: true,
                     selectedDate: _selectedDay,
                   ),
-            ),
-          );
-          if (result == true) _fetchPlannedOutfits();
-        },
-        onSeeDetails: () {
-          final plan = _plannedOutfits[selectedDateKey]?.first;
-          if (plan != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => OutfitDetailsPage(
+                ),
+              );
+              if (result == true) _fetchPlannedOutfits();
+            },
+            onSeeDetails: () {
+              final plan = _plannedOutfits[selectedDateKey]?.first;
+              if (plan != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OutfitDetailsPage(
                       outfit: Outfit(
                         id: plan.outfitId,
                         description: plan.outfitDescription,
@@ -177,17 +196,19 @@ class _FeedPageState extends State<FeedPage> {
                         isHijabFriendly: plan.isHijabFriendly,
                       ),
                     ),
-              ),
-            );
-          }
-        },
-        onBackToMonth: () {
-          setState(() {
-            _calendarFormat = CalendarFormat.month;
-            _selectedDay = null;
-          });
-        },
-        outfitImageUrl: _plannedOutfits[selectedDateKey]?.first.outfitImageUrl,
+                  ),
+                );
+              }
+            },
+            onBackToMonth: () {
+              setState(() {
+                _calendarFormat = CalendarFormat.month;
+                _selectedDay = null;
+              });
+            },
+            outfitImageUrl: _plannedOutfits[selectedDateKey]?.first.outfitImageUrl,
+          ),
+        ],
       ),
     );
   }

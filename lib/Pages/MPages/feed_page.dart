@@ -237,77 +237,74 @@ class _WardrobePageState extends State<WardrobePage> {
 
   Future<void> _goToUserProfile(int targetUserId) async {
     final prefs = await SharedPreferences.getInstance();
-    final currentUserId = prefs.getInt('user_id');
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => ProfilePage(
-              onThemeChange: () {},
-              userId: (targetUserId == currentUserId) ? null : targetUserId,
-            ),
+        builder: (_) => ProfilePage(onThemeChange: () {}, userId: targetUserId),
       ),
     );
   }
-Widget _buildFilterBar() {
-  final filters = ['All', 'Mine', 'Friends', 'Discover'];
-  return Container(
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
-        ),
-      ],
-    ),
-    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: filters.map((filter) {
-        final isSelected = selectedFilter == filter;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedFilter = filter;
-                  _applyFilter();
-                });
-                Navigator.pop(context); // Close the bottom sheet
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFFF9800) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFFFF9800)
-                        : Colors.grey.shade300,
-                    width: 1.5,
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Center(
-                  child: Text(
-                    filter,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.bold,
+
+  Widget _buildFilterBar() {
+    final filters = ['All', 'Mine', 'Friends', 'Discover'];
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children:
+            filters.map((filter) {
+              final isSelected = selectedFilter == filter;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedFilter = filter;
+                        _applyFilter();
+                      });
+                      Navigator.pop(context); // Close the bottom sheet
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected ? const Color(0xFFFF9800) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color:
+                              isSelected
+                                  ? const Color(0xFFFF9800)
+                                  : Colors.grey.shade300,
+                          width: 1.5,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Center(
+                        child: Text(
+                          filter,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    ),
-  );
-}
+              );
+            }).toList(),
+      ),
+    );
+  }
+
   Future<void> _deletePost(int postId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -369,7 +366,7 @@ Widget _buildFilterBar() {
                 )
                 : Container(
                   decoration: BoxDecoration(
-color: Colors.white,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -387,49 +384,54 @@ color: Colors.white,
                         ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                       border: InputBorder.none,
-                      icon: const Icon(Icons.search), iconColor: Colors.orange
+                      icon: const Icon(Icons.search),
+                      iconColor: Colors.orange,
                     ),
                     onChanged: _searchUsers,
                   ),
                 ),
-bottom: const PreferredSize(
-    preferredSize: Size.fromHeight(1),
-    child:  // Orange thin line
-        Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
-  ),
-       backgroundColor: theme.appBarTheme.backgroundColor,
-  foregroundColor: theme.appBarTheme.foregroundColor,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: // Orange thin line
+              Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
+        ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
 
-      actions: [
-  IconButton(
-    icon: Icon(_showSearchBar ? Icons.close : Icons.search),
-    onPressed: () {
-      setState(() {
-        _showSearchBar = !_showSearchBar;
-        _searchController.clear();
-        searchResults.clear();
-      });
-    },
-  ),
-  IconButton(
-    icon: const Icon(Icons.filter_list, color: Color(0xFFFF9800)),
-    onPressed: () {
-     showModalBottomSheet(
-  context: context,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-  ),
-  builder: (context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: .0), // Reduce vertical padding
-    child: SizedBox(
-      height: 70, // Set a fixed height for the filter bar
-      child: _buildFilterBar(),
-    ),
-  ),
-);
-    },
-  ),
-],
+        actions: [
+          IconButton(
+            icon: Icon(_showSearchBar ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _showSearchBar = !_showSearchBar;
+                _searchController.clear();
+                searchResults.clear();
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Color(0xFFFF9800)),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder:
+                    (context) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: .0,
+                      ), // Reduce vertical padding
+                      child: SizedBox(
+                        height: 70, // Set a fixed height for the filter bar
+                        child: _buildFilterBar(),
+                      ),
+                    ),
+              );
+            },
+          ),
+        ],
       ),
       body:
           _isLoading
@@ -440,129 +442,133 @@ bottom: const PreferredSize(
               )
               : _showSearchBar
               ? Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-  borderRadius: BorderRadius.circular(20),
-  color: Colors.white,
-  border: Border.all(
-    color: const Color(0xFFFF9800), // Orange border
-    width: 1,
-  ),
-  boxShadow: [
-    BoxShadow(
-      color: Colors.black.withOpacity(0.05),
-      blurRadius: 8,
-    ),
-  ],
-),
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: [
-                        if (recentSearches.isNotEmpty) ...[
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(
-                              'Recent Searches',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          ...recentSearches.map(
-                            (username) => ListTile(
-                              leading: Icon(
-                                Icons.history,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                              title: Text(
-                                username,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(
-                                  Icons.close,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    recentSearches.remove(username);
-                                  });
-                                  _saveRecentSearches();
-                                },
-                              ),
-                              onTap: () {
-                                _searchController.text = username;
-                                _searchUsers(username);
-                              },
-                            ),
-                          ),
-                          const Divider(),
-                        ],
-                        if (searchResults.isNotEmpty)
-                          ...searchResults.map(
-                            (user) => ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage:
-                                    (user['profile_picture'] != null &&
-                                            user['profile_picture']
-                                                .toString()
-                                                .isNotEmpty)
-                                        ? NetworkImage(user['profile_picture']!)
-                                        : null,
-                                backgroundColor: Colors.grey.shade200,
-                                child:
-                                    (user['profile_picture'] == null ||
-                                            user['profile_picture']
-                                                .toString()
-                                                .isEmpty)
-                                        ? const Icon(
-                                          Icons.person,
-                                          color: Colors.white,
-                                        )
-                                        : null,
-                              ),
-                              title: Text(
-                                user['username'] ?? 'User',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Tap to view profile',
-                                style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withOpacity(0.6),
-                                ),
-                              ),
-                              onTap: () {
-                                _addToRecentSearches(user['username']);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ProfilePage(
-                                      onThemeChange: () {},
-                                      userId: (user['id'] != -1) ? user['id'] : null,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        if (searchResults.isEmpty && _searchController.text.isNotEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Text('No users found.'),
-                          ),
-                      ],
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white,
+                    border: Border.all(
+                      color: const Color(0xFFFF9800), // Orange border
+                      width: 1,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                      ),
+                    ],
                   ),
-                )
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      if (recentSearches.isNotEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            'Recent Searches',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        ...recentSearches.map(
+                          (username) => ListTile(
+                            leading: Icon(
+                              Icons.history,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            title: Text(
+                              username,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  recentSearches.remove(username);
+                                });
+                                _saveRecentSearches();
+                              },
+                            ),
+                            onTap: () {
+                              _searchController.text = username;
+                              _searchUsers(username);
+                            },
+                          ),
+                        ),
+                        const Divider(),
+                      ],
+                      if (searchResults.isNotEmpty)
+                        ...searchResults.map(
+                          (user) => ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage:
+                                  (user['profile_picture'] != null &&
+                                          user['profile_picture']
+                                              .toString()
+                                              .isNotEmpty)
+                                      ? NetworkImage(user['profile_picture']!)
+                                      : null,
+                              backgroundColor: Colors.grey.shade200,
+                              child:
+                                  (user['profile_picture'] == null ||
+                                          user['profile_picture']
+                                              .toString()
+                                              .isEmpty)
+                                      ? const Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                      )
+                                      : null,
+                            ),
+                            title: Text(
+                              user['username'] ?? 'User',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Tap to view profile',
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                            ),
+                            onTap: () {
+                              _addToRecentSearches(user['username']);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ProfilePage(
+                                        onThemeChange: () {},
+                                        userId:
+                                            (user['id'] != -1)
+                                                ? user['id']
+                                                : null,
+                                      ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      if (searchResults.isEmpty &&
+                          _searchController.text.isNotEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text('No users found.'),
+                        ),
+                    ],
+                  ),
+                ),
+              )
               : filteredPosts.isEmpty
               ? const Center(child: Text('No posts found.'))
               : ListView.builder(
@@ -579,22 +585,19 @@ bottom: const PreferredSize(
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0),
-      
+
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
-         height: 400, 
+        height: 400,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: Colors.white,
           border: Border.all(
-        color: const Color(0xFFFF9800), // Orange border
-        width: 0.5,
-      ),
+            color: const Color(0xFFFF9800), // Orange border
+            width: 0.5,
+          ),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-            ),
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
           ],
         ),
         child: Column(
@@ -615,12 +618,10 @@ bottom: const PreferredSize(
                               ? NetworkImage(post['profilePictureUrl'])
                               : null,
                       backgroundColor: Colors.grey.shade300,
-                      child: post['profilePictureUrl'] == null
-                          ? const Icon(
-                            Icons.person,
-                            color: Colors.white,
-                          )
-                          : null,
+                      child:
+                          post['profilePictureUrl'] == null
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
                     ),
                   ),
                   title: GestureDetector(
@@ -634,42 +635,56 @@ bottom: const PreferredSize(
                     ),
                   ),
                 ),
-               if (isOwnPost)
-  Positioned(
-    top: 4,
-    right: 4,
-    child: IconButton(
-      icon: const Icon(Icons.more_vert, color: Colors.black87),
-      onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (ctx) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.delete, color: Colors.red),
-                  title: const Text('Delete Post', style: TextStyle(color: Colors.red)),
-                  onTap: () async {
-                    Navigator.pop(ctx); // Close the bottom sheet
-                    await _deletePost(post['id']);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    ),
-  ),
+                if (isOwnPost)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: IconButton(
+                      icon: const Icon(Icons.more_vert, color: Colors.black87),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                          ),
+                          builder:
+                              (ctx) => SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      title: const Text(
+                                        'Delete Post',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                      onTap: () async {
+                                        Navigator.pop(
+                                          ctx,
+                                        ); // Close the bottom sheet
+                                        await _deletePost(post['id']);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        );
+                      },
+                    ),
+                  ),
               ],
             ),
             if (post['imageUrl'] != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Container(

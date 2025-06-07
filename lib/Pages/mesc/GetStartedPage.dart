@@ -80,7 +80,7 @@ class _GetStartedPageState extends State<GetStartedPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Find local community events',
+                          'Discover your perfect outfit.',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -89,7 +89,7 @@ class _GetStartedPageState extends State<GetStartedPage>
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Get involved with what's happening near you.",
+                          "Let Outfitly AI help you style for any occasion.",
                           style: TextStyle(fontSize: 16, color: Colors.black87),
                         ),
                         const SizedBox(height: 24),

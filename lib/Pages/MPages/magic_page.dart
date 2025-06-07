@@ -768,247 +768,310 @@ class _MagicPageState extends State<MagicPage> {
     final dropdownTextColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- ORANGE TOP SECTION ---
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFF9800),
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(28), // slightly more rounded
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- ORANGE TOP SECTION ---
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  // Orange stays solid, white only blends at the very bottom
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFFFF9800), // Orange for most of the box
+                      Color(0xFFFF9800), // Orange continues
+                      Colors.white,      // White only at the very bottom
+                    ],
+                    stops: [0.0, 0.97, 1.0], // White starts blending at 85% height
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(28),
+                  ),
+                ),
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 32,
+                  bottom: 28,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                        'Set the weather and preferences below to let Outfitly AI craft your perfect look.',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.white, width: 2),
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.transparent,
+                      ),
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 3,
+                          activeTrackColor: Colors.white,
+                          inactiveTrackColor: Colors.white.withOpacity(0.2),
+                          trackShape: const RoundedRectSliderTrackShape(),
+                          thumbShape: _SmallOutlineThumbShape(),
+                          overlayColor: const Color(0x33FFFFFF),
+                          thumbColor: Colors.transparent,
+                          disabledThumbColor: Colors.transparent,
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
+                          activeTickMarkColor: Colors.transparent,
+                          inactiveTickMarkColor: Colors.transparent,
+                          valueIndicatorColor: Colors.white,
+                          valueIndicatorTextStyle: const TextStyle(
+                            color: Colors.black, // <-- Degree text is now black
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        child: Slider(
+                          value: selectedTemp,
+                          min: 5,
+                          max: 35,
+                          divisions: 30,
+                          label: '${selectedTemp.round()}°C',
+                          onChanged: (val) => setState(() => selectedTemp = val),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: ExpandableStyleSelector(
+                              label: "Season",
+                              selectedOption: selectedSeason,
+                              options: ['Winter', 'Spring', 'Summer', 'Autumn'],
+                              onChanged: (val) => setState(() => selectedSeason = val),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: ExpandableStyleSelector(
+                              label: "Modesty",
+                              selectedOption: selectedModesty,
+                              options: ['None', 'Hijab-Friendly'],
+                              onChanged: (val) => setState(() => selectedModesty = val),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: ExpandableStyleSelector(
+                              label: "Occasion",
+                              selectedOption: selectedOccasion,
+                              options: [
+                                'Casual',
+                                'Work',
+                                'Formal',
+                                'Comfy',
+                                'Chic',
+                                'Sport',
+                                'Classy',
+                              ],
+                              onChanged: (val) => setState(() => selectedOccasion = val),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: ExpandableStyleSelector(
+                              label: "Gender",
+                              selectedOption: selectedGender,
+                              options: ['Female', 'Male'],
+                              onChanged: (val) => setState(() => selectedGender = val),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 22),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : generateOutfit,
+                        child: const Text('Generate Outfit'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFFFF9800),
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                 ),
               ),
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 32, // You can reduce this to 16 if you want even less top space
-                bottom: 28,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
+              // --- END ORANGE TOP SECTION ---
+
+              // --- GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (generationError != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Center(
                     child: Text(
-                      'Set the weather and preferences below to let Outfitly AI craft your perfect look.',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                        color: Colors.white,
-                        letterSpacing: 0.2,
+                      generationError!,
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white, width: 2),
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.transparent,
-                    ),
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 3,
-                        activeTrackColor: Colors.white,
-                        inactiveTrackColor: Colors.white.withOpacity(0.2),
-                        trackShape: const RoundedRectSliderTrackShape(),
-                        thumbShape: _SmallOutlineThumbShape(),
-                        overlayColor: const Color(0x33FFFFFF),
-                        thumbColor: Colors.transparent,
-                        disabledThumbColor: Colors.transparent,
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
-                        activeTickMarkColor: Colors.transparent,
-                        inactiveTickMarkColor: Colors.transparent,
-                        valueIndicatorColor: Colors.white,
-                        valueIndicatorTextStyle: const TextStyle(
-                          color: Colors.black, // <-- Degree text is now black
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      child: Slider(
-                        value: selectedTemp,
-                        min: 5,
-                        max: 35,
-                        divisions: 30,
-                        label: '${selectedTemp.round()}°C',
-                        onChanged: (val) => setState(() => selectedTemp = val),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: ExpandableStyleSelector(
-                            label: "Season",
-                            selectedOption: selectedSeason,
-                            options: ['Winter', 'Spring', 'Summer', 'Autumn'],
-                            onChanged: (val) => setState(() => selectedSeason = val),
+                )
+              else if (recommendedItems.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 340, // Increased width for bigger images
+                      child: Column(
+                        children: [
+                          Text(
+                            "Your AI-Generated Outfit",
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 19, // Slightly larger title
+                            ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: ExpandableStyleSelector(
-                            label: "Modesty",
-                            selectedOption: selectedModesty,
-                            options: ['None', 'Hijab-Friendly'],
-                            onChanged: (val) => setState(() => selectedModesty = val),
+                          const SizedBox(height: 14),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 16, // More space between images
+                            runSpacing: 16,
+                            children: recommendedItems.map((item) {
+                              final imageUrl = item['photo_path'].toString().startsWith('http')
+                                  ? item['photo_path']
+                                  : 'http://10.0.2.2:8000${item['photo_path']}';
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: Image.network(
+                                  imageUrl,
+                                  width: 100,   // Increased size
+                                  height: 100,  // Increased size
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        width: 100,
+                                        height: 100,
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.image_not_supported, size: 36),
+                                      ),
+                                ),
+                              );
+                            }).toList(),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: ExpandableStyleSelector(
-                            label: "Occasion",
-                            selectedOption: selectedOccasion,
-                            options: [
-                              'Casual',
-                              'Work',
-                              'Formal',
-                              'Comfy',
-                              'Chic',
-                              'Sport',
-                              'Classy',
-                            ],
-                            onChanged: (val) => setState(() => selectedOccasion = val),
+                          const SizedBox(height: 14),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.save),
+                            label: const Text("Save Outfit"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF9800),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              textStyle: const TextStyle(fontSize: 16),
+                            ),
+                            onPressed: _alreadySaved ? null : _promptDescriptionAndSave,
                           ),
-                        ),
+                        ],
                       ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: ExpandableStyleSelector(
-                            label: "Gender",
-                            selectedOption: selectedGender,
-                            options: ['Female', 'Male'],
-                            onChanged: (val) => setState(() => selectedGender = val),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 22),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : generateOutfit,
-                      child: const Text('Generate Outfit'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFFFF9800),
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                        elevation: 2,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-            // --- END ORANGE TOP SECTION ---
-
-            // --- GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
-            const SizedBox(height: 24),
-            if (_loading)
-              const Center(child: CircularProgressIndicator())
-            else if (generationError != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Center(
-                  child: Text(
-                    generationError!,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            else if (recommendedItems.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  // Replace this with your outfit display widget
-                  child: Text(
-                    "Outfit generated! (Show your outfit preview here)",
-                    style: const TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
                 ),
-              ),
-            const SizedBox(height: 16),
-            // --- END GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
+              const SizedBox(height: 16),
+              // --- END GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
 
-            const Divider(height: 36, color: Color(0xFFFF9800)), // <-- Degree color changed to orange
+              const Divider(height: 36, color: Color(0xFFFF9800)), // <-- Degree color changed to orange
 
-            // BOTTOM OF PAGE
-            Center(
-              child: const Text(
-                'Prefer a personal touch? You can also design your own outfit manually below.',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 17,
-                  color: Colors.black87,
-                  letterSpacing: 0.2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.create),
-                label: const Text('Create Outfit Manually'),
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => OutfitCreationPage(
-                        selectedDate: widget.selectedDate,
-                      ),
-                    ),
-                  );
-
-                  // If outfit was successfully saved, assign it to planner
-                  if (result is int &&
-                      widget.fromCalendar &&
-                      widget.selectedDate != null) {
-                    await _assignOutfitToPlanner(result, widget.selectedDate!);
-                    Navigator.pop(context, true); // Tell planner to refresh
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF9800),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              // BOTTOM OF PAGE
+              Center(
+                child: const Text(
+                  'Prefer a personal touch? You can also design your own outfit manually below.',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    color: Colors.black87,
+                    letterSpacing: 0.2,
                   ),
-                  textStyle: const TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Center(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.create),
+                  label: const Text('Create Outfit Manually'),
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OutfitCreationPage(
+                          selectedDate: widget.selectedDate,
+                        ),
+                      ),
+                    );
+
+                    // If outfit was successfully saved, assign it to planner
+                    if (result is int &&
+                        widget.fromCalendar &&
+                        widget.selectedDate != null) {
+                      await _assignOutfitToPlanner(result, widget.selectedDate!);
+                      Navigator.pop(context, true); // Tell planner to refresh
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF9800),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

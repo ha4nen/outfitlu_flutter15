@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_application_1/Pages/MPages/profile_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_application_1/Pages/Mpages/Profile_Page.dart';
 
 class FollowersFollowingListPage extends StatefulWidget {
   final int userId;
@@ -79,16 +79,29 @@ class _FollowersFollowingListPageState
   @override
   Widget build(BuildContext context) {
     final title = widget.showFollowers ? 'Followers' : 'Following';
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        automaticallyImplyLeading: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
+        ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : users.isEmpty
               ? const Center(child: Text('No users found'))
-              : ListView.builder(
+              : ListView.separated(
                 itemCount: users.length,
+                separatorBuilder:
+                    (_, __) => Divider(color: Colors.grey.shade200),
                 itemBuilder: (_, index) {
                   final user = users[index]['user'];
                   final username = user['username'] ?? 'User';
@@ -98,7 +111,12 @@ class _FollowersFollowingListPageState
                   final isCurrentUser = userId == currentUserId;
 
                   return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     leading: CircleAvatar(
+                      radius: 26,
                       backgroundImage:
                           (profilePic != null &&
                                   profilePic.toString().isNotEmpty)
@@ -106,11 +124,19 @@ class _FollowersFollowingListPageState
                               : null,
                       backgroundColor: Colors.grey.shade300,
                       child:
-                          profilePic == null ? const Icon(Icons.person) : null,
+                          profilePic == null
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
                     ),
                     title: Text(
                       username,
-                      style: const TextStyle(color: Colors.black),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Tap to view profile',
+                      style: theme.textTheme.bodySmall,
                     ),
                     onTap: () {
                       Navigator.push(
@@ -119,7 +145,7 @@ class _FollowersFollowingListPageState
                           builder:
                               (_) => ProfilePage(
                                 onThemeChange: () {},
-                                userId: isCurrentUser ? null : userId,
+                                userId: userId,
                               ),
                         ),
                       );
@@ -133,7 +159,14 @@ class _FollowersFollowingListPageState
                                 backgroundColor:
                                     isFollowing
                                         ? Colors.grey
-                                        : Theme.of(context).colorScheme.primary,
+                                        : theme.colorScheme.primary,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               child: Text(
                                 isFollowing ? 'Unfollow' : 'Follow',
@@ -143,6 +176,7 @@ class _FollowersFollowingListPageState
                   );
                 },
               ),
+      backgroundColor: colorScheme.background,
     );
   }
 }

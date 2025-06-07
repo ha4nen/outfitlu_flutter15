@@ -13,9 +13,12 @@ class AddItemOptionsPage extends StatelessWidget {
     final apiKey = 'Ei2ToMiKZrvmjJiGN26dbaMQ';
     final url = Uri.parse('https://api.remove.bg/v1.0/removebg');
 
-    final request = http.MultipartRequest('POST', url)
-      ..headers['X-Api-Key'] = apiKey
-      ..files.add(await http.MultipartFile.fromPath('image_file', imageFile.path));
+    final request =
+        http.MultipartRequest('POST', url)
+          ..headers['X-Api-Key'] = apiKey
+          ..files.add(
+            await http.MultipartFile.fromPath('image_file', imageFile.path),
+          );
 
     final response = await request.send();
 
@@ -82,10 +85,7 @@ class AddItemOptionsPage extends StatelessWidget {
 
     return AlertDialog(
       backgroundColor: theme.colorScheme.surface,
-      title: Text(
-        "Add Item",
-        style: TextStyle(color: textColor),
-      ),
+      title: Text("Add Item", style: TextStyle(color: textColor)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -94,10 +94,7 @@ class AddItemOptionsPage extends StatelessWidget {
               Icons.camera_alt,
               color: theme.colorScheme.primary,
             ), // Dynamic icon color
-            title: Text(
-              "Take a Photo",
-              style: TextStyle(color: textColor),
-            ),
+            title: Text("Take a Photo", style: TextStyle(color: textColor)),
             onTap: () => _pickImage(context, ImageSource.camera),
           ),
           ListTile(

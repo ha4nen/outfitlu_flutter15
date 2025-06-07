@@ -119,72 +119,77 @@ class _FeedPageState extends State<FeedPage> {
         (_selectedDay ?? _focusedDay).toIso8601String().split('T').first;
     final events = _plannedOutfits[selectedDateKey] ?? [];
 
-    return  Scaffold(
-  body: MyPlannerUI(
-    focusedDay: _focusedDay,
-    selectedDay: _selectedDay,
-    calendarFormat: _calendarFormat,
-    onDaySelected: (selected, focused) {
-      setState(() {
-        _selectedDay = selected;
-        _focusedDay = focused;
-        _calendarFormat = CalendarFormat.week;
-      });
-    },
-    onPageChanged: (day) => setState(() => _focusedDay = day),
-    plannedOutfits: _plannedOutfits.map((key, value) => MapEntry(key, ['Planned'])),
-    onChooseOutfit: () async {
-      final selectedOutfit = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ChooseOutfitPage()),
-      );
-      if (selectedOutfit != null) {
-        await _assignOutfitToDate(selectedOutfit.id);
-        _fetchPlannedOutfits();
-      }
-    },
-    onCreateOutfit: () async {
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => MagicPage(
-            onThemeChange: () {},
-            fromCalendar: true,
-            selectedDate: _selectedDay,
-          ),
+    return Scaffold(
+      body: MyPlannerUI(
+        focusedDay: _focusedDay,
+        selectedDay: _selectedDay,
+        calendarFormat: _calendarFormat,
+        onDaySelected: (selected, focused) {
+          setState(() {
+            _selectedDay = selected;
+            _focusedDay = focused;
+            _calendarFormat = CalendarFormat.week;
+          });
+        },
+        onPageChanged: (day) => setState(() => _focusedDay = day),
+        plannedOutfits: _plannedOutfits.map(
+          (key, value) => MapEntry(key, ['Planned']),
         ),
-      );
-      if (result == true) _fetchPlannedOutfits();
-    },
-    onSeeDetails: () {
-      final plan = _plannedOutfits[selectedDateKey]?.first;
-      if (plan != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => OutfitDetailsPage(outfit: Outfit(
-              id: plan.outfitId,
-              description: plan.outfitDescription,
-              photoPath: plan.outfitImageUrl,
-              type: plan.outfitType,
-              season: plan.outfitSeason,
-              tags: plan.outfitTags,
-              isHijabFriendly: plan.isHijabFriendly,
-            )),
-          ),
-        );
-      }
-    },
-    onBackToMonth: () {
-      setState(() {
-        _calendarFormat = CalendarFormat.month;
-        _selectedDay = null;
-      });
-    },
-    outfitImageUrl: _plannedOutfits[selectedDateKey]?.first.outfitImageUrl,
-  ),
-);
-
+        onChooseOutfit: () async {
+          final selectedOutfit = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChooseOutfitPage()),
+          );
+          if (selectedOutfit != null) {
+            await _assignOutfitToDate(selectedOutfit.id);
+            _fetchPlannedOutfits();
+          }
+        },
+        onCreateOutfit: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (_) => MagicPage(
+                    onThemeChange: () {},
+                    fromCalendar: true,
+                    selectedDate: _selectedDay,
+                  ),
+            ),
+          );
+          if (result == true) _fetchPlannedOutfits();
+        },
+        onSeeDetails: () {
+          final plan = _plannedOutfits[selectedDateKey]?.first;
+          if (plan != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => OutfitDetailsPage(
+                      outfit: Outfit(
+                        id: plan.outfitId,
+                        description: plan.outfitDescription,
+                        photoPath: plan.outfitImageUrl,
+                        type: plan.outfitType,
+                        season: plan.outfitSeason,
+                        tags: plan.outfitTags,
+                        isHijabFriendly: plan.isHijabFriendly,
+                      ),
+                    ),
+              ),
+            );
+          }
+        },
+        onBackToMonth: () {
+          setState(() {
+            _calendarFormat = CalendarFormat.month;
+            _selectedDay = null;
+          });
+        },
+        outfitImageUrl: _plannedOutfits[selectedDateKey]?.first.outfitImageUrl,
+      ),
+    );
   }
 
   Widget _buildOutfitCard(OutfitPlan plan) => Padding(

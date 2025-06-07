@@ -65,10 +65,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             _modestyOptions.contains(data['modesty_preference'])
                 ? data['modesty_preference']
                 : null;
-        // TODO: load existing profile picture URL if you want to show it
       });
-    } else {
-      // handle error...
     }
   }
 
@@ -89,14 +86,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
         return;
       }
 
-      // Resize the image
       final imageBytes = await pickedFile.readAsBytes();
       final decodedImage = img.decodeImage(imageBytes);
       if (decodedImage != null) {
-        final resizedImage = img.copyResize(
-          decodedImage,
-          width: 500,
-        ); // Resize to 500px width
+        final resizedImage = img.copyResize(decodedImage, width: 500);
         final resizedImageFile = File(pickedFile.path)
           ..writeAsBytesSync(img.encodeJpg(resizedImage));
         setState(() => _image = resizedImageFile);
@@ -128,24 +121,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         } catch (e) {
-          print('Error adding file to request: $e');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to add image to request.')),
           );
           return;
         }
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Invalid image format.')));
-        return;
       }
     }
 
     try {
       final response = await request.send();
-      final responseData = await response.stream.bytesToString();
-
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +142,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
         throw Exception('Failed to update profile: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -178,7 +162,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Edit Profile'),
-          backgroundColor: primaryColor,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(color: const Color(0xFFFF9800), height: 1),
+          ),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -187,7 +174,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
-        backgroundColor: primaryColor,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFFF9800), height: 1),
+        ),
       ),
       body: Container(
         color: backgroundColor,
@@ -201,20 +191,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundImage: _image != null ? FileImage(_image!) : null,
-                  backgroundColor: primaryColor.withOpacity(0.2),
+                  backgroundColor: const Color(0xFFFF9800).withOpacity(0.1),
                   child:
                       _image == null
                           ? Icon(
                             Icons.add_a_photo,
                             size: 30,
-                            color: onPrimaryColor,
+                            color: primaryColor,
                           )
                           : null,
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Bio
               TextFormField(
                 initialValue: bio,
                 decoration: InputDecoration(
@@ -233,8 +221,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     (v) => v == null || v.isEmpty ? 'Please enter a bio' : null,
               ),
               const SizedBox(height: 12),
-
-              // Location
               TextFormField(
                 initialValue: location,
                 decoration: InputDecoration(
@@ -256,8 +242,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             : null,
               ),
               const SizedBox(height: 12),
-
-              // Gender Dropdown
               DropdownButtonFormField<String>(
                 value: gender,
                 hint: Text(
@@ -288,8 +272,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Modesty Preference Dropdown
               DropdownButtonFormField<String>(
                 value: modesty,
                 hint: Text(
@@ -321,8 +303,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -331,6 +312,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         foregroundColor: onPrimaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Save'),
                     ),
@@ -342,6 +326,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: primaryColor),
                         foregroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -356,7 +343,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 }
 
-/// Simple extension to capitalize the first letter
 extension on String {
   String capitalize() =>
       substring(0, 1).toUpperCase() + substring(1).toLowerCase();

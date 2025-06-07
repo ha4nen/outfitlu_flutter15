@@ -33,20 +33,27 @@ class ItemDetails extends StatelessWidget {
   Future<void> deleteItem(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: const Text('Are you sure you want to delete this item?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFFFF9800))),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Item'),
+            content: const Text('Are you sure you want to delete this item?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Color(0xFFFF9800)),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
     if (confirm != true) return;
 
@@ -64,9 +71,9 @@ class ItemDetails extends StatelessWidget {
         const SnackBar(content: Text('Item deleted successfully')),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to delete item')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to delete item')));
     }
   }
 
@@ -94,7 +101,7 @@ class ItemDetails extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: FutureBuilder<int?> (
+              child: FutureBuilder<int?>(
                 future: getCurrentUserId(),
                 builder: (context, snapshot) {
                   final currentUserId = snapshot.data;
@@ -108,7 +115,10 @@ class ItemDetails extends StatelessWidget {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            border: Border.all(color: Colors.orange.shade200, width: 1.5),
+                            border: Border.all(
+                              color: Colors.orange.shade200,
+                              width: 1.5,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ClipRRect(
@@ -118,7 +128,10 @@ class ItemDetails extends StatelessWidget {
                               width: double.infinity,
                               height: 200,
                               fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                              errorBuilder:
+                                  (_, __, ___) => const Center(
+                                    child: Icon(Icons.broken_image),
+                                  ),
                             ),
                           ),
                         )
@@ -151,15 +164,21 @@ class ItemDetails extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      if (snapshot.connectionState == ConnectionState.done && isOwner)
+                      if (snapshot.connectionState == ConnectionState.done &&
+                          isOwner)
                         Center(
                           child: ElevatedButton(
                             onPressed: () => deleteItem(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.shade700,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                               textStyle: const TextStyle(fontSize: 14),
                             ),
                             child: const Text('Delete Item'),
@@ -188,10 +207,7 @@ class ItemDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 4),
           Text(
             value,

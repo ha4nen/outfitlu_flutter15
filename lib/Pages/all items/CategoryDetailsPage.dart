@@ -15,7 +15,7 @@ class SubCategoryGroup {
   final int? userId;
 
   SubCategoryGroup({required this.id, required this.name, this.userId})
-      : items = [];
+    : items = [];
 }
 
 class CategoryDetailsPage extends StatefulWidget {
@@ -39,7 +39,7 @@ class _CategoryDetailsPageState extends State<CategoryDetailsPage> {
   bool isLoading = true;
   String error = '';
   String selectedTag = '';
-String sortBy = 'Newest';
+  String sortBy = 'Newest';
 
   @override
   void initState() {
@@ -65,9 +65,12 @@ String sortBy = 'Newest';
       return;
     }
 
-    final url = widget.userId != null
-        ? Uri.parse('http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/')
-        : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
+    final url =
+        widget.userId != null
+            ? Uri.parse(
+              'http://10.0.2.2:8000/api/users/${widget.userId}/wardrobe/',
+            )
+            : Uri.parse('http://10.0.2.2:8000/api/wardrobe/');
 
     try {
       final response = await http.get(
@@ -78,13 +81,25 @@ String sortBy = 'Newest';
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
-        final items = data
-    .map((json) => all_items.WardrobeItem.fromJson(json))
-    .where((item) => item.categoryId == widget.categoryId)
-    .where((item) => selectedTag.isEmpty || (item.tags?.toLowerCase().contains(selectedTag.toLowerCase()) ?? false))
-    .toList()
-    ..sort((a, b) => sortBy == 'Newest' ? b.id.compareTo(a.id) : a.id.compareTo(b.id));
-
+        final items =
+            data
+                .map((json) => all_items.WardrobeItem.fromJson(json))
+                .where((item) => item.categoryId == widget.categoryId)
+                .where(
+                  (item) =>
+                      selectedTag.isEmpty ||
+                      (item.tags?.toLowerCase().contains(
+                            selectedTag.toLowerCase(),
+                          ) ??
+                          false),
+                )
+                .toList()
+              ..sort(
+                (a, b) =>
+                    sortBy == 'Newest'
+                        ? b.id.compareTo(a.id)
+                        : a.id.compareTo(b.id),
+              );
 
         final Map<int, SubCategoryGroup> grouped = {};
         for (var item in items) {
@@ -117,8 +132,18 @@ String sortBy = 'Newest';
       });
     }
   }
-final tagOptions = ['All', 'Casual', 'Work', 'Formal', 'Comfy', 'Chic', 'Sport', 'Classy'];
-final sortOptions = ['Newest', 'Oldest'];
+
+  final tagOptions = [
+    'All',
+    'Casual',
+    'Work',
+    'Formal',
+    'Comfy',
+    'Chic',
+    'Sport',
+    'Classy',
+  ];
+  final sortOptions = ['Newest', 'Oldest'];
 
   Widget _buildSubCategorySection(SubCategoryGroup group) {
     final previewItems = group.items.take(4).toList();
@@ -127,17 +152,19 @@ final sortOptions = ['Newest', 'Oldest'];
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => SubDetails(
-                subcategoryId: group.id,
-                subcategoryName: group.name,
-                subCategory: '',
-                userId: widget.userId,
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => SubDetails(
+                        subcategoryId: group.id,
+                        subcategoryName: group.name,
+                        subCategory: '',
+                        userId: widget.userId,
+                      ),
+                ),
               ),
-            ),
-          ),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Row(
@@ -153,13 +180,14 @@ final sortOptions = ['Newest', 'Oldest'];
                 const SizedBox(width: 8),
                 Text(
                   group.items.length.toString(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const Spacer(),
-                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
               ],
             ),
           ),
@@ -173,24 +201,26 @@ final sortOptions = ['Newest', 'Oldest'];
               if (index < previewItems.length) {
                 final item = previewItems[index];
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => details.ItemDetails(
-                        itemId: item.id,
-                        itemName: item.material ?? 'Unnamed',
-                        color: item.color ?? 'N/A',
-                        size: item.size ?? 'N/A',
-                        material: item.material ?? 'N/A',
-                        season: item.season ?? 'N/A',
-                        tags: item.tags?.split(',') ?? [],
-                        imageUrl: item.photoPath,
-                        category: item.categoryName ?? 'N/A',
-                        subcategory: item.subcategoryName ?? 'General',
-                        userId: item.userId,
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => details.ItemDetails(
+                                itemId: item.id,
+                                itemName: item.material ?? 'Unnamed',
+                                color: item.color ?? 'N/A',
+                                size: item.size ?? 'N/A',
+                                material: item.material ?? 'N/A',
+                                season: item.season ?? 'N/A',
+                                tags: item.tags?.split(',') ?? [],
+                                imageUrl: item.photoPath,
+                                category: item.categoryName ?? 'N/A',
+                                subcategory: item.subcategoryName ?? 'General',
+                                userId: item.userId,
+                              ),
+                        ),
                       ),
-                    ),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6.0),
                     child: Container(
@@ -203,21 +233,27 @@ final sortOptions = ['Newest', 'Oldest'];
                       child: Column(
                         children: [
                           Expanded(
-                            child: item.photoPath != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      item.photoPath!,
-                                      fit: BoxFit.contain,
-                                      width: 100,
-                                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                            child:
+                                item.photoPath != null
+                                    ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.network(
+                                        item.photoPath!,
+                                        fit: BoxFit.contain,
+                                        width: 100,
+                                        errorBuilder:
+                                            (_, __, ___) =>
+                                                const Icon(Icons.broken_image),
+                                      ),
+                                    )
+                                    : const Center(
+                                      child: Icon(Icons.image_not_supported),
                                     ),
-                                  )
-                                : const Center(child: Icon(Icons.image_not_supported)),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${_capitalize(item.color)} ${_capitalize(item.subcategoryName)}'.trim(),
+                            '${_capitalize(item.color)} ${_capitalize(item.subcategoryName)}'
+                                .trim(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
@@ -226,7 +262,7 @@ final sortOptions = ['Newest', 'Oldest'];
                               fontWeight: FontWeight.w500,
                               color: Color(0xFF4B3C2F),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -234,17 +270,19 @@ final sortOptions = ['Newest', 'Oldest'];
                 );
               } else {
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SubDetails(
-                        subcategoryId: group.id,
-                        subcategoryName: group.name,
-                        subCategory: '',
-                        userId: widget.userId,
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => SubDetails(
+                                subcategoryId: group.id,
+                                subcategoryName: group.name,
+                                subCategory: '',
+                                userId: widget.userId,
+                              ),
+                        ),
                       ),
-                    ),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 6.0),
                     child: Container(
@@ -288,95 +326,117 @@ final sortOptions = ['Newest', 'Oldest'];
           child: Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : error.isNotEmpty
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : error.isNotEmpty
               ? Center(child: Text(error))
               : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-  children: [
-    for (final tag in tagOptions)
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(
-          label: Text(
-            () {
-              final tagKey = tag == 'All' ? '' : tag;
-              final count = subcategoryGroups.values
-                  .expand((group) => group.items)
-                  .where((item) => tagKey.isEmpty || (item.tags?.toLowerCase().contains(tagKey.toLowerCase()) ?? false))
-                  .length;
-              return '$tag ($count)';
-            }(),
-            style: TextStyle(
-              color: selectedTag == (tag == 'All' ? '' : tag)
-                  ? Colors.white
-                  : const Color(0xFF2F1B0C),
-            ),
-          ),
-          selected: selectedTag == (tag == 'All' ? '' : tag),
-          selectedColor: const Color(0xFFFF9800),
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFFFFE0B2)),
-          ),
-          onSelected: (_) {
-            final newTag = tag == 'All' ? '' : tag;
-            setState(() {
-              selectedTag = selectedTag == newTag ? '' : newTag;
-            });
-            _fetchItemsByCategory();
-          },
-        ),
-      ),
-    for (final sort in sortOptions)
-      Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(
-          label: Text(
-            sort,
-            style: TextStyle(
-              color: sortBy == sort ? Colors.white : const Color(0xFF2F1B0C),
-            ),
-          ),
-          selected: sortBy == sort,
-          selectedColor: const Color(0xFFFF9800),
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFFFFE0B2)),
-          ),
-          onSelected: (_) {
-            setState(() => sortBy = sort);
-            _fetchItemsByCategory();
-          },
-        ),
-      ),
-  ],
-),
-
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          for (final tag in tagOptions)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(
+                                  () {
+                                    final tagKey = tag == 'All' ? '' : tag;
+                                    final count =
+                                        subcategoryGroups.values
+                                            .expand((group) => group.items)
+                                            .where(
+                                              (item) =>
+                                                  tagKey.isEmpty ||
+                                                  (item.tags
+                                                          ?.toLowerCase()
+                                                          .contains(
+                                                            tagKey
+                                                                .toLowerCase(),
+                                                          ) ??
+                                                      false),
+                                            )
+                                            .length;
+                                    return '$tag ($count)';
+                                  }(),
+                                  style: TextStyle(
+                                    color:
+                                        selectedTag == (tag == 'All' ? '' : tag)
+                                            ? Colors.white
+                                            : const Color(0xFF2F1B0C),
+                                  ),
+                                ),
+                                selected:
+                                    selectedTag == (tag == 'All' ? '' : tag),
+                                selectedColor: const Color(0xFFFF9800),
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  side: const BorderSide(
+                                    color: Color(0xFFFFE0B2),
+                                  ),
+                                ),
+                                onSelected: (_) {
+                                  final newTag = tag == 'All' ? '' : tag;
+                                  setState(() {
+                                    selectedTag =
+                                        selectedTag == newTag ? '' : newTag;
+                                  });
+                                  _fetchItemsByCategory();
+                                },
+                              ),
+                            ),
+                          for (final sort in sortOptions)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(
+                                  sort,
+                                  style: TextStyle(
+                                    color:
+                                        sortBy == sort
+                                            ? Colors.white
+                                            : const Color(0xFF2F1B0C),
+                                  ),
+                                ),
+                                selected: sortBy == sort,
+                                selectedColor: const Color(0xFFFF9800),
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  side: const BorderSide(
+                                    color: Color(0xFFFFE0B2),
+                                  ),
+                                ),
+                                onSelected: (_) {
+                                  setState(() => sortBy = sort);
+                                  _fetchItemsByCategory();
+                                },
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _fetchItemsByCategory,
-                        child: ListView(
-                          padding: const EdgeInsets.all(16.0),
-                          children: subcategoryGroups.values
-                              .map((group) => _buildSubCategorySection(group))
-                              .toList(),
-                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: _fetchItemsByCategory,
+                      child: ListView(
+                        padding: const EdgeInsets.all(16.0),
+                        children:
+                            subcategoryGroups.values
+                                .map((group) => _buildSubCategorySection(group))
+                                .toList(),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
     );
   }
 }

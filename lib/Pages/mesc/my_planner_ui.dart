@@ -33,7 +33,8 @@ class MyPlannerUI extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedKey = (selectedDay ?? focusedDay).toIso8601String().split('T').first;
+    final selectedKey =
+        (selectedDay ?? focusedDay).toIso8601String().split('T').first;
     final hasEvent = plannedOutfits.containsKey(selectedKey);
     final bool isWeekView = calendarFormat == CalendarFormat.week;
 
@@ -55,12 +56,13 @@ class MyPlannerUI extends StatelessWidget {
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, thickness: 1, color: Color(0xFFFF9800)),
         ),
-        leading: isWeekView && onBackToMonth != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: onBackToMonth,
-              )
-            : null,
+        leading:
+            isWeekView && onBackToMonth != null
+                ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: onBackToMonth,
+                )
+                : null,
       ),
       body: Column(
         children: [
@@ -116,8 +118,14 @@ class MyPlannerUI extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: Color(0xFFFF9800),
                 ),
-                leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFFFF9800)),
-                rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFFFF9800)),
+                leftChevronIcon: Icon(
+                  Icons.chevron_left,
+                  color: Color(0xFFFF9800),
+                ),
+                rightChevronIcon: Icon(
+                  Icons.chevron_right,
+                  color: Color(0xFFFF9800),
+                ),
               ),
             ),
           ),
@@ -125,82 +133,119 @@ class MyPlannerUI extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 130),
-              child: hasEvent
-                  ? Column(
-                      children: [
-                        const Icon(Icons.checkroom, size: 80, color: Colors.grey),
-                        const SizedBox(height: 12),
-                        const Text("You have an outfit planned!", style: TextStyle(fontSize: 16)),
-                        const SizedBox(height: 16),
-                        if (outfitImageUrl != null)
-                          Column(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.orange.shade200, width: 1.5),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    outfitImageUrl!,
-                                    width: double.infinity,
-                                    height: 400,
-                                    fit: BoxFit.contain,
+              child:
+                  hasEvent
+                      ? Column(
+                        children: [
+                          const Icon(
+                            Icons.checkroom,
+                            size: 80,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "You have an outfit planned!",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 16),
+                          if (outfitImageUrl != null)
+                            Column(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.orange.shade200,
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      outfitImageUrl!,
+                                      width: double.infinity,
+                                      height: 400,
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: onSeeDetails,
-                                child: const Text(
-                                  "See the outfit details >",
-                                  style: TextStyle(
-                                    color: Color(0xFFFF9800),
-                                    fontWeight: FontWeight.w600,
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: onSeeDetails,
+                                  child: const Text(
+                                    "See the outfit details >",
+                                    style: TextStyle(
+                                      color: Color(0xFFFF9800),
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
+                              ],
+                            ),
+                        ],
+                      )
+                      : Column(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.orange.shade300,
+                                width: 1.5,
                               ),
-                            ],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.all(32),
+                            child: const Icon(
+                              Icons.checkroom,
+                              size: 80,
+                              color: Colors.grey,
+                            ),
                           ),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.orange.shade300, width: 1.5),
-                            borderRadius: BorderRadius.circular(12),
+                          const SizedBox(height: 20),
+                          const Text(
+                            "You don’t have any outfit planned for this day!",
+                            style: TextStyle(color: Colors.grey),
                           ),
-                          padding: const EdgeInsets.all(32),
-                          child: const Icon(Icons.checkroom, size: 80, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text("You don’t have any outfit planned for this day!", style: TextStyle(color: Colors.grey)),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: onChooseOutfit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFFFF9800),
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: onChooseOutfit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFFF9800),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              "CHOOSE OUTFIT",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
-                          child: const Text("CHOOSE OUTFIT", style: TextStyle(color: Colors.white)),
-                        ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: onCreateOutfit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFFEF6C00),
-                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: onCreateOutfit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFEF6C00),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              "CREATE OUTFIT",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
-                          child: const Text("CREATE OUTFIT", style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
             ),
-          )
+          ),
         ],
       ),
     );

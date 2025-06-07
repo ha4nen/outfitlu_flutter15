@@ -922,6 +922,43 @@ class _MagicPageState extends State<MagicPage> {
             ),
             // --- END ORANGE TOP SECTION ---
 
+            // --- GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
+            const SizedBox(height: 24),
+            if (_loading)
+              const Center(child: CircularProgressIndicator())
+            else if (generationError != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Center(
+                  child: Text(
+                    generationError!,
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            else if (recommendedItems.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  // Replace this with your outfit display widget
+                  child: Text(
+                    "Outfit generated! (Show your outfit preview here)",
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            // --- END GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
+
             const Divider(height: 36, color: Color(0xFFFF9800)), // <-- Degree color changed to orange
 
             // BOTTOM OF PAGE

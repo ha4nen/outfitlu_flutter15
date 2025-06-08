@@ -932,19 +932,6 @@ class _MagicPageState extends State<MagicPage> {
                   ],
                 ),
               ),
-<<<<<<< HEAD
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 60, // You can reduce this to 16 if you want even less top space
-                bottom: 28,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-=======
               // --- END ORANGE TOP SECTION ---
 
               // --- GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
@@ -957,7 +944,6 @@ class _MagicPageState extends State<MagicPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Center(
->>>>>>> 848a4b719b5763b65489bd3dc2556630b58bdcff
                     child: Text(
                       generationError!,
                       style: const TextStyle(

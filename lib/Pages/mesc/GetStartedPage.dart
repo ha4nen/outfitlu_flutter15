@@ -89,7 +89,7 @@ class _GetStartedPageState extends State<GetStartedPage>
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Let Outfitly AI help you style for any occasion.",
+                          "Let Outfitly’s AI style you for every moment.",
                           style: TextStyle(fontSize: 16, color: Colors.black87),
                         ),
                         const SizedBox(height: 24),

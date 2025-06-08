@@ -788,7 +788,7 @@ class _MagicPageState extends State<MagicPage> {
                       Color(0xFFFF9800), // Orange continues
                       Colors.white,      // White only at the very bottom
                     ],
-                    stops: [0.0, 0.97, 1.0], // White starts blending at 85% height
+                    stops: [0.0, 0.99, 1.0], // White starts blending at 85% height
                   ),
                   borderRadius: BorderRadius.vertical(
                     bottom: Radius.circular(28),
@@ -895,6 +895,7 @@ class _MagicPageState extends State<MagicPage> {
                                 'Classy',
                               ],
                               onChanged: (val) => setState(() => selectedOccasion = val),
+                              isSquare: true, // <-- Make options squares
                             ),
                           ),
                         ),
@@ -1021,12 +1022,10 @@ class _MagicPageState extends State<MagicPage> {
               const SizedBox(height: 16),
               // --- END GENERATED OUTFIT OR ERROR MESSAGE SECTION ---
 
-              const Divider(height: 36, color: Color(0xFFFF9800)), // <-- Degree color changed to orange
-
               // BOTTOM OF PAGE
               Center(
                 child: const Text(
-                  'Prefer a personal touch? You can also design your own outfit manually below.',
+                  'Prefer a personal touch? You can also design \nyour own outfit manually below.',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 17,
@@ -1122,6 +1121,7 @@ class ExpandableStyleSelector extends StatelessWidget {
   final String selectedOption;
   final List<String> options;
   final ValueChanged<String> onChanged;
+  final bool isSquare; // <-- Add this
 
   const ExpandableStyleSelector({
     super.key,
@@ -1129,6 +1129,7 @@ class ExpandableStyleSelector extends StatelessWidget {
     required this.selectedOption,
     required this.options,
     required this.onChanged,
+    this.isSquare = false, // <-- Default false
   });
 
   @override
@@ -1142,6 +1143,7 @@ class ExpandableStyleSelector extends StatelessWidget {
       selectedOption: displayOption,
       options: options.contains("None") ? options : ["None", ...options],
       onChanged: onChanged,
+      isSquare: isSquare, // <-- Pass to menu
     );
   }
 }
@@ -1151,12 +1153,14 @@ class _ExpandableMenu extends StatefulWidget {
   final String selectedOption;
   final List<String> options;
   final ValueChanged<String> onChanged;
+  final bool isSquare; // <-- Add this
 
   const _ExpandableMenu({
     required this.label,
     required this.selectedOption,
     required this.options,
     required this.onChanged,
+    this.isSquare = false, // <-- Default false
   });
 
   @override
@@ -1233,10 +1237,10 @@ class _ExpandableMenuState extends State<_ExpandableMenu> with TickerProviderSta
                               maxWidth: 344, // 4*80 + 3*8
                             ),
                             child: Wrap(
-                              alignment: WrapAlignment.start, // <-- force left alignment
+                              alignment: WrapAlignment.start,
                               crossAxisAlignment: WrapCrossAlignment.start,
-                              spacing: 8,
-                              runSpacing: 8,
+                              spacing: 0,      // <-- Remove horizontal space between options
+                              runSpacing: 0,   // <-- Remove vertical space between options
                               children: widget.options
                                   .where((opt) => opt != widget.selectedOption)
                                   .map((opt) => SizedBox(
@@ -1327,6 +1331,8 @@ class _ExpandableMenuState extends State<_ExpandableMenu> with TickerProviderSta
     final bool isSelected = widget.selectedOption == label;
     final bool isNone = label == "None";
 
+    final double aspect = widget.isSquare ? 1 : (isMain ? 1 : 1.5); // <-- Square if isSquare
+
     if (isMain) {
       // Determine initial value based on selection
       final double initialValue = isNone ? 0.0 : 1.0;
@@ -1335,7 +1341,7 @@ class _ExpandableMenuState extends State<_ExpandableMenu> with TickerProviderSta
           : (isNone ? 0.0 : 1.0);
 
       return AspectRatio(
-        aspectRatio: 1,
+        aspectRatio: aspect, // <-- Use aspect
         child: TweenAnimationBuilder<double>(
           tween: Tween<double>(
             begin: initialValue,
@@ -1395,7 +1401,7 @@ class _ExpandableMenuState extends State<_ExpandableMenu> with TickerProviderSta
 
     // Dropdown option: "None" is white, others are orange
     return AspectRatio(
-      aspectRatio: 1,
+      aspectRatio: aspect, // <-- Use aspect
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(

@@ -93,8 +93,7 @@ class _MagicPageState extends State<MagicPage> {
   }
 
   Future<void> generateOutfit() async {
-    setState(() => _loading = true);
-
+setState(() => _alreadySaved = false);
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     if (token == null) return;
@@ -120,6 +119,44 @@ class _MagicPageState extends State<MagicPage> {
       final accessoriesGrouped = groupBySubcategory(
         wardrobe.where((i) => i['category']['name'] == 'Accessories').toList(),
       );
+
+
+      // Season filtering for tops
+      if (selectedSeason != 'None') {
+        topsGrouped.removeWhere((subcat, items) =>
+          items.every((item) =>
+            item['season'] != selectedSeason && item['season'] != 'All-Season'
+          )
+        );
+      }
+
+      // Occasion filtering for tops
+      if (selectedOccasion != 'None') {
+        topsGrouped.removeWhere((subcat, items) =>
+          items.every((item) =>
+            !(item['tags']?.toString().toLowerCase().contains(selectedOccasion.toLowerCase()) ?? false)
+          )
+        );
+      }
+
+      // Season filtering for accessories
+      if (selectedSeason != 'None') {
+        accessoriesGrouped.removeWhere((subcat, items) =>
+          items.every((item) =>
+            item['season'] != selectedSeason && item['season'] != 'All-Season'
+          )
+        );
+      }
+
+      // Occasion filtering for accessories
+      if (selectedOccasion != 'None') {
+        accessoriesGrouped.removeWhere((subcat, items) =>
+          items.every((item) =>
+            !(item['tags']?.toString().toLowerCase().contains(selectedOccasion.toLowerCase()) ?? false)
+          )
+        );
+      }
+
       // ✨ MagicPage Flutter constraints (aligned with backend AI model logic)
 
       // These constraints must be applied inside the MagicPage's item filtering logic
@@ -219,26 +256,32 @@ class _MagicPageState extends State<MagicPage> {
       }
 
       for (int i = 0; i < 10; i++) {
-        final outerwearSubcats = [
-          'Jackets',
-          'Sweaters & Cardigans',
-          'Sweatshirts & Hoodies',
-        ];
-        final innerwearSubcats = ['Shirts', 'T-shirts'];
-
-        final topOuter = pickFromGroupedBySubcat(topsGrouped, outerwearSubcats);
-        final topInner = pickFromGroupedBySubcat(topsGrouped, innerwearSubcats);
-
         List<Map<String, dynamic>> tops = [];
 
-        if (selectedTemp < 15 && topOuter != null && topInner != null) {
-          tops = [topOuter, topInner];
-        } else if (topInner != null) {
-          tops = [topInner];
-        } else if (topOuter != null) {
-          tops = [topOuter];
+        if (selectedTemp < 15) {
+          // Pick one jacket and one sweatshirt/hoodie if available
+          final jacket = pickFromGroupedBySubcat(topsGrouped, ['Jackets']);
+          final hoodie = pickFromGroupedBySubcat(topsGrouped, ['Sweatshirts & Hoodies']);
+          if (jacket != null && hoodie != null) {
+            tops = [jacket, hoodie];
+          } else {
+            continue; // If either is missing, skip this iteration
+          }
         } else {
-          continue;
+          // Pick one from the rest (no jackets or hoodies)
+          final restSubcats = [
+            'Shirts',
+            'T-shirts',
+            'Tank Tops',
+            'Long-sleeves',
+            'Sweaters & Cardigans',
+          ];
+          final top = pickFromGroupedBySubcat(topsGrouped, restSubcats);
+          if (top != null) {
+            tops = [top];
+          } else {
+            continue;
+          }
         }
 
         final topIds = tops.map((t) => t['id']).toSet();
@@ -539,11 +582,13 @@ class _MagicPageState extends State<MagicPage> {
     );
 
     if (response.statusCode == 201) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ Outfit added to your planner!")),
       );
     } else {
       print("❌ Failed to assign outfit to planner: ${response.body}");
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to assign outfit to planner.")),
       );
@@ -558,7 +603,6 @@ class _MagicPageState extends State<MagicPage> {
     String? description,
   }) async {
     if (_alreadySaved) return;
-    setState(() => _alreadySaved = true);
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -604,19 +648,46 @@ class _MagicPageState extends State<MagicPage> {
       final responseData = jsonDecode(respStr);
       final outfitId = responseData['id'];
 
+      // Check if still mounted before showing SnackBar
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ AI outfit saved to wardrobe!")),
       );
 
-      final shouldPost = await _askToPostOutfit();
+      await Future.delayed(const Duration(milliseconds: 700));
+
+      // Check again before showing dialog
+      if (!mounted) return;
+      print("Showing post outfit dialog...");
+      final shouldPost = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Post Outfit?"),
+          content: const Text("Do you want to post this outfit to your feed?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Yes"),
+            ),
+          ],
+        ),
+      );
       if (shouldPost == true) {
         await _promptCaptionAndPost(outfitId);
       }
       if (widget.fromCalendar && widget.selectedDate != null) {
         await _assignOutfitToPlanner(outfitId, widget.selectedDate!);
+        if (!mounted) return; // <-- Add this before popping!
         Navigator.pop(context, true); // return true to trigger refresh
       }
+      if (!mounted) return; // <-- Add this before setState!
+      setState(() => _alreadySaved = true);
     } else {
+      if (!mounted) return;
       print("❌ Save failed: $respStr");
       ScaffoldMessenger.of(
         context,
@@ -627,23 +698,22 @@ class _MagicPageState extends State<MagicPage> {
   Future<bool?> _askToPostOutfit() async {
     return showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Post Outfit?"),
-            content: const Text(
-              "Do you want to post this outfit to your feed?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("No"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text("Yes"),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text("Post Outfit?"),
+        content: const Text(
+          "Do you want to post this outfit to your feed?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("No"),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -688,6 +758,7 @@ class _MagicPageState extends State<MagicPage> {
 
       final response = await postRequest.send();
       if (response.statusCode == 201) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Outfit posted successfully!")),
         );
@@ -768,6 +839,20 @@ class _MagicPageState extends State<MagicPage> {
     final dropdownTextColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFFF9800),
+        elevation: 0,
+        automaticallyImplyLeading: true, // <-- This shows the back arrow
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "AI Outfit Generator",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -1194,11 +1279,20 @@ class _ExpandableMenuState extends State<_ExpandableMenu> with TickerProviderSta
   }
 
   void _hideOverlay() {
-    _controller.reverse().then((_) {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
-      if (mounted) setState(() => isExpanded = false);
-    });
+    // Only reverse if the controller is not disposed and is animating
+    if (mounted && _controller.status != AnimationStatus.dismissed && _controller.isAnimating) {
+      _controller.reverse().then((_) {
+        _removeOverlay();
+      });
+    } else {
+      _removeOverlay();
+    }
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    if (mounted) setState(() => isExpanded = false);
   }
 
   OverlayEntry _buildOverlayEntry() {
@@ -1275,8 +1369,8 @@ class _ExpandableMenuState extends State<_ExpandableMenu> with TickerProviderSta
 
   @override
   void dispose() {
-    _controller.dispose();
     _hideOverlay();
+    _controller.dispose();
     super.dispose();
   }
 

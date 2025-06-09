@@ -6,9 +6,7 @@ class OutfitAIHelper {
   final int inputSize = 34;
 
   Future<void> loadModel() async {
-    interpreter = await Interpreter.fromAsset(
-      'models/full_outfit_model.tflite',
-    );
+    final interpreter = await Interpreter.fromAsset('assets/models/full_outfit_model.tflite');
     print('✅ TFLite model loaded');
   }
 
